@@ -62,7 +62,7 @@ function CategoryPick({ g, act, ctx, bank, onMenu, onTv }) {
 
 /* ---------- board ---------- */
 function Tile({ g, cell, onOpen }) {
-  if (cell.status === 'empty') return <span className="tile empty" title={t('tierExhausted', { v: cell.value })} aria-label={t('tierExhausted', { v: cell.value })}><span className="num">{cell.value}</span><i>∅</i></span>;
+  if (cell.status === 'empty') { const why = cell.why === 'invalid' ? t('tileInvalid') : t('tierExhausted', { v: cell.value }); return <span className={'tile empty' + (cell.why === 'invalid' ? ' invalid' : '')} title={why} aria-label={cell.value + ' · ' + why}><span className="num">{cell.value}</span><i>{cell.why === 'invalid' ? '⚠' : '∅'}</i></span>; }
   if (cell.status === 'done') {
     const r = cell.result || {};
     const team = r.team ? teamById(g, r.team) : null;
@@ -188,7 +188,7 @@ function ResultBanner({ g }) {
     </div>
   );
 }
-function QuestionScreen({ g, act, flash, onMenu, onTv }) {
+function QuestionScreen({ g, act, flash, onMenu, onTv, onWrong }) {
   const cur = g.current; const cell = curCell(g);
   const [peek, setPeek] = useState(false);
   useEffect(() => { setPeek(false); }, [cell && cell.id]);
@@ -213,6 +213,7 @@ function QuestionScreen({ g, act, flash, onMenu, onTv }) {
       <QuestionCard cell={cell} showAnswer={reveal || peek} host />
       {cell.q.check && <p className="checkbadge">{t('needsCheck')}</p>}
       {reveal && <ResultBanner g={g} />}
+      {onWrong && <button className="btn btn-sm btn-flag wrongbtn" onClick={() => onWrong(cell.id)}>⚠ {t('thisIsWrong')}</button>}
       {!reveal && <button className="btn btn-ghost btn-sm peek" aria-pressed={peek} onClick={() => setPeek(!peek)}>👁 {peek ? t('hideAnswer') : t('showAnswer')}</button>}
       {!reveal && <p className="hint center">{t('hostHint')}</p>}
       <div className="actions">
@@ -268,15 +269,16 @@ function GameLog({ g }) {
         {g.log.map((e, i) => {
           const tm = e.team ? teamById(g, e.team) : null;
           const c = e.cat ? catById(g, e.cat) : null;
+          if (e.kind === 'invalid') return <li key={i} className="lg-invalid">{c && <span className="muted">{c.emoji} {pick(c.name)} {e.value} · </span>}<span>⚠ {e.replaced ? t('logInvalidRep') : t('logInvalid')}</span>{(e.refunds || []).map((r, k) => { const rt = teamById(g, r.team); return <span key={k} className="muted"> · {teamName(rt)} {fmtDelta(r.delta)}</span>; })}</li>;
           const what = e.kind === 'adjust' ? t('logAdjust', { team: teamName(tm), d: (e.points > 0 ? '+' : '') + e.points })
             : e.kind === 'correct' ? t('logCorrect', { team: teamName(tm) }) : e.kind === 'stolen' ? t('logStolen', { team: teamName(tm) }) : e.kind === 'skipped' ? t('logSkipped') : t('logMissed');
-          return <li key={i}>{c && <span className="muted">{c.emoji} {pick(c.name)} {e.value} · </span>}<span dir="auto">{what}</span>{e.penalty ? <span className="muted"> (−{e.penalty})</span> : null}</li>;
+          return <li key={i} className={e.void ? 'lg-void' : undefined}>{c && <span className="muted">{c.emoji} {pick(c.name)} {e.value} · </span>}<span dir="auto">{what}</span>{e.penalty ? <span className="muted"> (−{e.penalty})</span> : null}{e.void ? <span className="muted"> {t('logVoid')}</span> : null}</li>;
         })}
       </ol>
     </details>
   );
 }
-function Results({ g, act, onHome, onAgain }) {
+function Results({ g, act, onHome, onAgain, onFlagPlayed }) {
   const sorted = [...g.teams].sort((a, b) => b.score - a.score);
   const s = gameStats(g);
   return (
@@ -298,6 +300,7 @@ function Results({ g, act, onHome, onAgain }) {
       </section>
       <Moments g={g} />
       <GameLog g={g} />
+      {onFlagPlayed && <button className="btn btn-sm btn-flag" onClick={onFlagPlayed}>⚠ {t('flagPlayed')}</button>}
       <button className="btn btn-gold" onClick={onAgain}>{t('playAgain')}</button>
       <p className="hint center" style={{ marginTop: -8 }}>{t('playAgainSub')}</p>
       <div className="row">
@@ -329,7 +332,7 @@ function FixScores({ g, act, onClose }) {
     </Sheet>
   );
 }
-function GameMenu({ g, act, onClose, onHome }) {
+function GameMenu({ g, act, onClose, onHome, onFlagPlayed }) {
   const [ask, setAsk] = useState(null);
   const [fix, setFix] = useState(false);
   const cur = g.current; const inQ = g.phase === 'question' && cur && cur.stage !== 'reveal';
@@ -347,6 +350,7 @@ function GameMenu({ g, act, onClose, onHome }) {
         {inQ && cur.stage === 'answer' && <button className="btn menu2" onClick={() => run(putBack)}><span>↩ {t('putBack')}</span><small>{t('putBackSub')}</small></button>}
         {inQ && <button className="btn" onClick={() => run(skipQuestion)}>⏭ {t('skipQ')}</button>}
         {g.phase !== 'pick' && <button className="btn" onClick={() => setFix(true)}>± {t('fixScores')}</button>}
+        {g.phase !== 'pick' && onFlagPlayed && <button className="btn btn-flag" onClick={() => { onClose(); onFlagPlayed(); }}>⚠ {t('flagPlayed')}</button>}
         {g.phase !== 'pick' && <button className="btn btn-danger" onClick={() => setAsk('end')}>🏁 {t('endGame')}</button>}
         <button className="btn btn-ghost menu2" onClick={() => { onClose(); onHome(); }}><span>🏠 {t('quitHome')}</span><small>{t('quitHomeSub')}</small></button>
         <button className="btn btn-ghost" onClick={onClose}>{t('close')}</button>

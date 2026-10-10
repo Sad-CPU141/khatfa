@@ -1,7 +1,7 @@
 /* ============================================================
    SETTINGS: language, question language, animations, TV size, backup.
    ============================================================ */
-function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, onBack, bank, qhist, onResetHistory }) {
+function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, onBack, bank, qhist, onResetHistory, issues, onClearIssues, extra }) {
   const [ask, setAsk] = useState(null);
   const [msg, setMsg] = useState(null);
   const fileRef = useRef(null);
@@ -43,6 +43,24 @@ function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, o
         <p className="hint">{t('historySub', { n: Object.keys((qhist && qhist.seen) || {}).length, g: (qhist && qhist.n) || 0 })}</p>
         <button className="btn" disabled={!qhist || !Object.keys(qhist.seen || {}).length} onClick={() => setAsk({ kind: 'hist' })}>{t('resetHistory')}</button>
       </section>}
+      {issues && <section className="card stack">
+        <h3>⚠ {t('issues')}</h3>
+        <p className="hint">{t('issuesSub')} <b>{t('issuesN', { n: issues.length })}</b></p>
+        <Toggle on={settings.skipReported !== false} onChange={(v) => set('skipReported', v)} title={t('skipReported')} />
+        {issues.length > 0 ? (
+          <details className="issuelist"><summary className="label">{t('issuesN', { n: issues.length })}</summary>
+            <ol>{issues.slice(0, 100).map((x) => {
+              const c = bank && bank.cats.find((k) => k.id === x.cat);
+              return <li key={x.id}><span className="muted small">{c ? c.emoji + ' ' + pick(c.name) : x.cat} · {x.value} · {t('reason_' + (x.reason || 'other'))}{x.note ? ' · ' : ''}</span>{x.note ? <bdi dir="auto" className="small">{x.note}</bdi> : null}<Txt v={x.q} as="span" className="iq" /><span className="small muted"> → <Txt v={x.a} /></span></li>;
+            })}</ol>
+          </details>
+        ) : <p className="hint">{t('issuesNone')}</p>}
+        <div className="row">
+          <button className="btn grow" disabled={!issues.length} onClick={() => downloadBlob(new Blob([JSON.stringify({ app: 'khatfa', kind: 'reported-questions', exportedAt: new Date().toISOString(), issues }, null, 1)], { type: 'application/json' }), 'khatfa-reported-' + todayStamp() + '.json')}>⬇ {t('exportIssues')}</button>
+          <button className="btn btn-ghost grow" disabled={!issues.length} onClick={() => setAsk({ kind: 'issues' })}>{t('clearIssues')}</button>
+        </div>
+      </section>}
+      {extra}
       <section className="card stack">
         <h3>{t('backup')}</h3>
         <p className="hint">{t('backupSub')}</p>
@@ -64,6 +82,7 @@ function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, o
           onYes={() => { onRestore(ask.v.data); setMsg({ text: t('restored'), ok: true }); }} onClose={() => setAsk(null)} />
       )}
       {ask && ask.kind === 'hist' && <Confirm title={t('resetHistoryQ')} body={t('resetHistoryBody')} yes={t('resetHistory')} onYes={onResetHistory} onClose={() => setAsk(null)} />}
+      {ask && ask.kind === 'issues' && <Confirm title={t('clearIssuesQ')} body={t('clearIssuesBody')} yes={t('clearIssues')} onYes={onClearIssues} onClose={() => setAsk(null)} />}
       {ask && ask.kind === 'clear' && <Confirm title={t('clearAllQ')} body={t('clearAllBody')} yes={t('deleteIt')} danger onYes={onClearAll} onClose={() => setAsk(null)} />}
       {msg && <Toast msg={msg.text} ok={msg.ok} onClose={() => setMsg(null)} />}
     </div>

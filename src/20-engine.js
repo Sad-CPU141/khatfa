@@ -126,7 +126,7 @@ const pickable = (g) => g.pool.filter((c) => canPick(g, c)).length;
 function buildBoard(g, ctx) {
   if (!ctx || !ctx.bank) return g;
   const allowed = g.pool.filter((c) => c.id !== MIX_ID).map((c) => c.id);
-  const { cells, report } = selectBoard(g.cats, ctx.bank, g.rules, { recent: ctx.recent, gameNo: g.gameNo, rand: ctx.rand, allowed });
+  const { cells, report } = selectBoard(g.cats, ctx.bank, g.rules, { recent: ctx.recent, gameNo: g.gameNo, rand: ctx.rand, allowed, used: ctx.exclude || [] });
   return { ...g, cells, report, phase: 'board', turn: 0, pool: g.pool };
 }
 
@@ -140,7 +140,7 @@ function openCell(g, cellId, now = Date.now()) {
   const c = cellById(g, cellId);
   if (g.phase !== 'board' || !c || c.status !== 'open' || isLocked(g, c)) return g;
   const n = withHistory(g, 'open');
-  return { ...n, phase: 'question', current: { cell: c.id, stage: 'answer', team: turnTeam(g).id, endsAt: now + ms(g.rules.answerTime * 1000), pausedLeft: null, result: null } };
+  return { ...n, phase: 'question', current: { cell: c.id, stage: 'answer', team: turnTeam(g).id, opener: turnTeam(g).id, endsAt: now + ms(g.rules.answerTime * 1000), pausedLeft: null, result: null } };
 }
 const curCell = (g) => (g.current ? cellById(g, g.current.cell) : null);
 const timeLeft = (g, now = Date.now()) => {
@@ -208,7 +208,7 @@ function finishQuestion(g, now = Date.now()) {
   if (g.phase !== 'question' || !cur || cur.stage !== 'reveal' || !c) return g;
   const r = cur.result || {};
   let n = withHistory(g, 'next');
-  const entry = { cell: c.id, cat: c.cat, tier: c.tier, value: c.value, turnTeam: turnTeam(n).id, kind: r.kind, team: r.team, points: r.points || 0, penalty: r.penalty || 0, at: now };
+  const entry = { cell: c.id, qid: c.q && c.q.id, cat: c.cat, tier: c.tier, value: c.value, turnTeam: turnTeam(n).id, kind: r.kind, team: r.team, points: r.points || 0, penalty: r.penalty || 0, answeredBy: r.answeredBy || null, at: now };
   n = { ...n, cells: n.cells.map((x) => (x.id === c.id ? { ...x, status: 'done', result: { kind: r.kind, team: r.team } } : x)), log: [...n.log, entry], current: null, turn: nextTeamIndex(n, n.turn), phase: 'board' };
   if (isBoardDone(n)) n = { ...n, phase: 'done', endedAt: now };
   return n;
@@ -236,7 +236,7 @@ function gameStats(g) {
   g.teams.forEach((tm) => { per[tm.id] = { correct: 0, own: 0, steals: 0, streak: 0, best: 0, stolenPts: 0 }; });
   let biggestSteal = null, biggestWin = null;
   g.log.forEach((e) => {
-    if (e.kind === 'adjust' || e.kind === 'skipped') return;
+    if (e.kind === 'adjust' || e.kind === 'skipped' || e.void) return;
     const own = per[e.turnTeam]; if (own) own.own++;
     if (e.kind === 'correct' && per[e.team]) {
       per[e.team].correct++; per[e.team].streak++; per[e.team].best = Math.max(per[e.team].best, per[e.team].streak);
@@ -256,4 +256,115 @@ function rematch(g, bank, now = Date.now(), opts = {}) {
   return createGame(bank, g.teams.map(({ name, color, emoji }) => ({ name, color, emoji })), g.rules, now, opts);
 }
 // A finished game, slimmed down for the "recent games" list.
-const pastEntry = (g) => ({ id: g.id, createdAt: g.createdAt, endedAt: g.endedAt, gameNo: g.gameNo, rules: g.rules, teams: g.teams, cats: g.cats, cells: g.cells.map(({ q, ...rest }) => rest), log: g.log, phase: 'done' });
+const pastEntry = (g) => ({ id: g.id, createdAt: g.createdAt, endedAt: g.endedAt, gameNo: g.gameNo, rules: g.rules, teams: g.teams, cats: g.cats, cells: g.cells.map(({ q, ...rest }) => rest), log: g.log, invalid: g.invalid || [], phase: 'done' });
+
+/* ---------- "This is wrong": invalidate a bad question ----------
+   The host flags the question on a tile (the open one, or one already played).
+   1. Exactly the score changes this question caused are reversed:
+        · +points to the team that answered or stole it,
+        · −points of the "wrong answers lose points" penalty (only if it was applied).
+      Opening a question costs nothing in Khatfa, so there's nothing else to refund.
+   2. The question is recorded in g.invalid and can't come back this game.
+   3. A replacement of the same value is found: same category (same subcategory if possible).
+      If none is left, the host chooses: a same-value question from a related category,
+      from any category in this game, or leave the tile empty. Nothing is silently repeated.
+   Idempotent: the call names the question id it is about; once that question is no longer
+   on the tile (or is already in g.invalid), the call does nothing. One undo step. */
+const INVALID_REASONS = ['answer', 'unclear', 'media', 'duplicate', 'other'];
+const isInvalidated = (g, qid) => (g.invalid || []).some((x) => x.qid === qid);
+// What reversing this question would change: [{ team, delta }] (never more than the question caused).
+function invalidRefunds(g, cellId) {
+  const c = cellById(g, cellId); if (!c || !c.q) return [];
+  const out = [];
+  const add = (team, delta) => { if (team && delta) out.push({ team, delta }); };
+  const cur = g.current && g.current.cell === cellId ? g.current : null;
+  if (cur) {
+    if (cur.stage === 'steal') add(cur.answeredBy, cur.penalty || 0);
+    if (cur.stage === 'reveal' && cur.result) { add(cur.result.team, -(cur.result.points || 0)); add(cur.result.answeredBy, cur.result.penalty || 0); }
+  } else if (c.status === 'done') {
+    const e = [...g.log].reverse().find((x) => x.cell === cellId && !x.void && x.kind !== 'adjust');
+    if (e) { add(e.team, -(e.points || 0)); add(e.answeredBy || e.turnTeam, e.penalty || 0); }
+  }
+  return out;
+}
+// Every question id this game has used or ruled out (so a replacement is always fresh).
+function gameUsed(g) {
+  const used = new Set(); const facts = new Set();
+  g.cells.forEach((c) => { if (c.q) { used.add(c.q.id); (c.q.facts && c.q.facts.length ? c.q.facts : [c.q.id]).forEach((k) => facts.add(k)); } });
+  (g.invalid || []).forEach((x) => { used.add(x.qid); (x.facts || []).forEach((k) => facts.add(k)); });
+  return { used, facts };
+}
+// Same value, same category (same subcategory first). ctx: { bank, recent, rand, exclude:[ids] }
+function findReplacement(g, cell, ctx) {
+  if (!ctx || !ctx.bank) return null;
+  const { used, facts } = gameUsed(g);
+  (ctx.exclude || []).forEach((id) => used.add(id));
+  const base = { used, facts, recent: ctx.recent || {}, gameNo: g.gameNo, rand: ctx.rand || Math.random };
+  const rules = { ...g.rules, nicheOnly: false };
+  const realCat = cell.q ? cell.q.cat : cell.cat;
+  const try1 = (pool) => selectQuestions(pool, cell.tier, 1, rules, { ...base, used: new Set(base.used), facts: new Set(base.facts) }).picked[0] || null;
+  if (cell.cat === MIX_ID) {
+    const allowed = g.pool.filter((p) => p.id !== MIX_ID).map((p) => p.id);
+    const r = selectMix(ctx.bank, allowed, cell.tier, 1, rules, { ...base, used: new Set(base.used), facts: new Set(base.facts) });
+    return r.picked[0] ? { q: r.picked[0], how: 'same' } : null;
+  }
+  const pool = ctx.bank.byCat[realCat] || [];
+  const sub = cell.q && cell.q.sub;
+  const q = (sub && try1(pool.filter((x) => x.sub === sub))) || try1(pool);
+  return q ? { q, how: 'same' } : null;
+}
+// When the category has nothing left at this value: candidates the host can choose from.
+function replacementOptions(g, cell, ctx) {
+  if (!ctx || !ctx.bank) return [];
+  const { used, facts } = gameUsed(g);
+  (ctx.exclude || []).forEach((id) => used.add(id));
+  const rules = { ...g.rules, nicheOnly: false };
+  const realCat = cell.q ? cell.q.cat : cell.cat;
+  const meta = ctx.bank.cats.find((x) => x.id === realCat);
+  const group = meta ? meta.group : null;
+  const inGame = g.cats.map((c) => c.id).filter((id) => id !== MIX_ID && id !== realCat);
+  const related = ctx.bank.cats.filter((x) => x.group === group && x.id !== realCat).map((x) => x.id);
+  const out = [];
+  const tryCats = (ids, how) => {
+    for (const id of shuffleWith(ids, ctx.rand || Math.random)) {
+      const q = selectQuestions(ctx.bank.byCat[id] || [], cell.tier, 1, rules, { used: new Set(used), facts: new Set(facts), recent: ctx.recent || {}, gameNo: g.gameNo, rand: ctx.rand || Math.random }).picked[0];
+      if (q) { out.push({ q, how }); used.add(q.id); return; }
+    }
+  };
+  tryCats(related, 'related');
+  tryCats(inGame, 'board');
+  return out;
+}
+/* opts: { qid (required: the question being flagged), reason, note, replacement: { q, how } | 'empty', now }
+   Returns the same game if nothing should change (wrong qid, already done, etc.). */
+function invalidateQuestion(g, cellId, opts) {
+  const o = opts || {};
+  const c = cellById(g, cellId);
+  if (!c || !c.q || c.q.id !== o.qid || isInvalidated(g, o.qid) || g.phase === 'pick') return g;
+  const isCur = !!(g.current && g.current.cell === cellId);
+  if (!isCur && c.status !== 'done') return g; // only an opened or already-played question can be flagged
+  const now = o.now || Date.now();
+  const refunds = invalidRefunds(g, cellId);
+  const stage = isCur ? g.current.stage : 'done';
+  const opener = isCur ? (g.current.opener || g.current.answeredBy || (g.current.result && g.current.result.answeredBy) || g.current.team) : null;
+  let n = withHistory(g, 'invalid');
+  refunds.forEach((r) => { n = addScore(n, r.team, r.delta); });
+  const rep = o.replacement && o.replacement !== 'empty' && o.replacement.q ? o.replacement : null;
+  const record = { qid: c.q.id, cell: cellId, cat: c.cat, tier: c.tier, value: c.value, facts: c.q.facts || [], stage, reason: INVALID_REASONS.includes(o.reason) ? o.reason : 'other', note: o.note ? String(o.note).slice(0, 300) : '', refunds, replacement: rep ? rep.q.id : null, how: rep ? rep.how : 'empty', at: now, q: { q: c.q.q, a: c.q.a } };
+  const log = n.log.map((e) => (!isCur && e.cell === cellId && !e.void && e.kind !== 'adjust' ? { ...e, void: true } : e));
+  log.push({ kind: 'invalid', cell: cellId, cat: c.cat, tier: c.tier, value: c.value, refunds, replaced: !!rep, at: now });
+  const cells = n.cells.map((x) => {
+    if (x.id !== cellId) return x;
+    const { result, ...rest } = x;
+    return rep ? { ...rest, q: rep.q, status: 'open', replaced: (x.replaced || 0) + 1, why: undefined } : { ...rest, q: null, status: 'empty', why: 'invalid' };
+  });
+  n = { ...n, cells, log, invalid: [...(n.invalid || []), record] };
+  if (isCur) {
+    // The team that opened it gets the replacement straight away (fresh clock); with no replacement they pick again.
+    if (rep) n = { ...n, phase: 'question', current: { cell: cellId, stage: 'answer', team: opener, opener, endsAt: now + ms(n.rules.answerTime * 1000), pausedLeft: null, result: null } };
+    else n = { ...n, phase: 'board', current: null };
+  }
+  if (n.phase === 'done' && !n.endedEarly && openCells(n).length) n = { ...n, phase: 'board', endedAt: undefined };
+  if (n.phase === 'board' && isBoardDone(n)) n = { ...n, phase: 'done', endedAt: now };
+  return n;
+}

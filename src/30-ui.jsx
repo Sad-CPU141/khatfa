@@ -147,7 +147,7 @@ function ScoreBar({ g, activeId, label, big }) {
 function Flash({ f, g, onDone }) {
   useEffect(() => { const id = setTimeout(onDone, ms(f.kind === 'stolen' ? 1700 : 1300)); return () => clearTimeout(id); }, [f]);
   const team = f.team && g ? teamById(g, f.team) : null;
-  const big = { correct: t('flashCorrect'), stolen: t('flashSteal'), wrong: t('flashWrong'), missed: t('flashMissed'), timeup: t('timeUp') }[f.kind];
+  const big = { correct: t('flashCorrect'), stolen: t('flashSteal'), wrong: t('flashWrong'), missed: t('flashMissed'), timeup: t('timeUp'), invalid: '⚠ ' + t('flashInvalid') }[f.kind];
   return (
     <div className={'flash k-' + f.kind} onClick={onDone} role="status" aria-live="assertive" style={team ? tStyle(team) : undefined}>
       <div className="inner">

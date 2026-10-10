@@ -1,7 +1,7 @@
-/* Khatfa 25dff7b993 — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa 0d66f796ba — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "25dff7b993";
+const APP_VERSION = "0d66f796ba";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -52,7 +52,8 @@ const K = {
   current: 'kh_current_v1',
   past: 'kh_past_v1',
   packs: 'kh_packs_v1',
-  history: 'kh_qhistory_v1'
+  history: 'kh_qhistory_v1',
+  issues: 'kh_issues_v1'
 };
 const STORE_KEYS = Object.values(K);
 const store = (() => {
@@ -227,7 +228,8 @@ function makeBackup(state) {
       current: state.game || null,
       past: state.past || [],
       packs: state.packs || [],
-      history: state.history || null
+      history: state.history || null,
+      issues: state.issues || []
     }
   };
 }
@@ -255,6 +257,10 @@ function validateBackup(obj) {
     error: 'bkDamaged'
   };
   if (d.history != null && (typeof d.history !== 'object' || typeof d.history.seen !== 'object')) return {
+    ok: false,
+    error: 'bkDamaged'
+  };
+  if (d.issues != null && !Array.isArray(d.issues)) return {
     ok: false,
     error: 'bkDamaged'
   };
@@ -584,7 +590,51 @@ const S = {
   dismiss: ['OK', 'تمام'],
   crashed: ['Something went wrong.', 'صار خطأ.'],
   crashedSub: ['Your game is saved. Reload to carry on.', 'لعبتك محفوظة. حدّث الصفحة وكمّل.'],
-  howBody: [['Split into two teams. Each team picks categories; they all go on the board.', 'Teams take turns choosing a question. Harder questions are worth more.', 'The host reads it out and starts the clock. Answer right to win the points.', 'Wrong or out of time? The other team gets a short chance to snatch it — a Khatfa!', 'When the board is empty, the team with the most points wins.'], ['انقسموا لفريقين. كل فريق يختار فئات، وكلها تنحط على اللوحة.', 'الفرق تتناوب على اختيار الأسئلة. كل ما صعب السؤال زادت نقاطه.', 'المقدّم يقرأ السؤال ويشغّل الوقت. جاوب صح وخذ النقاط.', 'غلطتوا أو خلص الوقت؟ الفريق الثاني عنده فرصة قصيرة يخطف السؤال… خطفة!', 'إذا خلصت اللوحة، الفريق صاحب أعلى نقاط يفوز.']]
+  howBody: [['Split into two teams. Each team picks categories; they all go on the board.', 'Teams take turns choosing a question. Harder questions are worth more.', 'The host reads it out and starts the clock. Answer right to win the points.', 'Wrong or out of time? The other team gets a short chance to snatch it — a Khatfa!', 'When the board is empty, the team with the most points wins.'], ['انقسموا لفريقين. كل فريق يختار فئات، وكلها تنحط على اللوحة.', 'الفرق تتناوب على اختيار الأسئلة. كل ما صعب السؤال زادت نقاطه.', 'المقدّم يقرأ السؤال ويشغّل الوقت. جاوب صح وخذ النقاط.', 'غلطتوا أو خلص الوقت؟ الفريق الثاني عنده فرصة قصيرة يخطف السؤال… خطفة!', 'إذا خلصت اللوحة، الفريق صاحب أعلى نقاط يفوز.']],
+  thisIsWrong: ['This is wrong', 'السؤال غلط'],
+  wrongTitle: ['Something wrong with this question?', 'فيه مشكلة بالسؤال؟'],
+  wrongSub: ['It will be removed from this game and replaced with another {v}-point question. Only the points this question changed are reversed.', 'بينشال من هاللعبة ويتبدّل بسؤال ثاني بـ{v} نقطة. ونرجّع بس النقاط اللي غيّرها هالسؤال.'],
+  whyWrong: ['What’s wrong? (optional)', 'وش المشكلة؟ (اختياري)'],
+  reason_answer: ['Wrong answer', 'الإجابة غلط'],
+  reason_unclear: ['Unclear or misleading', 'غير واضح أو مضلّل'],
+  reason_media: ['Picture, sound or clip broken', 'الصورة أو الصوت أو المقطع خربان'],
+  reason_duplicate: ['Repeat / gave itself away', 'مكرر أو يكشف نفسه'],
+  reason_other: ['Something else', 'شي ثاني'],
+  wrongNote: ['Note for later (optional)', 'ملاحظة للمراجعة (اختياري)'],
+  noRefund: ['No points were given or taken for this question yet, so nothing needs refunding.', 'ما انحسبت ولا انخصمت نقاط على هالسؤال، فما فيه شي يرجع.'],
+  willRefund: ['These score changes will be reversed:', 'بنرجّع تغييرات النقاط هذي:'],
+  refundLine: ['{team}: {d}', '{team}: {d}'],
+  repSame: ['Replacement: another {v} from {cat}.', 'البديل: سؤال {v} ثاني من {cat}.'],
+  repSameNow: ['The same team answers the replacement now, with a fresh clock.', 'نفس الفريق يجاوب على البديل الحين، والوقت يبدأ من جديد.'],
+  repSameBoard: ['It goes back on the board as an open tile.', 'يرجع على اللوحة كمربع مفتوح.'],
+  repNone: ['{cat} has no unused {v}-point questions left. Choose what to do:', '{cat} ما بقى فيها أسئلة {v} ما انلعبت. اختار:'],
+  repRelated: ['Use a {v} from {cat} (similar topic)', 'سؤال {v} من {cat} (موضوع قريب)'],
+  repBoard: ['Use a {v} from {cat} (on this board)', 'سؤال {v} من {cat} (من اللوحة)'],
+  repEmpty: ['Leave the tile empty (no question, no points)', 'خلّ المربع فاضي (بدون سؤال ولا نقاط)'],
+  repEmptyNow: ['The same team picks another tile.', 'نفس الفريق يختار مربع ثاني.'],
+  replaceIt: ['Remove and replace', 'شيله وبدّله'],
+  reverseAndReplace: ['Reverse points and replace', 'رجّع النقاط وبدّله'],
+  reverseAndEmpty: ['Reverse points and remove', 'رجّع النقاط وشيله'],
+  removeIt: ['Remove it', 'شيله'],
+  wrongDone: ['Question removed.', 'انشال السؤال.'],
+  wrongDoneRefund: ['Question removed and points reversed.', 'انشال السؤال ورجعت النقاط.'],
+  flashInvalid: ['Question replaced', 'تبدّل السؤال'],
+  flagPlayed: ['A played question was wrong', 'سؤال انلعب وطلع غلط'],
+  flagPlayedSub: ['Pick the question. Its points are reversed and the tile reopens with a replacement.', 'اختار السؤال. نرجّع نقاطه ويفتح المربع ببديل.'],
+  noPlayed: ['No questions have been played yet.', 'ما انلعب أي سؤال للحين.'],
+  logInvalid: ['Question removed as wrong', 'انشال سؤال لأنه غلط'],
+  logInvalidRep: ['Question removed as wrong · replaced', 'انشال سؤال لأنه غلط · وتبدّل'],
+  logVoid: ['(cancelled)', '(ملغي)'],
+  tileInvalid: ['Removed: the question was wrong', 'انشال: السؤال كان غلط'],
+  issues: ['Reported questions', 'الأسئلة المبلّغ عنها'],
+  issuesSub: ['Questions flagged with “This is wrong”, to fix later.', 'الأسئلة اللي انضغط عليها «السؤال غلط»، عشان تتصلّح.'],
+  issuesN: ['{n} reported', '{n} مبلّغ عنها'],
+  issuesNone: ['Nothing reported yet.', 'ما فيه بلاغات للحين.'],
+  skipReported: ['Skip reported questions in new games', 'تجاهل الأسئلة المبلّغ عنها في الألعاب الجديدة'],
+  exportIssues: ['Export list', 'صدّر القائمة'],
+  clearIssues: ['Clear list', 'امسح القائمة'],
+  clearIssuesQ: ['Clear the reported list?', 'تمسح قائمة البلاغات؟'],
+  clearIssuesBody: ['Reported questions can appear in games again.', 'الأسئلة المبلّغ عنها ممكن ترجع تطلع في الألعاب.']
 };
 let LANG = 'en';
 const setLang = l => {
@@ -1023,7 +1073,8 @@ function buildBoard(g, ctx) {
     recent: ctx.recent,
     gameNo: g.gameNo,
     rand: ctx.rand,
-    allowed
+    allowed,
+    used: ctx.exclude || []
   });
   return {
     ...g,
@@ -1049,6 +1100,7 @@ function openCell(g, cellId, now = Date.now()) {
       cell: c.id,
       stage: 'answer',
       team: turnTeam(g).id,
+      opener: turnTeam(g).id,
       endsAt: now + ms(g.rules.answerTime * 1000),
       pausedLeft: null,
       result: null
@@ -1214,6 +1266,7 @@ function finishQuestion(g, now = Date.now()) {
   let n = withHistory(g, 'next');
   const entry = {
     cell: c.id,
+    qid: c.q && c.q.id,
     cat: c.cat,
     tier: c.tier,
     value: c.value,
@@ -1222,6 +1275,7 @@ function finishQuestion(g, now = Date.now()) {
     team: r.team,
     points: r.points || 0,
     penalty: r.penalty || 0,
+    answeredBy: r.answeredBy || null,
     at: now
   };
   n = {
@@ -1290,7 +1344,7 @@ function gameStats(g) {
   let biggestSteal = null,
     biggestWin = null;
   g.log.forEach(e => {
-    if (e.kind === 'adjust' || e.kind === 'skipped') return;
+    if (e.kind === 'adjust' || e.kind === 'skipped' || e.void) return;
     const own = per[e.turnTeam];
     if (own) own.own++;
     if (e.kind === 'correct' && per[e.team]) {
@@ -1347,8 +1401,243 @@ const pastEntry = g => ({
     ...rest
   }) => rest),
   log: g.log,
+  invalid: g.invalid || [],
   phase: 'done'
 });
+const INVALID_REASONS = ['answer', 'unclear', 'media', 'duplicate', 'other'];
+const isInvalidated = (g, qid) => (g.invalid || []).some(x => x.qid === qid);
+function invalidRefunds(g, cellId) {
+  const c = cellById(g, cellId);
+  if (!c || !c.q) return [];
+  const out = [];
+  const add = (team, delta) => {
+    if (team && delta) out.push({
+      team,
+      delta
+    });
+  };
+  const cur = g.current && g.current.cell === cellId ? g.current : null;
+  if (cur) {
+    if (cur.stage === 'steal') add(cur.answeredBy, cur.penalty || 0);
+    if (cur.stage === 'reveal' && cur.result) {
+      add(cur.result.team, -(cur.result.points || 0));
+      add(cur.result.answeredBy, cur.result.penalty || 0);
+    }
+  } else if (c.status === 'done') {
+    const e = [...g.log].reverse().find(x => x.cell === cellId && !x.void && x.kind !== 'adjust');
+    if (e) {
+      add(e.team, -(e.points || 0));
+      add(e.answeredBy || e.turnTeam, e.penalty || 0);
+    }
+  }
+  return out;
+}
+function gameUsed(g) {
+  const used = new Set();
+  const facts = new Set();
+  g.cells.forEach(c => {
+    if (c.q) {
+      used.add(c.q.id);
+      (c.q.facts && c.q.facts.length ? c.q.facts : [c.q.id]).forEach(k => facts.add(k));
+    }
+  });
+  (g.invalid || []).forEach(x => {
+    used.add(x.qid);
+    (x.facts || []).forEach(k => facts.add(k));
+  });
+  return {
+    used,
+    facts
+  };
+}
+function findReplacement(g, cell, ctx) {
+  if (!ctx || !ctx.bank) return null;
+  const {
+    used,
+    facts
+  } = gameUsed(g);
+  (ctx.exclude || []).forEach(id => used.add(id));
+  const base = {
+    used,
+    facts,
+    recent: ctx.recent || {},
+    gameNo: g.gameNo,
+    rand: ctx.rand || Math.random
+  };
+  const rules = {
+    ...g.rules,
+    nicheOnly: false
+  };
+  const realCat = cell.q ? cell.q.cat : cell.cat;
+  const try1 = pool => selectQuestions(pool, cell.tier, 1, rules, {
+    ...base,
+    used: new Set(base.used),
+    facts: new Set(base.facts)
+  }).picked[0] || null;
+  if (cell.cat === MIX_ID) {
+    const allowed = g.pool.filter(p => p.id !== MIX_ID).map(p => p.id);
+    const r = selectMix(ctx.bank, allowed, cell.tier, 1, rules, {
+      ...base,
+      used: new Set(base.used),
+      facts: new Set(base.facts)
+    });
+    return r.picked[0] ? {
+      q: r.picked[0],
+      how: 'same'
+    } : null;
+  }
+  const pool = ctx.bank.byCat[realCat] || [];
+  const sub = cell.q && cell.q.sub;
+  const q = sub && try1(pool.filter(x => x.sub === sub)) || try1(pool);
+  return q ? {
+    q,
+    how: 'same'
+  } : null;
+}
+function replacementOptions(g, cell, ctx) {
+  if (!ctx || !ctx.bank) return [];
+  const {
+    used,
+    facts
+  } = gameUsed(g);
+  (ctx.exclude || []).forEach(id => used.add(id));
+  const rules = {
+    ...g.rules,
+    nicheOnly: false
+  };
+  const realCat = cell.q ? cell.q.cat : cell.cat;
+  const meta = ctx.bank.cats.find(x => x.id === realCat);
+  const group = meta ? meta.group : null;
+  const inGame = g.cats.map(c => c.id).filter(id => id !== MIX_ID && id !== realCat);
+  const related = ctx.bank.cats.filter(x => x.group === group && x.id !== realCat).map(x => x.id);
+  const out = [];
+  const tryCats = (ids, how) => {
+    for (const id of shuffleWith(ids, ctx.rand || Math.random)) {
+      const q = selectQuestions(ctx.bank.byCat[id] || [], cell.tier, 1, rules, {
+        used: new Set(used),
+        facts: new Set(facts),
+        recent: ctx.recent || {},
+        gameNo: g.gameNo,
+        rand: ctx.rand || Math.random
+      }).picked[0];
+      if (q) {
+        out.push({
+          q,
+          how
+        });
+        used.add(q.id);
+        return;
+      }
+    }
+  };
+  tryCats(related, 'related');
+  tryCats(inGame, 'board');
+  return out;
+}
+function invalidateQuestion(g, cellId, opts) {
+  const o = opts || {};
+  const c = cellById(g, cellId);
+  if (!c || !c.q || c.q.id !== o.qid || isInvalidated(g, o.qid) || g.phase === 'pick') return g;
+  const isCur = !!(g.current && g.current.cell === cellId);
+  if (!isCur && c.status !== 'done') return g;
+  const now = o.now || Date.now();
+  const refunds = invalidRefunds(g, cellId);
+  const stage = isCur ? g.current.stage : 'done';
+  const opener = isCur ? g.current.opener || g.current.answeredBy || g.current.result && g.current.result.answeredBy || g.current.team : null;
+  let n = withHistory(g, 'invalid');
+  refunds.forEach(r => {
+    n = addScore(n, r.team, r.delta);
+  });
+  const rep = o.replacement && o.replacement !== 'empty' && o.replacement.q ? o.replacement : null;
+  const record = {
+    qid: c.q.id,
+    cell: cellId,
+    cat: c.cat,
+    tier: c.tier,
+    value: c.value,
+    facts: c.q.facts || [],
+    stage,
+    reason: INVALID_REASONS.includes(o.reason) ? o.reason : 'other',
+    note: o.note ? String(o.note).slice(0, 300) : '',
+    refunds,
+    replacement: rep ? rep.q.id : null,
+    how: rep ? rep.how : 'empty',
+    at: now,
+    q: {
+      q: c.q.q,
+      a: c.q.a
+    }
+  };
+  const log = n.log.map(e => !isCur && e.cell === cellId && !e.void && e.kind !== 'adjust' ? {
+    ...e,
+    void: true
+  } : e);
+  log.push({
+    kind: 'invalid',
+    cell: cellId,
+    cat: c.cat,
+    tier: c.tier,
+    value: c.value,
+    refunds,
+    replaced: !!rep,
+    at: now
+  });
+  const cells = n.cells.map(x => {
+    if (x.id !== cellId) return x;
+    const {
+      result,
+      ...rest
+    } = x;
+    return rep ? {
+      ...rest,
+      q: rep.q,
+      status: 'open',
+      replaced: (x.replaced || 0) + 1,
+      why: undefined
+    } : {
+      ...rest,
+      q: null,
+      status: 'empty',
+      why: 'invalid'
+    };
+  });
+  n = {
+    ...n,
+    cells,
+    log,
+    invalid: [...(n.invalid || []), record]
+  };
+  if (isCur) {
+    if (rep) n = {
+      ...n,
+      phase: 'question',
+      current: {
+        cell: cellId,
+        stage: 'answer',
+        team: opener,
+        opener,
+        endsAt: now + ms(n.rules.answerTime * 1000),
+        pausedLeft: null,
+        result: null
+      }
+    };else n = {
+      ...n,
+      phase: 'board',
+      current: null
+    };
+  }
+  if (n.phase === 'done' && !n.endedEarly && openCells(n).length) n = {
+    ...n,
+    phase: 'board',
+    endedAt: undefined
+  };
+  if (n.phase === 'board' && isBoardDone(n)) n = {
+    ...n,
+    phase: 'done',
+    endedAt: now
+  };
+  return n;
+}
 class Boundary extends React.Component {
   constructor(p) {
     super(p);
@@ -1685,7 +1974,8 @@ function Flash({
     stolen: t('flashSteal'),
     wrong: t('flashWrong'),
     missed: t('flashMissed'),
-    timeup: t('timeUp')
+    timeup: t('timeUp'),
+    invalid: '⚠ ' + t('flashInvalid')
   }[f.kind];
   return React.createElement("div", {
     className: 'flash k-' + f.kind,
@@ -2345,17 +2635,18 @@ function Tile({
   cell,
   onOpen
 }) {
-  if (cell.status === 'empty') return React.createElement("span", {
-    className: "tile empty",
-    title: t('tierExhausted', {
+  if (cell.status === 'empty') {
+    const why = cell.why === 'invalid' ? t('tileInvalid') : t('tierExhausted', {
       v: cell.value
-    }),
-    "aria-label": t('tierExhausted', {
-      v: cell.value
-    })
-  }, React.createElement("span", {
-    className: "num"
-  }, cell.value), React.createElement("i", null, "\u2205"));
+    });
+    return React.createElement("span", {
+      className: 'tile empty' + (cell.why === 'invalid' ? ' invalid' : ''),
+      title: why,
+      "aria-label": cell.value + ' · ' + why
+    }, React.createElement("span", {
+      className: "num"
+    }, cell.value), React.createElement("i", null, cell.why === 'invalid' ? '⚠' : '∅'));
+  }
   if (cell.status === 'done') {
     const r = cell.result || {};
     const team = r.team ? teamById(g, r.team) : null;
@@ -2605,7 +2896,8 @@ function QuestionScreen({
   act,
   flash,
   onMenu,
-  onTv
+  onTv,
+  onWrong
 }) {
   const cur = g.current;
   const cell = curCell(g);
@@ -2674,7 +2966,10 @@ function QuestionScreen({
     className: "checkbadge"
   }, t('needsCheck')), reveal && React.createElement(ResultBanner, {
     g: g
-  }), !reveal && React.createElement("button", {
+  }), onWrong && React.createElement("button", {
+    className: "btn btn-sm btn-flag wrongbtn",
+    onClick: () => onWrong(cell.id)
+  }, "\u26A0 ", t('thisIsWrong')), !reveal && React.createElement("button", {
     className: "btn btn-ghost btn-sm peek",
     "aria-pressed": peek,
     onClick: () => setPeek(!peek)
@@ -2807,6 +3102,18 @@ function GameLog({
   }, g.log.map((e, i) => {
     const tm = e.team ? teamById(g, e.team) : null;
     const c = e.cat ? catById(g, e.cat) : null;
+    if (e.kind === 'invalid') return React.createElement("li", {
+      key: i,
+      className: "lg-invalid"
+    }, c && React.createElement("span", {
+      className: "muted"
+    }, c.emoji, " ", pick(c.name), " ", e.value, " \xB7 "), React.createElement("span", null, "\u26A0 ", e.replaced ? t('logInvalidRep') : t('logInvalid')), (e.refunds || []).map((r, k) => {
+      const rt = teamById(g, r.team);
+      return React.createElement("span", {
+        key: k,
+        className: "muted"
+      }, " \xB7 ", teamName(rt), " ", fmtDelta(r.delta));
+    }));
     const what = e.kind === 'adjust' ? t('logAdjust', {
       team: teamName(tm),
       d: (e.points > 0 ? '+' : '') + e.points
@@ -2816,21 +3123,25 @@ function GameLog({
       team: teamName(tm)
     }) : e.kind === 'skipped' ? t('logSkipped') : t('logMissed');
     return React.createElement("li", {
-      key: i
+      key: i,
+      className: e.void ? 'lg-void' : undefined
     }, c && React.createElement("span", {
       className: "muted"
     }, c.emoji, " ", pick(c.name), " ", e.value, " \xB7 "), React.createElement("span", {
       dir: "auto"
     }, what), e.penalty ? React.createElement("span", {
       className: "muted"
-    }, " (\u2212", e.penalty, ")") : null);
+    }, " (\u2212", e.penalty, ")") : null, e.void ? React.createElement("span", {
+      className: "muted"
+    }, " ", t('logVoid')) : null);
   })));
 }
 function Results({
   g,
   act,
   onHome,
-  onAgain
+  onAgain,
+  onFlagPlayed
 }) {
   const sorted = [...g.teams].sort((a, b) => b.score - a.score);
   const s = gameStats(g);
@@ -2866,7 +3177,10 @@ function Results({
     g: g
   }), React.createElement(GameLog, {
     g: g
-  }), React.createElement("button", {
+  }), onFlagPlayed && React.createElement("button", {
+    className: "btn btn-sm btn-flag",
+    onClick: onFlagPlayed
+  }, "\u26A0 ", t('flagPlayed')), React.createElement("button", {
     className: "btn btn-gold",
     onClick: onAgain
   }, t('playAgain')), React.createElement("p", {
@@ -2925,7 +3239,8 @@ function GameMenu({
   g,
   act,
   onClose,
-  onHome
+  onHome,
+  onFlagPlayed
 }) {
   const [ask, setAsk] = useState(null);
   const [fix, setFix] = useState(false);
@@ -2973,7 +3288,13 @@ function GameMenu({
   }, "\u23ED ", t('skipQ')), g.phase !== 'pick' && React.createElement("button", {
     className: "btn",
     onClick: () => setFix(true)
-  }, "\xB1 ", t('fixScores')), g.phase !== 'pick' && React.createElement("button", {
+  }, "\xB1 ", t('fixScores')), g.phase !== 'pick' && onFlagPlayed && React.createElement("button", {
+    className: "btn btn-flag",
+    onClick: () => {
+      onClose();
+      onFlagPlayed();
+    }
+  }, "\u26A0 ", t('flagPlayed')), g.phase !== 'pick' && React.createElement("button", {
     className: "btn btn-danger",
     onClick: () => setAsk('end')
   }, "\uD83C\uDFC1 ", t('endGame')), React.createElement("button", {
@@ -3239,6 +3560,238 @@ function CategoryPicker({
   }) : React.createElement("p", {
     className: "hint center"
   }, t('noMatch')));
+}
+const fmtDelta = d => (d > 0 ? '+' : '−') + Math.abs(d);
+const catName = (g, bank, id) => {
+  const c = catById(g, id) || bank && bank.cats.find(x => x.id === id);
+  return c ? pick(c.name) : id;
+};
+function WrongSheet({
+  g,
+  cellId,
+  ctx,
+  act,
+  onClose,
+  onDone
+}) {
+  const cell = cellById(g, cellId);
+  const qid = cell && cell.q && cell.q.id;
+  const [reason, setReason] = useState(null);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const plan = useMemo(() => {
+    if (!cell || !cell.q) return null;
+    const c = ctx();
+    const same = findReplacement(g, cell, c);
+    return {
+      refunds: invalidRefunds(g, cellId),
+      same,
+      options: same ? [] : replacementOptions(g, cell, c)
+    };
+  }, [cellId, qid]);
+  const [choice, setChoice] = useState(0);
+  if (!cell || !plan) return null;
+  const isCur = !!(g.current && g.current.cell === cellId);
+  const realCat = cell.q.cat;
+  const choices = plan.same ? [plan.same] : [...plan.options, 'empty'];
+  const chosen = choices[Math.min(choice, choices.length - 1)];
+  const refunding = plan.refunds.length > 0;
+  const go = () => {
+    if (busy) return;
+    setBusy(true);
+    const rec = {
+      qid,
+      reason: reason || 'other',
+      note,
+      replacement: chosen,
+      now: Date.now()
+    };
+    act(x => invalidateQuestion(x, cellId, rec));
+    onDone && onDone({
+      refunded: refunding,
+      cell,
+      rec,
+      refunds: plan.refunds,
+      replacement: chosen
+    });
+    onClose();
+  };
+  const yes = refunding ? chosen === 'empty' ? t('reverseAndEmpty') : t('reverseAndReplace') : chosen === 'empty' ? t('removeIt') : t('replaceIt');
+  return React.createElement(Sheet, {
+    onClose: onClose
+  }, React.createElement("div", {
+    className: "stack wrongsheet"
+  }, React.createElement("h2", {
+    className: "display",
+    style: {
+      fontSize: 28
+    }
+  }, "\u26A0 ", t('wrongTitle')), React.createElement("div", {
+    className: "card wq"
+  }, React.createElement("span", {
+    className: "small muted"
+  }, catName(g, null, cell.cat), " \xB7 ", cell.value), React.createElement(Txt, {
+    v: cell.q.q,
+    as: "p",
+    className: "wq-q"
+  })), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('wrongSub', {
+    v: cell.value
+  })), React.createElement("span", {
+    className: "label"
+  }, t('whyWrong')), React.createElement("div", {
+    className: "chips"
+  }, INVALID_REASONS.map(r => React.createElement("button", {
+    key: r,
+    className: 'chip' + (reason === r ? ' on' : ''),
+    "aria-pressed": reason === r,
+    onClick: () => setReason(reason === r ? null : r)
+  }, t('reason_' + r)))), React.createElement("input", {
+    className: "input",
+    dir: "auto",
+    maxLength: 300,
+    value: note,
+    placeholder: t('wrongNote'),
+    "aria-label": t('wrongNote'),
+    onChange: e => setNote(e.target.value)
+  }), React.createElement("div", {
+    className: 'card refundbox' + (refunding ? ' on' : '')
+  }, refunding ? React.createElement(React.Fragment, null, React.createElement("b", null, t('willRefund')), React.createElement("ul", null, plan.refunds.map((r, i) => {
+    const tm = teamById(g, r.team);
+    return React.createElement("li", {
+      key: i,
+      style: tStyle(tm)
+    }, React.createElement("span", {
+      className: "dot"
+    }), " ", React.createElement("span", {
+      dir: "auto"
+    }, t('refundLine', {
+      team: teamName(tm),
+      d: fmtDelta(r.delta)
+    })), " ", React.createElement("span", {
+      className: "muted num"
+    }, "(", tm.score, " \u2192 ", tm.score + r.delta, ")"));
+  }))) : React.createElement("span", null, t('noRefund'))), plan.same ? React.createElement("p", {
+    className: "repline"
+  }, "\uD83D\uDD01 ", t('repSame', {
+    v: cell.value,
+    cat: cell.cat === MIX_ID ? catName(g, null, MIX_ID) : catName(g, ctx().bank, realCat)
+  }), " ", isCur ? t('repSameNow') : t('repSameBoard')) : React.createElement("div", {
+    className: "stack-sm",
+    role: "radiogroup"
+  }, React.createElement("p", {
+    className: "warn",
+    style: {
+      margin: 0
+    }
+  }, t('repNone', {
+    cat: catName(g, ctx().bank, realCat),
+    v: cell.value
+  })), choices.map((c, i) => React.createElement("button", {
+    key: i,
+    role: "radio",
+    "aria-checked": choice === i,
+    className: 'optrow' + (choice === i ? ' on' : ''),
+    onClick: () => setChoice(i)
+  }, React.createElement("span", {
+    className: "radio",
+    "aria-hidden": "true"
+  }), React.createElement("span", {
+    className: "grow"
+  }, c === 'empty' ? React.createElement(React.Fragment, null, t('repEmpty'), isCur ? React.createElement("small", {
+    className: "muted"
+  }, " \xB7 ", t('repEmptyNow')) : null) : t(c.how === 'related' ? 'repRelated' : 'repBoard', {
+    v: cell.value,
+    cat: catName(g, ctx().bank, c.q.cat)
+  }))))), React.createElement("div", {
+    className: "row"
+  }, React.createElement("button", {
+    className: "btn btn-ghost grow",
+    onClick: onClose
+  }, t('cancel')), React.createElement("button", {
+    className: "btn btn-flag solid grow",
+    disabled: busy,
+    onClick: go
+  }, yes))));
+}
+function PlayedList({
+  g,
+  onPick,
+  onClose
+}) {
+  const order = {};
+  g.log.forEach((e, i) => {
+    if (e.cell && !e.void && e.kind !== 'invalid') order[e.cell] = i;
+  });
+  const played = g.cells.filter(c => c.status === 'done' && c.q && !isInvalidated(g, c.q.id)).sort((a, b) => (order[b.id] || 0) - (order[a.id] || 0));
+  return React.createElement(Sheet, {
+    onClose: onClose
+  }, React.createElement("div", {
+    className: "stack-sm"
+  }, React.createElement("h2", {
+    className: "display",
+    style: {
+      fontSize: 28
+    }
+  }, "\u26A0 ", t('flagPlayed')), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('flagPlayedSub')), !played.length && React.createElement("p", {
+    className: "hint center"
+  }, t('noPlayed')), played.map(c => {
+    const tm = c.result && c.result.team ? teamById(g, c.result.team) : null;
+    return React.createElement("button", {
+      key: c.id,
+      className: "optrow played",
+      onClick: () => onPick(c.id)
+    }, React.createElement("span", {
+      className: "pl-v num"
+    }, c.value), React.createElement("span", {
+      className: "grow"
+    }, React.createElement("span", {
+      className: "small muted"
+    }, catName(g, null, c.cat), tm ? ' · ' + teamName(tm) : ''), React.createElement(Txt, {
+      v: c.q.q,
+      as: "span",
+      className: "pl-q"
+    })));
+  }), React.createElement("button", {
+    className: "btn btn-ghost",
+    onClick: onClose
+  }, t('close'))));
+}
+const ISSUES_MAX = 500;
+function issueEntry(g, info) {
+  const c = info.cell;
+  const q = c.q;
+  return {
+    id: uid(),
+    at: info.rec.now,
+    gameId: g.id,
+    qid: q.id,
+    cat: q.cat,
+    tier: c.tier,
+    value: c.value,
+    type: q.type || 'text',
+    q: q.q,
+    a: q.a,
+    ref: q.ref || null,
+    pack: q.pack || null,
+    reason: info.rec.reason,
+    note: info.rec.note || '',
+    refunds: info.refunds,
+    replacement: info.replacement && info.replacement !== 'empty' ? info.replacement.q.id : null
+  };
+}
+function addIssue(list, entry) {
+  if ((list || []).some(x => x.gameId === entry.gameId && x.qid === entry.qid)) return list;
+  return [entry, ...(list || [])].slice(0, ISSUES_MAX);
 }
 const TV_CHANNEL = 'khatfa-tv';
 const tvUrl = () => location.origin + location.pathname + '#tv';
@@ -3567,7 +4120,10 @@ function SettingsScreen({
   onBack,
   bank,
   qhist,
-  onResetHistory
+  onResetHistory,
+  issues,
+  onClearIssues,
+  extra
 }) {
   const [ask, setAsk] = useState(null);
   const [msg, setMsg] = useState(null);
@@ -3680,7 +4236,62 @@ function SettingsScreen({
     onClick: () => setAsk({
       kind: 'hist'
     })
-  }, t('resetHistory'))), React.createElement("section", {
+  }, t('resetHistory'))), issues && React.createElement("section", {
+    className: "card stack"
+  }, React.createElement("h3", null, "\u26A0 ", t('issues')), React.createElement("p", {
+    className: "hint"
+  }, t('issuesSub'), " ", React.createElement("b", null, t('issuesN', {
+    n: issues.length
+  }))), React.createElement(Toggle, {
+    on: settings.skipReported !== false,
+    onChange: v => set('skipReported', v),
+    title: t('skipReported')
+  }), issues.length > 0 ? React.createElement("details", {
+    className: "issuelist"
+  }, React.createElement("summary", {
+    className: "label"
+  }, t('issuesN', {
+    n: issues.length
+  })), React.createElement("ol", null, issues.slice(0, 100).map(x => {
+    const c = bank && bank.cats.find(k => k.id === x.cat);
+    return React.createElement("li", {
+      key: x.id
+    }, React.createElement("span", {
+      className: "muted small"
+    }, c ? c.emoji + ' ' + pick(c.name) : x.cat, " \xB7 ", x.value, " \xB7 ", t('reason_' + (x.reason || 'other')), x.note ? ' · ' : ''), x.note ? React.createElement("bdi", {
+      dir: "auto",
+      className: "small"
+    }, x.note) : null, React.createElement(Txt, {
+      v: x.q,
+      as: "span",
+      className: "iq"
+    }), React.createElement("span", {
+      className: "small muted"
+    }, " \u2192 ", React.createElement(Txt, {
+      v: x.a
+    })));
+  }))) : React.createElement("p", {
+    className: "hint"
+  }, t('issuesNone')), React.createElement("div", {
+    className: "row"
+  }, React.createElement("button", {
+    className: "btn grow",
+    disabled: !issues.length,
+    onClick: () => downloadBlob(new Blob([JSON.stringify({
+      app: 'khatfa',
+      kind: 'reported-questions',
+      exportedAt: new Date().toISOString(),
+      issues
+    }, null, 1)], {
+      type: 'application/json'
+    }), 'khatfa-reported-' + todayStamp() + '.json')
+  }, "\u2B07 ", t('exportIssues')), React.createElement("button", {
+    className: "btn btn-ghost grow",
+    disabled: !issues.length,
+    onClick: () => setAsk({
+      kind: 'issues'
+    })
+  }, t('clearIssues')))), extra, React.createElement("section", {
     className: "card stack"
   }, React.createElement("h3", null, t('backup')), React.createElement("p", {
     className: "hint"
@@ -3740,6 +4351,12 @@ function SettingsScreen({
     yes: t('resetHistory'),
     onYes: onResetHistory,
     onClose: () => setAsk(null)
+  }), ask && ask.kind === 'issues' && React.createElement(Confirm, {
+    title: t('clearIssuesQ'),
+    body: t('clearIssuesBody'),
+    yes: t('clearIssues'),
+    onYes: onClearIssues,
+    onClose: () => setAsk(null)
   }), ask && ask.kind === 'clear' && React.createElement(Confirm, {
     title: t('clearAllQ'),
     body: t('clearAllBody'),
@@ -3766,7 +4383,8 @@ const DEFAULT_SETTINGS = {
   motion: 'system',
   tvZoom: 1,
   rules: null,
-  lastTeams: null
+  lastTeams: null,
+  skipReported: true
 };
 function applyDocLang(lang) {
   const el = document.documentElement;
@@ -3792,6 +4410,16 @@ function App() {
   const [sheet, setSheet] = useState(null);
   const [tvHere, setTvHere] = useState(false);
   const [toast, setToast] = useState(null);
+  const [wrongCell, setWrongCell] = useState(null);
+  const [playedList, setPlayedList] = useState(false);
+  const [issues, setIssuesRaw] = useState([]);
+  const issuesRef = useRef(issues);
+  issuesRef.current = issues;
+  const setIssues = l => {
+    issuesRef.current = l;
+    setIssuesRaw(l);
+    store.set(K.issues, l);
+  };
   const tvRoute = typeof location !== 'undefined' && /^#tv\b/.test(location.hash);
   useEffect(() => {
     store.onError = key => setToast({
@@ -3812,6 +4440,11 @@ function App() {
         histRef.current = h;
         setQhistRaw(h);
       }
+      const iss = store.get(K.issues, []);
+      if (Array.isArray(iss)) {
+        issuesRef.current = iss;
+        setIssuesRaw(iss);
+      }
       setReady(true);
     });
   }, []);
@@ -3821,6 +4454,8 @@ function App() {
     document.documentElement.setAttribute('data-motion', settings.motion || 'system');
     document.documentElement.style.setProperty('--tvzoom', String(settings.tvZoom || 1));
   }, [settings.lang, settings.motion, settings.tvZoom]);
+  const latestSettings = useRef(settings);
+  latestSettings.current = settings;
   const setSettings = s => {
     setLang(s.lang);
     setSettingsRaw(s);
@@ -3849,10 +4484,12 @@ function App() {
     });
   };
   const act = fn => setGame(g => g ? fn(g) : g);
+  const reportedIds = () => latestSettings.current.skipReported !== false ? issuesRef.current.map(x => x.qid) : [];
   const ctx = () => ({
     bank: BANK,
     recent: histRef.current.seen,
-    rand: Math.random
+    rand: Math.random,
+    exclude: reportedIds()
   });
   const begin = g => {
     if (g.rules.randomCats) {
@@ -3907,6 +4544,7 @@ function App() {
     setPast(d.past || []);
     store.set(K.past, d.past || []);
     store.set(K.packs, d.packs || []);
+    setIssues(Array.isArray(d.issues) ? d.issues : []);
     if (d.history) setQhist(d.history);
   };
   const clearAll = () => {
@@ -3915,9 +4553,21 @@ function App() {
     setLang(DEFAULT_SETTINGS.lang);
     setGameRaw(null);
     setPast([]);
+    issuesRef.current = [];
+    setIssuesRaw([]);
     histRef.current = emptyHistory();
     setQhistRaw(emptyHistory());
     setScreen('home');
+  };
+  const onWrongDone = info => {
+    setIssues(addIssue(issuesRef.current, issueEntry(game, info)));
+    setToast({
+      text: info.refunded ? t('wrongDoneRefund') : t('wrongDone'),
+      ok: true
+    });
+    sendTv({
+      kind: 'invalid'
+    });
   };
   let view;
   if (screen === 'settings') view = React.createElement(SettingsScreen, {
@@ -3928,8 +4578,11 @@ function App() {
       game,
       past,
       packs: store.get(K.packs, []),
-      history: qhist
+      history: qhist,
+      issues
     },
+    issues: issues,
+    onClearIssues: () => setIssues([]),
     onRestore: restore,
     onClearAll: clearAll,
     bank: BANK,
@@ -3954,7 +4607,8 @@ function App() {
       ctx,
       bank: BANK,
       onMenu: () => setSheet('menu'),
-      onTv: () => setSheet('tv')
+      onTv: () => setSheet('tv'),
+      onWrong: id => setWrongCell(id)
     };
     if (tvHere) view = React.createElement(React.Fragment, null, React.createElement(TvView, {
       g: game,
@@ -3968,7 +4622,8 @@ function App() {
       g: game,
       act: act,
       onHome: goHome,
-      onAgain: playAgain
+      onAgain: playAgain,
+      onFlagPlayed: () => setPlayedList(true)
     });
   } else view = React.createElement(Home, {
     game: game,
@@ -3993,7 +4648,22 @@ function App() {
     g: game,
     act: act,
     onClose: () => setSheet(null),
-    onHome: goHome
+    onHome: goHome,
+    onFlagPlayed: () => setPlayedList(true)
+  }), playedList && game && React.createElement(PlayedList, {
+    g: game,
+    onClose: () => setPlayedList(false),
+    onPick: id => {
+      setPlayedList(false);
+      setWrongCell(id);
+    }
+  }), wrongCell && game && React.createElement(WrongSheet, {
+    g: game,
+    cellId: wrongCell,
+    ctx: ctx,
+    act: act,
+    onClose: () => setWrongCell(null),
+    onDone: onWrongDone
   }), sheet === 'tv' && React.createElement(TvSheet, {
     onClose: () => setSheet(null),
     onHere: () => setTvHere(true)
@@ -4001,6 +4671,7 @@ function App() {
     onClose: () => setSheet(null)
   }), toast && React.createElement(Toast, {
     msg: toast.text,
+    ok: toast.ok,
     onClose: () => setToast(null)
   })));
 }
@@ -4052,6 +4723,14 @@ if (window.__KH_TEST__) window.__KH = {
   openCells,
   isBoardDone,
   tvGame,
+  invalidateQuestion,
+  invalidRefunds,
+  findReplacement,
+  replacementOptions,
+  isInvalidated,
+  addIssue,
+  issueEntry,
+  gameUsed,
   makeBackup,
   validateBackup,
   t,

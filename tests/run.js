@@ -132,6 +132,7 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     ok(KH.winners({ teams: [{ id: 'a', score: 5 }, { id: 'b', score: 5 }] }).length === 0, 'equal scores = a draw');
   }
   await require('./bank-rules.js')({ ok, boot });
+  await require('./wrong-rules.js')({ ok, boot });
 
   /* ---------------- language ---------------- */
   console.log('Language');
@@ -222,7 +223,7 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
 
     // wrong → steal
     await click(w, d.querySelectorAll('.tile.open')[3]);
-    await click(w, btn(d, 'Wrong'));
+    await click(w, d.querySelector('.btn-wrong'));
     await closeFlash(w, d);
     ok(/Steal chance: الأبطال/.test(text(d)) && !!btn(d, 'Stolen'), 'wrong answer opens a steal chance for the other team');
     await click(w, btn(d, 'Stolen'));
@@ -235,7 +236,7 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     await click(w, d.querySelector('.tile.open'));
     await sleep(30 * 1000 * 0.02 + 400);
     ok(/Time’s up/.test(d.querySelector('.clock').textContent), 'when the clock runs out it says “Time’s up!”');
-    await click(w, btn(d, 'Wrong')); await closeFlash(w, d);
+    await click(w, d.querySelector('.btn-wrong')); await closeFlash(w, d);
     await click(w, btn(d, 'Missed')); await closeFlash(w, d);
     ok(/No points this time/.test(text(d)), 'missed steal: no points');
     await click(w, btn(d, 'Back to the board'));
@@ -269,6 +270,38 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     ok(!!btn(r2.d, 'Continue game') && /33 questions left/.test(text(r2.d)), 'after a reload, home offers “Continue game”');
     await click(r2.w, btn(r2.d, 'Continue game'));
     ok(r2.d.querySelectorAll('.tile.done').length === 3, 'continuing restores the board exactly');
+
+    // "This is wrong" on an answered question: exact refund, replacement, logged
+    await click(w, d.querySelector('.tile.open'));
+    const qBefore = d.querySelector('.qtext').textContent;
+    const pre = KH.store.get('kh_current_v1').teams.map((x) => x.score);
+    const turnIdx = KH.store.get('kh_current_v1').teams.findIndex((x) => x.id === KH.store.get('kh_current_v1').current.team);
+    await click(w, d.querySelector('.btn-right')); await closeFlash(w, d);
+    const val = KH.store.get('kh_current_v1').cells.find((c) => c.id === KH.store.get('kh_current_v1').current.cell).value;
+    ok(KH.store.get('kh_current_v1').teams[turnIdx].score === pre[turnIdx] + val, 'setup: a correct answer added ' + val);
+    ok(!!btn(d, 'This is wrong') && d.querySelector('.wrongbtn').classList.contains('btn-flag'), '“This is wrong” is on the question screen, styled apart from the scoring buttons');
+    await click(w, btn(d, 'This is wrong'));
+    ok(/These score changes will be reversed/.test(text(d)) && /−/.test(d.querySelector('.refundbox').textContent), 'the sheet shows exactly which points will be reversed');
+    await click(w, btn(d, 'Wrong answer'));
+    await click(w, btn(d, 'Reverse points and replace'));
+    const after = KH.store.get('kh_current_v1');
+    ok(after.teams.map((x) => x.score).join() === pre.join(), 'confirming restores both teams to their scores before that question');
+    ok(after.phase === 'question' && after.current.stage === 'answer' && d.querySelector('.qtext').textContent !== qBefore, 'a replacement question opens straight away');
+    ok(/points reversed/.test(text(d)), 'the host sees a short confirmation');
+    ok(KH.store.get('kh_issues_v1', []).length === 1 && KH.store.get('kh_issues_v1')[0].reason === 'answer', 'the flagged question is saved to the reported list with its reason');
+    await click(w, btn(d, 'This is wrong'));
+    ok(/nothing needs refunding/.test(text(d)), 'flagging the replacement before anyone answers: nothing to refund');
+    await click(w, btn(d, 'Cancel'));
+    await click(w, d.querySelector('.btn-wrong')); await closeFlash(w, d);
+    await click(w, btn(d, 'Missed')); await closeFlash(w, d);
+    await click(w, btn(d, 'Back to the board'));
+    // a played question, from the menu
+    const doneBefore = d.querySelectorAll('.tile.done').length;
+    await click(w, d.querySelector('[aria-label="Menu"]'));
+    await click(w, btn(d, 'A played question was wrong'));
+    await click(w, d.querySelector('.optrow.played'));
+    await click(w, btn(d, 'Remove and replace'));
+    ok(d.querySelectorAll('.tile.done').length === doneBefore - 1 && !!d.querySelector('.board'), 'a played question can be flagged from the menu: its tile reopens with a replacement');
 
     // end the game
     await click(w, d.querySelector('[aria-label="Menu"]'));

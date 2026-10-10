@@ -395,3 +395,30 @@ html[lang="ar"] .qh-val,html[lang="ar"] .ck-n,html[lang="ar"] .stat .v,html[lang
 .cbadge.pop{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 50%,var(--line))}
 .cbadge.niche{color:#ff9aa8}
 .cbadge.big{color:var(--teal)}
+
+/* "This is wrong" */
+.btn-flag{border-color:#ff9a3d;color:#ffb36b;background:transparent}
+.btn-flag.solid{background:#ff9a3d;border-color:#ff9a3d;color:#2a1400;box-shadow:0 5px 0 #c9661b}
+.btn-flag:disabled{opacity:.5}
+.wrongbtn{align-self:center;min-height:40px;border-style:dashed}
+.chip{min-height:38px;padding:6px 12px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--muted);font-weight:700;font-size:14px}
+.chip.on{background:#ff9a3d;border-color:#ff9a3d;color:#2a1400}
+.wq{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.wq-q{margin:0;font-weight:700}
+.refundbox{padding:10px 12px;font-size:15px}
+.refundbox.on{border-color:#ff9a3d}
+.refundbox ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.refundbox .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.repline{margin:0;font-weight:600}
+.optrow{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:10px 12px;border-radius:14px;border:2px solid var(--line);background:var(--panel);font-size:15px}
+.optrow.on{border-color:var(--gold)}
+.optrow .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--muted);flex:none}
+.optrow.on .radio{border:6px solid var(--gold)}
+.optrow.played .pl-v{min-width:48px;font-family:var(--display);font-size:22px;color:var(--gold)}
+.optrow .pl-q{display:block;font-weight:600}
+.tile.empty.invalid{border-color:#ff9a3d;color:#ffb36b}
+.glog .lg-invalid{color:#ffb36b}
+.glog .lg-void>span[dir]{text-decoration:line-through;opacity:.7}
+.flash.k-invalid .big{color:#ff9a3d;font-size:clamp(44px,12vw,96px)}
+.issuelist ol{margin:8px 0 0;padding-inline-start:20px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.issuelist .iq{display:block;font-weight:600}
