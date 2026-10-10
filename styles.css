@@ -1,4 +1,4 @@
-/* Khatfa 9b0be6e83e — built from src/styles.css */
+/* Khatfa 25dff7b993 — built from src/styles.css */
 /* Khatfa — same "game night" family as Draft Night: ink/purple stage, gold accents, condensed headings.
    Khatfa's own accent is electric teal (the "snatch" colour). Written with logical properties so
    Arabic (RTL) and English (LTR) both lay out correctly. Fonts are self-hosted (SIL OFL). */
@@ -342,3 +342,57 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 /* Arabic letters inside display-font labels need Cairo's heavy weight (Anton has no Arabic) */
 html[lang="ar"] .qh-val,html[lang="ar"] .ck-n,html[lang="ar"] .stat .v,html[lang="ar"] .topbar .title{font-weight:900}
 .qh-val{white-space:nowrap}
+
+/* ---------- categories: browser, picker, counts ---------- */
+.tiercounts{display:inline-flex;gap:3px;flex:none}
+.tc{min-width:24px;padding:1px 5px;border-radius:7px;text-align:center;font-family:var(--cond);font-weight:800;font-size:12px;line-height:1.5;background:var(--panel2);border:1px solid var(--line)}
+.tc.t1{color:#ffe08a}.tc.t2{color:#ffb15c}.tc.t3{color:#ff7a8a}
+.tc.short{background:color-mix(in srgb,var(--danger) 25%,var(--panel2));border-color:var(--danger);color:#fff}
+.catbrowser input[type=search]{position:sticky;top:-10px;z-index:3;box-shadow:0 -12px 0 var(--stage),0 8px 12px -6px var(--stage)}
+.fchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin-inline:-2px;-webkit-overflow-scrolling:touch}
+.fchips::-webkit-scrollbar{display:none}
+.fchip{flex:none;white-space:nowrap;min-height:38px;padding:6px 13px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--muted);font-family:var(--cond);font-weight:800;font-size:14px;cursor:pointer}
+.fchip.on{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+.tvmode .fchips{display:none}
+@media (min-width:900px){.fchips{flex-wrap:wrap;overflow:visible}}
+.cgroup{border:2px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.cg-head{display:flex;align-items:center;gap:8px;padding-inline-end:10px}
+.cg-title{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:12px;text-align:start}
+.cg-title b{font-family:var(--cond);font-weight:800;font-size:18px}
+.cg-em{font-size:22px}
+.cg-body{padding:0 10px 10px}
+.mini-sw{width:52px;height:30px;border-radius:99px;border:0;background:var(--line);position:relative;flex:none}
+.mini-sw span{position:absolute;top:3px;inset-inline-start:3px;width:24px;height:24px;border-radius:50%;background:var(--text);transition:transform .2s}
+.mini-sw[aria-checked="true"]{background:var(--ok)}
+.mini-sw[aria-checked="true"] span{transform:translateX(22px)}
+[dir="rtl"] .mini-sw[aria-checked="true"] span{transform:translateX(-22px)}
+.crow{border-radius:12px;background:var(--stage);border:2px solid var(--line)}
+.crow.off{opacity:.55}
+.crow-main{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;background:none;border:0;text-align:start}
+.cr-em{font-size:22px;flex:none}
+.cr-txt{display:flex;flex-direction:column;min-width:0}
+.cr-name{font-weight:700;line-height:1.2}
+.cr-check{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;font-weight:900;flex:none}
+.cr-check.on{background:var(--ok);border-color:var(--ok);color:#06210f}
+.cr-subbtn{display:block;margin:0 10px 8px;padding:2px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);font-size:12px;font-weight:700;color:var(--muted)}
+.sublist{margin:0 10px 10px;padding-inline-start:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.sublist li{display:flex;justify-content:space-between;gap:8px}
+.catcard .tiercounts{margin-top:2px}
+.catcard.short{opacity:.45}
+.catcard.short .cc-n{color:var(--danger);font-weight:700}
+.picked{gap:6px}
+.pchip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:700;background:color-mix(in srgb,var(--c) 30%,var(--panel));border:2px solid var(--c)}
+.tile.locked{background:var(--panel2);color:var(--dim);border-color:var(--line);box-shadow:none}
+.tile.locked i,.tile.empty i{position:absolute;top:1px;inset-inline-end:5px;font-style:normal;font-size:11px}
+.tile.empty{font-size:16px}
+.boardnote{border-color:var(--gold);padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.boardnote p{margin:0}
+.boardnote .btn{align-self:flex-end}
+.aalt{margin:0;font-size:14px;color:#4a4064}
+.aalt b{font-weight:800}
+.cbadges{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:2px}
+.cr-txt .cbadges{justify-content:flex-start}
+.cbadge{font-family:var(--cond);font-weight:800;font-size:11px;padding:0 7px;border-radius:99px;line-height:1.6;border:1px solid var(--line);background:var(--panel2)}
+.cbadge.pop{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 50%,var(--line))}
+.cbadge.niche{color:#ff9aa8}
+.cbadge.big{color:var(--teal)}

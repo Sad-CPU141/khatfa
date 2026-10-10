@@ -11,7 +11,7 @@ let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  ✓ ' + msg); else { failures++; console.log('  ✗ ' + msg); } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function boot({ idb = true, storage, speed, url, bc } = {}) {
+async function boot({ idb = true, storage, speed, url, bc, navLang } = {}) {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/<script[^>]*src="[^"]*"[^>]*><\/script>/g, '').replace(/<link[^>]*>/g, '');
   const dom = new JSDOM(html, { url: url || 'https://sad-cpu141.github.io/khatfa/', runScripts: 'outside-only', pretendToBeVisual: true });
   const w = dom.window;
@@ -19,6 +19,7 @@ async function boot({ idb = true, storage, speed, url, bc } = {}) {
   w.addEventListener('error', (e) => console.log('    PAGE ERROR:', e.error && (e.error.stack || e.error.message)));
   w.console.error = (...a) => { console.log('    CONSOLE.ERROR:', String(a[0]).slice(0, 400), a[0] && a[0].stack ? a[0].stack.slice(0, 600) : ''); };
   if (speed) w.__KH_TEST_SPEED = speed;
+  if (navLang) { Object.defineProperty(w.navigator, 'language', { value: navLang, configurable: true }); Object.defineProperty(w.navigator, 'languages', { value: [navLang], configurable: true }); }
   if (bc) w.BroadcastChannel = globalThis.BroadcastChannel;
   w.matchMedia = () => ({ matches: false, addListener() {}, removeListener() {} });
   w.scrollTo = () => {};
@@ -26,7 +27,7 @@ async function boot({ idb = true, storage, speed, url, bc } = {}) {
   w.URL.createObjectURL = () => 'blob:test'; w.URL.revokeObjectURL = () => {};
   if (idb) { const fake = require('fake-indexeddb'); w.indexedDB = fake.indexedDB; w.IDBKeyRange = fake.IDBKeyRange; }
   if (storage) Object.entries(storage).forEach(([k, v]) => w.localStorage.setItem(k, v));
-  for (const f of ['vendor/react.production.min.js', 'vendor/react-dom.production.min.js', 'app.js']) w.eval(fs.readFileSync(path.join(root, f), 'utf8'));
+  for (const f of ['vendor/react.production.min.js', 'vendor/react-dom.production.min.js', 'bank.js', 'app.js']) w.eval(fs.readFileSync(path.join(root, f), 'utf8'));
   await sleep(150);
   return { dom, w, d: w.document, KH: w.__KH };
 }
@@ -40,29 +41,22 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
   console.log('Game rules');
   {
     const { KH } = await boot();
-    const P = KH.SAMPLE_PACK;
+    const B = KH.BANK;
     const teams = [{ name: 'A' }, { name: 'B' }];
-    // Every sample question is well formed and bilingual.
-    const qs = P.categories.flatMap((c) => c.questions);
-    ok(qs.every((q) => q.q.ar && q.q.en && q.a.ar && q.a.en && [1, 2, 3].includes(q.tier)), 'sample pack: all ' + qs.length + ' questions have Arabic + English question and answer, and a tier');
-    ok(new Set(qs.map((q) => q.id)).size === qs.length, 'sample pack: question ids are unique');
-    ok(P.categories.every((c) => [1, 2, 3].every((tier) => c.questions.filter((q) => q.tier === tier).length >= 2)), 'sample pack: every category has 2 questions per tier');
-
-    let g = KH.createGame(P, teams, {}, 1000);
-    ok(g.phase === 'pick' && g.rules.values.join() === '200,400,600' && g.rules.perValue === 2 && g.rules.catsPerTeam === 3, 'defaults: 200/400/600, 2 per value, 3 categories per team');
-    ok(g.rules.steals === true && g.rules.wrongPenalty === false, 'defaults: steals on, wrong-answer penalty (a modifier) off');
+    const ctx = { bank: B, recent: {} };
+    const board = (rules) => { let g = KH.createGame(B, teams, rules || {}, 0); for (let i = 0; i < 20 && g.phase === 'pick'; i++) g = KH.randomPick(g, ctx); return g; };
+    let g = KH.createGame(B, teams, {}, 1000);
+    ok(g.phase === 'pick' && g.rules.perValue === 2 && g.rules.catsPerTeam === 3, 'defaults: 2 per value, 3 categories per team');
+    ok(g.rules.steals === true && g.rules.wrongPenalty === false && g.rules.curve === 'standard' && !g.rules.niche && !g.rules.nicheOnly && !g.rules.strict && !g.rules.mixed && !g.rules.randomCats && !g.rules.progressive, 'defaults: steals on; every optional setting off / standard');
     ok(KH.pickingTeam(g).id === 't0', 'team 1 picks first');
-    g = KH.pickCategory(g, 'c-geo');
+    g = KH.pickCategory(g, 'capitals', ctx);
     ok(KH.pickingTeam(g).id === 't1', 'teams alternate picks');
-    ok(KH.pickCategory(g, 'c-geo') === g, 'a category can’t be picked twice');
+    ok(KH.pickCategory(g, 'capitals', ctx) === g, 'a category can’t be picked twice');
     g = KH.undo(g);
     ok(g.cats.length === 0 && KH.pickingTeam(g).id === 't0', 'undo takes a pick back');
-    ['c-geo', 'c-sci', 'c-ani', 'c-num', 'c-arb', 'c-food'].forEach((id) => { g = KH.pickCategory(g, id); });
-    ok(g.phase === 'board' && g.cells.length === 36, 'after 6 picks the board has 6 categories × 6 questions');
-    ok(g.cats.filter((c) => c.by === 't0').length === 3 && g.cats.filter((c) => c.by === 't1').length === 3, 'each team picked 3 categories');
-    ok(g.cells.every((c) => c.q && c.q.tier === c.tier && c.value === [200, 400, 600][c.tier - 1]), 'every cell has a question of the right difficulty and value');
-    ok(new Set(g.cells.map((c) => c.q.id)).size === 36, 'no question appears twice on the board');
-
+    g = board();
+    ok(g.phase === 'board' && g.cells.length === 36 && g.cells.every((c) => c.q), 'after 6 picks the board has 36 questions');
+    ok(!JSON.stringify(g).includes('"questions"'), 'the saved game holds only its own 36 questions, not the whole bank');
     // correct answer
     const t0 = 50000;
     let c = g.cells.find((x) => x.value === 400);
@@ -75,60 +69,46 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     ok(g.teams[0].score === 400 && g.current.stage === 'reveal' && g.current.result.kind === 'correct', 'correct: +400 to the answering team, answer revealed');
     g = KH.finishQuestion(g, t0 + 20000);
     ok(g.phase === 'board' && KH.turnTeam(g).id === 't1' && g.cells.find((x) => x.id === c.id).status === 'done', 'after the question the turn passes and the tile is used');
-
-    // wrong → steal → stolen
     c = g.cells.find((x) => x.status === 'open' && x.value === 600);
-    g = KH.openCell(g, c.id, t0);
-    g = KH.markWrong(g, t0 + 5000);
+    g = KH.openCell(g, c.id, t0); g = KH.markWrong(g, t0 + 5000);
     ok(g.current.stage === 'steal' && g.current.team === 't0' && g.current.endsAt === t0 + 5000 + 15000, 'wrong: the other team gets a 15s steal chance');
     ok(g.teams[1].score === 0, 'no penalty by default');
     g = KH.markCorrect(g);
     ok(g.teams[0].score === 1000 && g.current.result.kind === 'stolen', 'stolen: the stealing team gets the 600');
     g = KH.finishQuestion(g, t0);
     ok(KH.turnTeam(g).id === 't0', 'turn order is unaffected by steals');
-
-    // wrong → steal missed
     c = KH.openCells(g)[0];
     g = KH.openCell(g, c.id, t0); g = KH.markWrong(g, t0); g = KH.markWrong(g, t0);
     ok(g.current.stage === 'reveal' && g.current.result.kind === 'missed' && g.teams.map((x) => x.score).join() === '1000,0', 'a missed steal gives nobody points');
     g = KH.finishQuestion(g, t0);
-    // put back / skip
     c = KH.openCells(g)[0];
     const before = KH.turnTeam(g).id;
     g = KH.putBack(KH.openCell(g, c.id, t0));
     ok(g.phase === 'board' && g.cells.find((x) => x.id === c.id).status === 'open' && KH.turnTeam(g).id === before, 'putting a question back leaves it open and keeps the same team’s turn');
     g = KH.finishQuestion(KH.skipQuestion(KH.openCell(g, c.id, t0)), t0);
     ok(g.cells.find((x) => x.id === c.id).status === 'done' && g.log[g.log.length - 1].kind === 'skipped', 'skipping uses the question up with no points');
-    // penalty modifier
-    let gp = KH.createGame(P, teams, { wrongPenalty: true }, 0);
-    gp = KH.randomPick(KH.randomPick(KH.randomPick(KH.randomPick(KH.randomPick(KH.randomPick(gp))))));
+    let gp = board({ wrongPenalty: true });
     const c2 = gp.cells.find((x) => x.value === 200);
     gp = KH.markWrong(KH.openCell(gp, c2.id, 0), 0);
     ok(gp.teams[0].score === -200 && gp.current.stage === 'steal', 'with the penalty modifier on, a wrong answer loses the value (then the steal still happens)');
     gp = KH.markCorrect(gp);
     ok(gp.teams[1].score === 200, '…and a steal never loses points');
-    // steals off
-    let gs = KH.createGame(P, teams, { steals: false }, 0);
-    for (let i = 0; i < 6; i++) gs = KH.randomPick(gs);
+    let gs = board({ steals: false });
     gs = KH.markWrong(KH.openCell(gs, gs.cells[0].id, 0), 0);
     ok(gs.current.stage === 'reveal', 'with steals off, a wrong answer goes straight to the answer');
-    // undo + adjust
     let gu = KH.adjustScore(g, 't1', 200, 0);
     ok(gu.teams[1].score === 200 && gu.log[gu.log.length - 1].kind === 'adjust', 'fix scores adds to the score and to the log');
     ok(KH.undo(gu).teams[1].score === 0, 'undo reverts a score fix');
-    // per value 1, 2 categories each
-    let g1 = KH.createGame(P, teams, { perValue: 1, catsPerTeam: 2 }, 0);
-    for (let i = 0; i < 4; i++) g1 = KH.randomPick(g1);
+    const g1 = board({ perValue: 1, catsPerTeam: 2 });
     ok(g1.phase === 'board' && g1.cells.length === 12, '1 question per value, 2 categories each → 12 tiles');
 
-    // 300 random games: always finish, scores add up, no tile reused
     let stuck = 0, badSum = 0, reused = 0;
     for (let run = 0; run < 300; run++) {
-      let r = KH.createGame(P, run % 5 === 0 ? [{ name: 'A' }, { name: 'B' }, { name: 'C' }] : teams, { perValue: 1 + (run % 2), catsPerTeam: 1 + (run % 2), wrongPenalty: run % 3 === 0, steals: run % 7 !== 0 }, 0);
+      let r = KH.createGame(B, run % 5 === 0 ? [{ name: 'A' }, { name: 'B' }, { name: 'C' }] : teams, { perValue: 1 + (run % 2), catsPerTeam: 1 + (run % 2), wrongPenalty: run % 3 === 0, steals: run % 7 !== 0, curve: ['standard', 'steep', 'brutal'][run % 3], mixed: run % 4 === 0, progressive: run % 6 === 0, minTier: run % 9 === 0 ? 2 : 1 }, 0);
       let steps = 0;
-      while (r.phase !== 'done' && steps++ < 2000) {
-        if (r.phase === 'pick') { r = KH.randomPick(r); continue; }
-        if (r.phase === 'board') { const open = KH.openCells(r); r = KH.openCell(r, open[Math.floor(Math.random() * open.length)].id, 0); continue; }
+      while (r.phase !== 'done' && steps++ < 3000) {
+        if (r.phase === 'pick') { r = KH.randomPick(r, ctx); continue; }
+        if (r.phase === 'board') { const open = KH.openCells(r).filter((x) => !KH.isLocked(r, x)); r = KH.openCell(r, open[Math.floor(Math.random() * open.length)].id, 0); continue; }
         const x = Math.random();
         if (r.current.stage === 'reveal') r = x < 0.05 ? KH.undo(r) : KH.finishQuestion(r, 0);
         else if (x < 0.4) r = KH.markCorrect(r); else if (x < 0.9) r = KH.markWrong(r, 0); else if (x < 0.95) r = KH.skipQuestion(r); else r = KH.putBack(r);
@@ -141,22 +121,17 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
       if (new Set(cells).size !== cells.length) reused++;
       KH.gameStats(r); KH.winners(r);
     }
-    ok(stuck === 0, '300 random games (2–3 teams, all rule mixes, undo/skip/put back) all finish');
+    ok(stuck === 0, '300 random games (2–3 teams, every setting mixed in, undo/skip/put back) all finish');
     ok(badSum === 0, 'final scores always match the game log');
     ok(reused === 0, 'no tile is ever played twice');
-
-    // TV never receives unrevealed answers
-    let gt = KH.createGame(P, teams, {}, 0); for (let i = 0; i < 6; i++) gt = KH.randomPick(gt);
-    gt = KH.openCell(gt, gt.cells[0].id, 0);
+    let gt = board(); gt = KH.openCell(gt, gt.cells[0].id, 0);
     const tv = KH.tvGame(gt);
-    ok(!tv.history && tv.cells.every((c) => !c.q.a), 'the TV copy has no answers while the question is open');
+    ok(!tv.history && tv.cells.every((x) => !x.q.a && !x.q.alt && !x.q.hint), 'the TV copy has no answers, accepted answers or hints while the question is open');
     gt = KH.markCorrect(gt);
     ok(KH.tvGame(gt).cells[0].q.a && KH.tvGame(gt).cells[1].q.a === null, 'after marking, the TV gets only that question’s answer');
-
-    // results
-    const w = KH.winners({ teams: [{ id: 'a', score: 5 }, { id: 'b', score: 5 }] });
-    ok(w.length === 0, 'equal scores = a draw');
+    ok(KH.winners({ teams: [{ id: 'a', score: 5 }, { id: 'b', score: 5 }] }).length === 0, 'equal scores = a draw');
   }
+  await require('./bank-rules.js')({ ok, boot });
 
   /* ---------------- language ---------------- */
   console.log('Language');
@@ -170,10 +145,13 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
   }
 
   /* ---------------- click-through ---------------- */
-  console.log('Click-through (Arabic first, then English)');
+  console.log('Click-through (language follows the device, then switching)');
   {
-    const { w, d, KH } = await boot({ speed: 0.02 });
-    ok(d.documentElement.getAttribute('dir') === 'rtl' && d.documentElement.getAttribute('lang') === 'ar', 'opens in Arabic, right-to-left');
+    const E = await boot({ idb: false, navLang: 'en-GB' });
+    ok(E.d.documentElement.getAttribute('dir') === 'ltr' && E.d.documentElement.getAttribute('lang') === 'en' && !!btn(E.d, 'New game'), 'an English (or any non-Arabic) device opens in English, left-to-right');
+    E.w.close();
+    const { w, d, KH } = await boot({ speed: 0.02, navLang: 'ar-SA' });
+    ok(d.documentElement.getAttribute('dir') === 'rtl' && d.documentElement.getAttribute('lang') === 'ar', 'an Arabic device opens in Arabic, right-to-left');
     ok(/خطفة/.test(text(d)) && !!btn(d, 'لعبة جديدة'), 'home screen shows the logo and “New game”');
     await click(w, btn(d, 'English'));
     ok(d.documentElement.getAttribute('dir') === 'ltr' && !!btn(d, 'New game'), 'one tap switches to English, left-to-right');
@@ -189,12 +167,36 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     await setVal(names[1], '');
     ok(!btn(d, 'Pick categories') && /Give every team a name/.test(text(d)), 'a blank team name blocks the start, with a reason');
     await setVal(names[1], 'Night Owls');
-    await click(w, d.querySelector('.rtitle'));
-    ok(/Wrong answers lose points/.test(text(d)) && d.querySelectorAll('.rbody .toggle')[1].getAttribute('aria-pressed') === 'false' && d.querySelectorAll('.rbody .toggle')[0].getAttribute('aria-pressed') === 'true', 'house rules open: steals on, the optional modifier off');
+    const sec = (t) => [...d.querySelectorAll('.rtitle')].find((b) => b.textContent.includes(t));
+    await click(w, sec('House rules'));
+    ok(d.querySelector('.rbody .toggle').getAttribute('aria-pressed') === 'true' && /always 200 \(easy\), 400 \(hard\) and 600/.test(text(d)), 'house rules: points fixed at 200/400/600, steals on');
+    await click(w, sec('Difficulty'));
+    ok(/Standard/.test(text(d)) && [...d.querySelectorAll('.rbody .toggle')].slice(1).every((x) => x.getAttribute('aria-pressed') === 'false'), 'difficulty: Standard curve, niche / strict / progressive all off');
+    await click(w, sec('Optional modifiers'));
+    ok(/Wrong answers lose points/.test(text(d)) && [...d.querySelectorAll('.toggle')].find((x) => /Wrong answers lose/.test(x.textContent)).getAttribute('aria-pressed') === 'false', 'the optional modifier is off');
+    ok([...d.querySelectorAll('.toggle')].filter((x) => /Random categories|Mixed categories/.test(x.textContent)).every((x) => x.getAttribute('aria-pressed') === 'false'), 'random and mixed categories are off');
+    // category browser: search, switch one off
+    await click(w, btn(d, 'Choose categories'));
+    const search = d.querySelector('.catbrowser input[type=search]');
+    await setVal(search, 'formula');
+    ok(d.querySelectorAll('.crow').length === 1 && /Formula 1/.test(d.querySelector('.crow').textContent), 'searching categories finds Formula 1');
+    ok(/\d+/.test(d.querySelector('.crow .tiercounts').textContent), 'each category shows its real question counts per value');
+    await click(w, d.querySelector('.crow-main'));
+    ok(d.querySelector('.crow').classList.contains('off'), 'a category can be switched off');
+    await setVal(search, 'tennis');
+    await click(w, btn(d, 'Shown off'));
+    await setVal(search, '');
+    ok([...d.querySelectorAll('.cgroup')].length > 5 && /9\/11/.test(text(d)), 'with a search typed, “Shown off” only switches off the categories shown (F1 and tennis off, 9 of 11 sports on)');
+    await setVal(search, 'tennis');
+    await click(w, btn(d, 'Shown on'));
+    await setVal(search, '');
+    await click(w, btn(d, 'Done'));
+    ok(/of \d+ categories on/.test(text(d)), 'setup shows how many categories are on');
     await click(w, btn(d, '30s'));
     await click(w, btn(d, 'Pick categories'));
     ok(!!d.querySelector('.catgrid') && /الأبطال, pick a category/.test(text(d)), 'category pick: the first team is asked to pick (mixed Arabic name in English UI)');
     const cards = () => [...d.querySelectorAll('.catcard')];
+    ok(!cards().some((c) => /Formula 1/.test(c.textContent)), 'the switched-off category isn’t offered in the game');
     await click(w, cards()[0]);
     ok(cards()[0].disabled && /Night Owls, pick a category/.test(text(d)), 'picked category is taken, turn passes');
     await click(w, btn(d, 'Undo pick'));
@@ -296,13 +298,13 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     if (typeof globalThis.BroadcastChannel !== 'function') { console.log('  (skipped: this Node has no BroadcastChannel)'); }
     else {
       const H = await boot({ speed: 0.02, bc: true, idb: false, storage: { kh_settings_v1: JSON.stringify({ lang: 'ar' }) } });
-      const T = await boot({ bc: true, url: 'https://sad-cpu141.github.io/khatfa/#tv', idb: false });
+      const T = await boot({ bc: true, url: 'https://sad-cpu141.github.io/khatfa/#tv', idb: false, navLang: 'ar' });
       await sleep(100);
       ok(/بانتظار لعبة/.test(text(T.d)), 'TV window waits for a game');
       await click(H.w, btn(H.d, 'لعبة جديدة'));
       await click(H.w, btn(H.d, 'اختيار الفئات'));
       await sleep(80);
-      ok(!!T.d.querySelector('.tvmode .catgrid.big'), 'TV shows category picking');
+      ok(!!T.d.querySelector('.tvmode .tv-head .picker'), 'TV shows whose turn it is to pick a category');
       for (let i = 0; i < 6; i++) await click(H.w, [...H.d.querySelectorAll('.catcard')].find((c) => !c.disabled));
       await sleep(80);
       ok(T.d.querySelectorAll('.tvmode .tile.open').length === 36, 'TV shows the full board');

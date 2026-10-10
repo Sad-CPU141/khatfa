@@ -1,7 +1,7 @@
 /* ============================================================
    SETTINGS: language, question language, animations, TV size, backup.
    ============================================================ */
-function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, onBack }) {
+function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, onBack, bank, qhist, onResetHistory }) {
   const [ask, setAsk] = useState(null);
   const [msg, setMsg] = useState(null);
   const fileRef = useRef(null);
@@ -37,6 +37,12 @@ function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, o
         <div className="field"><span className="label">{t('tvZoom')}</span>
           <Seg value={settings.tvZoom} options={[[0.85, 'S'], [1, 'M'], [1.2, 'L'], [1.4, 'XL']]} onChange={(v) => set('tvZoom', v)} label={t('tvZoom')} /></div>
       </section>
+      {bank && <section className="card stack">
+        <h3>{t('qbank')}</h3>
+        <p className="hint">{t('qbankSub', { q: bank.total, c: bank.cats.length })}</p>
+        <p className="hint">{t('historySub', { n: Object.keys((qhist && qhist.seen) || {}).length, g: (qhist && qhist.n) || 0 })}</p>
+        <button className="btn" disabled={!qhist || !Object.keys(qhist.seen || {}).length} onClick={() => setAsk({ kind: 'hist' })}>{t('resetHistory')}</button>
+      </section>}
       <section className="card stack">
         <h3>{t('backup')}</h3>
         <p className="hint">{t('backupSub')}</p>
@@ -57,6 +63,7 @@ function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, o
         <Confirm title={t('importQ')} body={t('importBody', { past: ask.v.summary.past, cur: ask.v.summary.current ? t('importCur') : '', date: (ask.v.summary.exportedAt || '').slice(0, 10) })} yes={t('importBackup')}
           onYes={() => { onRestore(ask.v.data); setMsg({ text: t('restored'), ok: true }); }} onClose={() => setAsk(null)} />
       )}
+      {ask && ask.kind === 'hist' && <Confirm title={t('resetHistoryQ')} body={t('resetHistoryBody')} yes={t('resetHistory')} onYes={onResetHistory} onClose={() => setAsk(null)} />}
       {ask && ask.kind === 'clear' && <Confirm title={t('clearAllQ')} body={t('clearAllBody')} yes={t('deleteIt')} danger onYes={onClearAll} onClose={() => setAsk(null)} />}
       {msg && <Toast msg={msg.text} ok={msg.ok} onClose={() => setMsg(null)} />}
     </div>

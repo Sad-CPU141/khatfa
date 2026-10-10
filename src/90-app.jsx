@@ -1,19 +1,23 @@
 /* ============================================================
    APP: state, screens, saving, TV sync.
    ============================================================ */
-const DEFAULT_SETTINGS = { lang: 'ar', qLang: 'auto', motion: 'system', tvZoom: 1, rules: null, lastTeams: null };
+const deviceLang = () => { try { return /^ar\b/i.test((navigator.languages && navigator.languages[0]) || navigator.language || '') ? 'ar' : 'en'; } catch (e) { return 'en'; } };
+const DEFAULT_SETTINGS = { lang: deviceLang(), qLang: 'auto', motion: 'system', tvZoom: 1, rules: null, lastTeams: null };
 function applyDocLang(lang) {
   const el = document.documentElement;
   el.setAttribute('lang', lang === 'en' ? 'en' : 'ar');
   el.setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
 }
-const findPack = (id) => PACKS().find((p) => p.id === id) || PACKS()[0];
+const BANK = indexBank();
 
 function App() {
   const [ready, setReady] = useState(false);
   const [settings, setSettingsRaw] = useState(DEFAULT_SETTINGS);
   const [game, setGameRaw] = useState(null);
   const [past, setPast] = useState([]);
+  const [qhist, setQhistRaw] = useState(emptyHistory());
+  const histRef = useRef(qhist); histRef.current = qhist;
+  const setQhist = (h) => { histRef.current = h; setQhistRaw(h); store.set(K.history, h); };
   const [screen, setScreen] = useState('home');
   const [flash, setFlash] = useState(null);
   const [sheet, setSheet] = useState(null); // 'menu' | 'tv' | 'how'
@@ -29,6 +33,7 @@ function App() {
       const cur = store.get(K.current, null);
       if (cur && Array.isArray(cur.teams)) setGameRaw(cur);
       setPast(store.get(K.past, []));
+      const h = store.get(K.history, null); if (h && h.seen) { histRef.current = h; setQhistRaw(h); }
       setReady(true);
     });
   }, []);
@@ -44,6 +49,11 @@ function App() {
     setGameRaw((prev) => {
       const g = typeof next === 'function' ? next(prev) : next;
       if (g) store.set(K.current, g); else store.del(K.current);
+      // Question history: a game counts once its board is built; a question counts once it's shown.
+      if (g && prev && prev.id === g.id && prev.phase === 'pick' && g.phase === 'board' && histRef.current.n < g.gameNo) setQhist({ ...histRef.current, n: g.gameNo });
+      if (g && g.current && (!prev || !prev.current || prev.current.cell !== g.current.cell)) {
+        const c = cellById(g, g.current.cell); if (c && c.q) setQhist(trimHistory(markSeen(histRef.current, c.q.id, g.gameNo)));
+      }
       if (g && g.phase === 'done' && (!prev || prev.phase !== 'done' || prev.id !== g.id)) {
         setPast((p) => { const list = [pastEntry(g), ...p.filter((x) => x.id !== g.id)].slice(0, 30); store.set(K.past, list); return list; });
       }
@@ -51,33 +61,37 @@ function App() {
     });
   };
   const act = (fn) => setGame((g) => (g ? fn(g) : g));
+  // What the engine needs to build a board: the bank and this device's question history.
+  const ctx = () => ({ bank: BANK, recent: histRef.current.seen, rand: Math.random });
+  const begin = (g) => { if (g.rules.randomCats) { const b = autoPick(g, ctx()); if (histRef.current.n < b.gameNo && b.phase === 'board') setQhist({ ...histRef.current, n: b.gameNo }); return b; } return g; };
   const sendTv = useTvSender(game, settings);
   const doFlash = (info) => { setFlash(info); sendTv(info); };
 
   if (tvRoute) return <QLangCtx.Provider value={settings.qLang}>{ready ? <LocalTv /> : null}</QLangCtx.Provider>;
   if (!ready) return <div className="boot"><div>خطفة<small>KHATFA</small></div></div>;
 
-  const startNew = (pack, teams, rules) => {
+  const startNew = (teams, rules) => {
     setSettings({ ...settings, rules, lastTeams: teams });
-    setGame(createGame(pack, teams, rules, Date.now()));
+    setGame(begin(createGame(BANK, teams, rules, Date.now(), { gameNo: startGameNo(histRef.current) })));
     setScreen('game');
   };
   const goHome = () => { setTvHere(false); setScreen('home'); };
-  const playAgain = () => { setGame(rematch(game, findPack(game.pack && game.pack.id), Date.now())); setScreen('game'); };
+  const playAgain = () => { setGame(begin(rematch(game, BANK, Date.now(), { gameNo: startGameNo(histRef.current) }))); setScreen('game'); };
   const restore = (d) => {
     const s = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
     setSettings(s); setGame(d.current || null); setPast(d.past || []); store.set(K.past, d.past || []); store.set(K.packs, d.packs || []);
+    if (d.history) setQhist(d.history);
   };
   const clearAll = () => {
     Object.values(K).forEach((k) => store.del(k));
-    setSettingsRaw(DEFAULT_SETTINGS); setLang(DEFAULT_SETTINGS.lang); setGameRaw(null); setPast([]); setScreen('home');
+    setSettingsRaw(DEFAULT_SETTINGS); setLang(DEFAULT_SETTINGS.lang); setGameRaw(null); setPast([]); histRef.current = emptyHistory(); setQhistRaw(emptyHistory()); setScreen('home');
   };
 
   let view;
-  if (screen === 'settings') view = <SettingsScreen settings={settings} setSettings={setSettings} state={{ settings, game, past, packs: store.get(K.packs, []) }} onRestore={restore} onClearAll={clearAll} onBack={() => setScreen('home')} />;
-  else if (screen === 'setup') view = <Setup initial={{ teams: settings.lastTeams, rules: settings.rules }} onBack={() => setScreen('home')} onStart={startNew} />;
+  if (screen === 'settings') view = <SettingsScreen settings={settings} setSettings={setSettings} state={{ settings, game, past, packs: store.get(K.packs, []), history: qhist }} onRestore={restore} onClearAll={clearAll} bank={BANK} qhist={qhist} onResetHistory={() => setQhist({ n: histRef.current.n, seen: {} })} onBack={() => setScreen('home')} />;
+  else if (screen === 'setup') view = <Setup bank={BANK} initial={{ teams: settings.lastTeams, rules: settings.rules }} onBack={() => setScreen('home')} onStart={startNew} />;
   else if (screen === 'game' && game) {
-    const common = { g: game, act, onMenu: () => setSheet('menu'), onTv: () => setSheet('tv') };
+    const common = { g: game, act, ctx, bank: BANK, onMenu: () => setSheet('menu'), onTv: () => setSheet('tv') };
     if (tvHere) view = <><TvView g={game} flash={flash} onFlashDone={() => setFlash(null)} /><TvExit onExit={() => setTvHere(false)} /></>;
     else if (game.phase === 'pick') view = <CategoryPick {...common} />;
     else if (game.phase === 'board') view = <Board {...common} />;
@@ -99,5 +113,5 @@ function App() {
   );
 }
 
-if (window.__KH_TEST__) window.__KH = { store, K, SAMPLE_PACK, DEFAULT_RULES, cleanRules, createGame, pickCategory, randomPick, buildBoard, openCell, markCorrect, markWrong, skipQuestion, putBack, finishQuestion, endGame, adjustScore, undo, undoLabel, winners, gameStats, rematch, pastEntry, timeLeft, pauseTimer, resumeTimer, turnTeam, pickingTeam, openCells, isBoardDone, tvGame, makeBackup, validateBackup, t, setLang, pick, S };
+if (window.__KH_TEST__) window.__KH = { store, K, BANK, indexBank, selectBoard, selectQuestions, rowTiers, tiersNeeded, categoryShortfall, gamePool, autoPick, isLocked, markSeen, trimHistory, emptyHistory, startGameNo, tierCounts, POINTS, MIX_ID, DEFAULT_RULES, cleanRules, createGame, pickCategory, randomPick, buildBoard, openCell, markCorrect, markWrong, skipQuestion, putBack, finishQuestion, endGame, adjustScore, undo, undoLabel, winners, gameStats, rematch, pastEntry, timeLeft, pauseTimer, resumeTimer, turnTeam, pickingTeam, openCells, isBoardDone, tvGame, makeBackup, validateBackup, t, setLang, pick, S };
 ReactDOM.createRoot(document.getElementById('root')).render(<Boundary><App /></Boundary>);

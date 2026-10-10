@@ -15,7 +15,8 @@ function tvGame(g) {
   if (!g) return null;
   const { history, ...rest } = g;
   const revealed = g.current && g.current.stage === 'reveal' ? g.current.cell : null;
-  return { ...rest, cells: (g.cells || []).map((c) => (c.q && c.id !== revealed ? { ...c, q: { ...c.q, a: null, note: null } } : c)) };
+  // Unrevealed questions travel without answer, accepted answers, hint or note.
+  return { ...rest, cells: (g.cells || []).map((c) => (c.q && c.id !== revealed ? { ...c, q: { ...c.q, a: null, alt: null, note: null, hint: null, ref: null } } : c)) };
 }
 
 function TvButton({ onTv }) {
@@ -64,8 +65,8 @@ function TvView({ g, flash, onFlashDone }) {
   else if (g.phase === 'pick') {
     const team = pickingTeam(g);
     body = <>
-      <div className="tv-head"><span className="eyebrow">{t('tvPicking')}</span><div className="picker" style={tStyle(team)}><span className="pk-em">{team.emoji}</span><b className="pk-t">{t('yourPick', { team: teamName(team) })}</b></div></div>
-      <CategoryGrid g={g} big />
+      <div className="tv-head"><span className="eyebrow">{t('tvPicking')}</span><div className="picker" style={tStyle(team)}><span className="pk-em">{team.emoji}</span><b className="pk-t">{t('yourPick', { team: teamName(team) })}</b><span>{t('picksLeft', { n: picksNeeded(g) - g.cats.length })}</span></div></div>
+      {g.cats.length > 0 && <CategoryGrid g={g} cats={g.cats.map((c) => g.pool.find((p) => p.id === c.id) || c)} big />}
     </>;
   } else if (g.phase === 'board') {
     const team = turnTeam(g);

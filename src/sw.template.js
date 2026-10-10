@@ -6,7 +6,7 @@ const CACHE = 'khatfa-' + VERSION;
 const FONTS = ['anton-latin-400', 'barlow-latin-400', 'barlow-latin-500', 'barlow-latin-600', 'barlow-latin-700',
   'barlow-semi-condensed-latin-500', 'barlow-semi-condensed-latin-600', 'barlow-semi-condensed-latin-700', 'barlow-semi-condensed-latin-800',
   'cairo-arabic-400', 'cairo-arabic-600', 'cairo-arabic-700', 'cairo-arabic-800', 'cairo-arabic-900'].map((f) => './fonts/' + f + '-normal.woff2');
-const CORE = ['./', './index.html', './app.js?v=' + VERSION, './styles.css?v=' + VERSION, './manifest.webmanifest',
+const CORE = ['./', './index.html', './app.js?v=' + VERSION, './bank.js?v=' + VERSION, './styles.css?v=' + VERSION, './manifest.webmanifest',
   './vendor/react.production.min.js', './vendor/react-dom.production.min.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', ...FONTS];
 

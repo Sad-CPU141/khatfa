@@ -210,7 +210,7 @@ function Home({ game, past, settings, setSettings, onNew, onContinue, onHow, onS
         </div>
         {p.canPrompt && <button className="btn btn-ghost" onClick={() => p.prompt()}>📲 {t('install')}</button>}
       </div>
-      <p className="hint center">{t('sampleNote')}</p>
+      <p className="hint center">{t('bankNote', { q: BANK.total, c: BANK.cats.length })}</p>
       {past.length > 0 && (
         <section className="stack-sm">
           <span className="eyebrow">{t('pastGames')}</span>
@@ -248,7 +248,6 @@ function HowTo({ onClose }) {
 /* ============================================================
    SETUP: teams + house rules
    ============================================================ */
-const PACKS = () => [SAMPLE_PACK];
 const freshTeams = () => [
   { name: t('defaultTeam1'), color: COLORS[0], emoji: EMOJIS[0] },
   { name: t('defaultTeam2'), color: COLORS[1], emoji: EMOJIS[1] },
@@ -267,18 +266,44 @@ function TeamEditor({ team, i, onChange, others }) {
     </div>
   );
 }
-function Setup({ initial, onBack, onStart }) {
+function Section({ icon, title, sub, children, startOpen }) {
+  const [open, setOpen] = useState(!!startOpen);
+  return (
+    <section className="rsec">
+      <button className="rtitle" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className="re">{icon}</span>
+        <span className="grow"><b>{title}</b>{sub && <span className="small muted rsum">{sub}</span>}</span>
+        <span className="chev">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && <div className="rbody stack">{children}</div>}
+    </section>
+  );
+}
+const tierLabel = (tier) => POINTS[tier - 1] + ' · ' + t(['tierEasy', 'tierHard', 'tierBrutal'][tier - 1]);
+function difficultySummary(r) {
+  const parts = [t('curve_' + r.curve)];
+  if (r.minTier > 1 || r.maxTier < 3) parts.push(POINTS[r.minTier - 1] + '–' + POINTS[r.maxTier - 1]);
+  if (r.niche) parts.push(t('nicheMode'));
+  if (r.nicheOnly) parts.push(t('nicheOnly'));
+  if (r.strict) parts.push(t('strictRepeats'));
+  if (r.progressive) parts.push(t('progressive'));
+  return parts.join(' · ');
+}
+function Setup({ initial, bank, onBack, onStart }) {
   const [teams, setTeams] = useState(() => (initial && initial.teams) || freshTeams());
   const [rules, setRules] = useState(() => cleanRules(initial && initial.rules));
-  const [open, setOpen] = useState(false);
-  const pack = PACKS()[0];
-  const usableCats = pack.categories.filter((c) => c.questions.length).length;
+  const [browse, setBrowse] = useState(false);
+  const set = (k, v) => setRules(cleanRules({ ...rules, [k]: v }));
+  const pool = useMemo(() => gamePool(bank, rules), [bank, rules]);
+  const real = pool.filter((c) => c.id !== MIX_ID);
+  const playable = pool.filter((c) => (c.short || [0, 0, 0]).every((n) => n === 0));
+  const shortCats = real.filter((c) => c.short.some((n) => n > 0));
   const need = rules.catsPerTeam * teams.length;
+  const included = bank.cats.length - rules.exclude.filter((id) => bank.byCat[id]).length;
+  const qIncluded = real.reduce((n, c) => n + c.count[0] + c.count[1] + c.count[2], 0);
   const problems = [];
   if (teams.some((tm) => !tm.name.trim())) problems.push(t('needNames'));
-  if (need > usableCats) problems.push(t('needCats', { have: usableCats, need }));
-  const set = (k, v) => setRules({ ...rules, [k]: v });
-  const maxCats = Math.max(1, Math.floor(usableCats / teams.length));
+  if (playable.length < need) problems.push(t('needCats', { have: playable.length, need }));
   return (
     <div className="app">
       <TopBar onBack={onBack} title={t('setupTitle')} />
@@ -287,38 +312,45 @@ function Setup({ initial, onBack, onStart }) {
         {teams.map((tm, i) => <TeamEditor key={i} team={tm} i={i} others={teams.filter((_, j) => j !== i)} onChange={(x) => setTeams(teams.map((y, j) => (j === i ? x : y)))} />)}
       </section>
       <section className="card stack-sm">
-        <span className="eyebrow">{t('pack')}</span>
-        <div className="row"><span className="packem">🧪</span><b className="grow"><Txt v={pack.name} /></b><span className="small muted">{t('questionsN', { n: pack.categories.reduce((n, c) => n + c.questions.length, 0) })}</span></div>
+        <span className="eyebrow">{t('categories')}</span>
+        <div className="row"><span className="packem">📚</span><b className="grow">{t('catsOn', { n: included, of: bank.cats.length })}</b><span className="small muted num">{t('questionsN', { n: qIncluded })}</span></div>
+        {shortCats.length > 0 && <p className="hint">⚠ {t('catsShort', { n: shortCats.length })}</p>}
+        <button className="btn btn-sm" style={{ width: '100%' }} onClick={() => setBrowse(true)}>{t('chooseCats')}</button>
+        <Toggle on={rules.randomCats} onChange={(v) => set('randomCats', v)} title={t('randomCats')} sub={t('randomCatsSub')} />
+        <Toggle on={rules.mixed} onChange={(v) => set('mixed', v)} title={t('mixedCats')} sub={t('mixedCatsSub')} />
       </section>
-      <section className="rsec">
-        <button className="rtitle" aria-expanded={open} onClick={() => setOpen(!open)}>
-          <span className="re">⚙️</span>
-          <span className="grow"><b>{t('houseRules')}</b><span className="small muted rsum">{t('rulesSummary', { vals: rules.values.join('/'), per: rules.perValue, cats: rules.catsPerTeam, a: rules.answerTime, s: rules.stealTime })}</span></span>
-          <span className="chev">{open ? '▲' : '▼'}</span>
-        </button>
-        {open && (
-          <div className="rbody stack">
-            <div className="field"><span className="label">{t('pointValues')}</span>
-              <Seg value={rules.values.join('/')} options={VALUE_PRESETS.map((v) => [v.join('/'), v.join('/')])} onChange={(v) => set('values', v.split('/').map(Number))} label={t('pointValues')} /></div>
-            <div className="field"><span className="label">{t('perValue')}</span>
-              <Seg value={rules.perValue} options={[[1, '1'], [2, '2']]} onChange={(v) => set('perValue', v)} label={t('perValue')} /></div>
-            <div className="field"><span className="label">{t('catsPerTeam')}</span>
-              <Seg value={rules.catsPerTeam} options={[1, 2, 3, 4].filter((n) => n <= maxCats).map((n) => [n, String(n)])} onChange={(v) => set('catsPerTeam', v)} label={t('catsPerTeam')} /></div>
-            <div className="field"><span className="label">{t('answerTime')}</span>
-              <Seg value={rules.answerTime} options={TIME_CHOICES.map((n) => [n, t('seconds', { n })])} onChange={(v) => set('answerTime', v)} label={t('answerTime')} /></div>
-            <Toggle on={rules.steals} onChange={(v) => set('steals', v)} title={t('stealOn')} sub={t('stealOnSub')} />
-            {rules.steals && <div className="field"><span className="label">{t('stealTime')}</span>
-              <Seg value={rules.stealTime} options={STEAL_CHOICES.map((n) => [n, t('seconds', { n })])} onChange={(v) => set('stealTime', v)} label={t('stealTime')} /></div>}
-            <div className="stack-sm">
-              <span className="label">{t('modifiers')}</span>
-              <p className="hint">{t('modifiersSub')}</p>
-              <Toggle on={rules.wrongPenalty} onChange={(v) => set('wrongPenalty', v)} title={t('wrongPenalty')} sub={t('wrongPenaltySub')} />
-            </div>
-          </div>
-        )}
-      </section>
+      <Section icon="⚙️" title={t('houseRules')} sub={t('rulesSummary', { per: rules.perValue, cats: rules.catsPerTeam, a: rules.answerTime, s: rules.stealTime })}>
+        <p className="hint">{t('valuesFixed')}</p>
+        <div className="field"><span className="label">{t('perValue')}</span>
+          <Seg value={rules.perValue} options={[[1, '1'], [2, '2']]} onChange={(v) => set('perValue', v)} label={t('perValue')} /></div>
+        <div className="field"><span className="label">{t('catsPerTeam')}</span>
+          <Seg value={rules.catsPerTeam} options={[1, 2, 3, 4].map((n) => [n, String(n)])} onChange={(v) => set('catsPerTeam', v)} label={t('catsPerTeam')} /></div>
+        <div className="field"><span className="label">{t('answerTime')}</span>
+          <Seg value={rules.answerTime} options={TIME_CHOICES.map((n) => [n, t('seconds', { n })])} onChange={(v) => set('answerTime', v)} label={t('answerTime')} /></div>
+        <Toggle on={rules.steals} onChange={(v) => set('steals', v)} title={t('stealOn')} sub={t('stealOnSub')} />
+        {rules.steals && <div className="field"><span className="label">{t('stealTime')}</span>
+          <Seg value={rules.stealTime} options={STEAL_CHOICES.map((n) => [n, t('seconds', { n })])} onChange={(v) => set('stealTime', v)} label={t('stealTime')} /></div>}
+      </Section>
+      <Section icon="🌶️" title={t('difficulty')} sub={difficultySummary(rules)}>
+        <div className="field"><span className="label">{t('curve')}</span>
+          <Seg value={rules.curve} options={CURVES.map((c) => [c, t('curve_' + c)])} onChange={(v) => set('curve', v)} label={t('curve')} />
+          <p className="hint">{t('curveSub_' + rules.curve)}</p></div>
+        <div className="field"><span className="label">{t('minDiff')}</span>
+          <Seg value={rules.minTier} options={[1, 2, 3].map((n) => [n, String(POINTS[n - 1])])} onChange={(v) => setRules(cleanRules({ ...rules, minTier: v, maxTier: Math.max(v, rules.maxTier) }))} label={t('minDiff')} /></div>
+        <div className="field"><span className="label">{t('maxDiff')}</span>
+          <Seg value={rules.maxTier} options={[1, 2, 3].map((n) => [n, String(POINTS[n - 1])])} onChange={(v) => setRules(cleanRules({ ...rules, maxTier: v, minTier: Math.min(v, rules.minTier) }))} label={t('maxDiff')} />
+          {(rules.minTier > 1 || rules.maxTier < 3) && <p className="hint">{t('minMaxSub', { rows: rowTiers(rules).map((x) => POINTS[x - 1]).join(' / ') })}</p>}</div>
+        <Toggle on={rules.niche} onChange={(v) => set('niche', v)} title={t('nicheMode')} sub={t('nicheModeSub')} />
+        <Toggle on={rules.nicheOnly} onChange={(v) => set('nicheOnly', v)} title={t('nicheOnly')} sub={t('nicheOnlySub')} />
+        <Toggle on={rules.strict} onChange={(v) => set('strict', v)} title={t('strictRepeats')} sub={t('strictRepeatsSub')} />
+        <Toggle on={rules.progressive} onChange={(v) => set('progressive', v)} title={t('progressive')} sub={t('progressiveSub')} />
+      </Section>
+      <Section icon="🧩" title={t('modifiers')} sub={t('modifiersSub')}>
+        <Toggle on={rules.wrongPenalty} onChange={(v) => set('wrongPenalty', v)} title={t('wrongPenalty')} sub={t('wrongPenaltySub')} />
+      </Section>
       {problems.map((p) => <p key={p} className="warn">{p}</p>)}
-      <button className="btn btn-gold" disabled={problems.length > 0} onClick={() => onStart(pack, teams.map((tm) => ({ ...tm, name: tm.name.trim() })), rules)}>{t('pickCategories')}</button>
+      <button className="btn btn-gold" disabled={problems.length > 0} onClick={() => onStart(teams.map((tm) => ({ ...tm, name: tm.name.trim() })), rules)}>{rules.randomCats ? t('startGame') : t('pickCategories')}</button>
+      {browse && <CategoryBrowser bank={bank} rules={rules} onChange={(exclude) => setRules(cleanRules({ ...rules, exclude }))} onClose={() => setBrowse(false)} />}
     </div>
   );
 }

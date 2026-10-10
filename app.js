@@ -1,7 +1,7 @@
-/* Khatfa 9b0be6e83e — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa 25dff7b993 — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "9b0be6e83e";
+const APP_VERSION = "25dff7b993";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -51,7 +51,8 @@ const K = {
   settings: 'kh_settings_v1',
   current: 'kh_current_v1',
   past: 'kh_past_v1',
-  packs: 'kh_packs_v1'
+  packs: 'kh_packs_v1',
+  history: 'kh_qhistory_v1'
 };
 const STORE_KEYS = Object.values(K);
 const store = (() => {
@@ -225,7 +226,8 @@ function makeBackup(state) {
       settings: state.settings || {},
       current: state.game || null,
       past: state.past || [],
-      packs: state.packs || []
+      packs: state.packs || [],
+      history: state.history || null
     }
   };
 }
@@ -249,6 +251,10 @@ function validateBackup(obj) {
     error: 'bkDamaged'
   };
   if (d.packs.some(p => !p || typeof p.id !== 'string' || !Array.isArray(p.categories))) return {
+    ok: false,
+    error: 'bkDamaged'
+  };
+  if (d.history != null && (typeof d.history !== 'object' || typeof d.history.seen !== 'object')) return {
     ok: false,
     error: 'bkDamaged'
   };
@@ -358,7 +364,7 @@ const S = {
   noPast: ['Finished games will show here.', 'الألعاب المنتهية تظهر هنا.'],
   won: ['won', 'فاز'],
   draw: ['Draw', 'تعادل'],
-  sampleNote: ['Version 1 preview: a small sample question pack is built in. The full question editor and starter packs come next.', 'نسخة تجريبية: فيها حزمة أسئلة صغيرة للتجربة. محرر الأسئلة والحزم الكاملة جايين بالخطوة الجاية.'],
+  bankNote: ['{q} questions in {c} categories. 200 easy · 400 hard · 600 brutal.', '{q} سؤال في {c} فئة. ٢٠٠ سهل · ٤٠٠ صعب · ٦٠٠ نار.'],
   setupTitle: ['New game', 'لعبة جديدة'],
   teams: ['Teams', 'الفرق'],
   teamName: ['Team name', 'اسم الفريق'],
@@ -369,7 +375,6 @@ const S = {
   colour: ['Colour', 'اللون'],
   pack: ['Question pack', 'حزمة الأسئلة'],
   houseRules: ['House rules', 'قوانين اللعبة'],
-  pointValues: ['Point values', 'قيم النقاط'],
   perValue: ['Questions per value in each category', 'عدد الأسئلة لكل قيمة في الفئة'],
   catsPerTeam: ['Categories per team', 'عدد الفئات لكل فريق'],
   answerTime: ['Time to answer', 'وقت الإجابة'],
@@ -382,9 +387,72 @@ const S = {
   wrongPenaltySub: ['The answering team loses the question’s value. Steals never lose points.', 'الفريق اللي جاوب يخسر قيمة السؤال. الخطف ما يخصم.'],
   seconds: ['{n}s', '{n} ث'],
   pickCategories: ['Pick categories', 'اختيار الفئات'],
-  needCats: ['This pack has {have} categories; {need} are needed. Lower “Categories per team”.', 'الحزمة فيها {have} فئات، والمطلوب {need}. قلّل عدد الفئات لكل فريق.'],
+  needCats: ['Only {have} categories can fill a whole column with these settings, and {need} are needed. Switch more categories on, or lower “Categories per team”.', 'فقط {have} فئات تقدر تعبّي عمود كامل بهذي الإعدادات، والمطلوب {need}. شغّل فئات أكثر أو قلّل عدد الفئات لكل فريق.'],
   needNames: ['Give every team a name.', 'اكتب اسم لكل فريق.'],
-  rulesSummary: ['{vals} · {per}× per value · {cats} categories each · {a}s / steal {s}s', '{vals} · {per}× لكل قيمة · {cats} فئات لكل فريق · {a}ث / خطف {s}ث'],
+  rulesSummary: ['200/400/600 · {per}× per value · {cats} categories each · {a}s / steal {s}s', '٢٠٠/٤٠٠/٦٠٠ · {per}× لكل قيمة · {cats} فئات لكل فريق · {a}ث / خطف {s}ث'],
+  valuesFixed: ['Points are always 200 (easy), 400 (hard) and 600 (brutal).', 'النقاط دائماً ٢٠٠ (سهل) و٤٠٠ (صعب) و٦٠٠ (نار).'],
+  categories: ['Categories', 'الفئات'],
+  catsOn: ['{n} of {of} categories on', '{n} من {of} فئة مفعّلة'],
+  catsShort: ['{n} categories don’t have enough questions for these settings, so they can’t be picked.', '{n} فئات ما فيها أسئلة كافية لهذي الإعدادات، فما تنختار.'],
+  chooseCats: ['Choose categories', 'اختر الفئات'],
+  randomCats: ['Random categories', 'فئات عشوائية'],
+  randomCatsSub: ['Skip the picking: categories are chosen for you from the ones switched on.', 'بدون اختيار: الفئات تنختار لكم عشوائياً من المفعّلة.'],
+  mixedCats: ['Mixed categories', 'فئات مخلوطة'],
+  mixedCatsSub: ['Adds “Random Mix”: a column with questions from all your switched-on categories.', 'يضيف «خلطة عشوائية»: عمود أسئلته من كل الفئات المفعّلة.'],
+  difficulty: ['Difficulty', 'الصعوبة'],
+  curve: ['Difficulty curve', 'منحنى الصعوبة'],
+  curve_standard: ['Standard', 'عادي'],
+  curve_steep: ['Steep', 'حاد'],
+  curve_brutal: ['Brutal', 'نار'],
+  curveSub_standard: ['200 easy, 400 hard, 600 brutal.', '٢٠٠ سهل، ٤٠٠ صعب، ٦٠٠ نار.'],
+  curveSub_steep: ['400s and 600s lean towards the most niche questions in their tier.', 'أسئلة ٤٠٠ و٦٠٠ تميل لأصعب وأندر أسئلة مستواها.'],
+  curveSub_brutal: ['Specialist questions everywhere, especially at 400 and 600.', 'أسئلة للمختصين في كل مكان، خصوصاً ٤٠٠ و٦٠٠.'],
+  minDiff: ['Minimum difficulty', 'أقل صعوبة'],
+  maxDiff: ['Maximum difficulty', 'أعلى صعوبة'],
+  minMaxSub: ['Board rows will be {rows}.', 'صفوف اللوحة بتكون {rows}.'],
+  nicheMode: ['Niche mode', 'وضع النوادر'],
+  nicheModeSub: ['More of the extra-niche questions in every tier.', 'أسئلة نادرة أكثر في كل مستوى.'],
+  nicheOnly: ['Niche only', 'نوادر فقط'],
+  nicheOnlySub: ['Only extra-niche questions. Categories without enough of them can’t be picked.', 'أسئلة نادرة فقط. الفئات اللي ما فيها كفاية ما تنختار.'],
+  strictRepeats: ['Strict no-repeats', 'منع التكرار الصارم'],
+  strictRepeatsSub: ['Never use a question this device has shown before, until a category runs out. (Questions never repeat within one game either way.)', 'لا تستخدم أي سؤال ظهر على هذا الجهاز قبل، إلا إذا خلصت الفئة. (الأسئلة ما تتكرر في نفس اللعبة بكل الأحوال.)'],
+  progressive: ['Progressive difficulty', 'صعوبة متدرجة'],
+  progressiveSub: ['In each category, the 200s must be played before the 400s, and the 400s before the 600s.', 'في كل فئة لازم تنلعب ٢٠٠ قبل ٤٠٠، و٤٠٠ قبل ٦٠٠.'],
+  startGame: ['Start the game', 'ابدأ اللعبة'],
+  tierEasy: ['easy', 'سهل'],
+  tierHard: ['hard', 'صعب'],
+  tierBrutal: ['brutal', 'نار'],
+  done: ['Done', 'تم'],
+  searchCats: ['Search categories…', 'ابحث عن فئة…'],
+  allOn: ['All on', 'شغّل الكل'],
+  allOff: ['All off', 'أطفئ الكل'],
+  shownOn: ['Shown on', 'شغّل الظاهرة'],
+  shownOff: ['Shown off', 'أطفئ الظاهرة'],
+  countsKey: ['Numbers show how many 200 · 400 · 600 questions each category has.', 'الأرقام = عدد أسئلة ٢٠٠ · ٤٠٠ · ٦٠٠ في كل فئة.'],
+  allInGroup: ['All of {g}', 'كل {g}'],
+  shortFor: ['not enough {tiers} for these settings', 'ما يكفي {tiers} لهذي الإعدادات'],
+  subcats: ['{n} subcategories', '{n} فئات فرعية'],
+  all: ['All', 'الكل'],
+  popular: ['Popular', 'الأشهر'],
+  nicheTopics: ['Niche', 'نوادر'],
+  bigBank: ['Big bank', 'أسئلة كثيرة'],
+  noMatch: ['No categories match.', 'ما فيه فئات مطابقة.'],
+  notEnough: ['Not enough questions', 'أسئلة غير كافية'],
+  mixSub: ['From all your categories', 'من كل فئاتك'],
+  tierExhausted: ['No more {v} questions in this category', 'خلصت أسئلة {v} في هذي الفئة'],
+  lockedTile: ['locked until the easier ones are played', 'مقفل لين تنلعب الأسهل'],
+  reportExhausted: ['Ran out of questions for: {list}. Those tiles are empty. Pick other categories next time, or allow more categories.', 'خلصت الأسئلة في: {list}. هذي الخانات فاضية. اختاروا فئات ثانية المرة الجاية أو شغّلوا فئات أكثر.'],
+  reportRepeats: ['{n} questions on this board were shown on this device recently (not enough unseen ones left).', '{n} أسئلة في هذي اللوحة ظهرت على الجهاز مؤخراً (ما بقى أسئلة جديدة كفاية).'],
+  reportNiche: ['Not enough extra-niche questions for every tile: {n} regular ones were used.', 'ما فيه أسئلة نادرة كفاية لكل الخانات: استُخدم {n} أسئلة عادية.'],
+  alsoAccept: ['Also accept:', 'يُقبل أيضاً:'],
+  asOf: ['Correct as of {d}', 'صحيح حتى {d}'],
+  hintForHost: ['Hint:', 'تلميح:'],
+  qbank: ['Question bank', 'بنك الأسئلة'],
+  qbankSub: ['{q} questions in {c} categories.', '{q} سؤال في {c} فئة.'],
+  historySub: ['This device has shown {n} different questions over {g} games. Recently shown questions are avoided in new games.', 'هذا الجهاز عرض {n} سؤال مختلف خلال {g} لعبة. الأسئلة اللي ظهرت مؤخراً نتجنبها في الألعاب الجديدة.'],
+  resetHistory: ['Reset question history', 'مسح سجل الأسئلة'],
+  resetHistoryQ: ['Reset question history?', 'تمسح سجل الأسئلة؟'],
+  resetHistoryBody: ['Questions you’ve already seen can come up again straight away. Games and scores aren’t affected.', 'الأسئلة اللي شفتوها ممكن ترجع على طول. الألعاب والنتائج ما تتأثر.'],
   pickTitle: ['Pick categories', 'اختيار الفئات'],
   yourPick: ['{team}, pick a category', '{team}، اختاروا فئة'],
   pickedBy: ['Picked by {team}', 'اختيار {team}'],
@@ -518,7 +586,7 @@ const S = {
   crashedSub: ['Your game is saved. Reload to carry on.', 'لعبتك محفوظة. حدّث الصفحة وكمّل.'],
   howBody: [['Split into two teams. Each team picks categories; they all go on the board.', 'Teams take turns choosing a question. Harder questions are worth more.', 'The host reads it out and starts the clock. Answer right to win the points.', 'Wrong or out of time? The other team gets a short chance to snatch it — a Khatfa!', 'When the board is empty, the team with the most points wins.'], ['انقسموا لفريقين. كل فريق يختار فئات، وكلها تنحط على اللوحة.', 'الفرق تتناوب على اختيار الأسئلة. كل ما صعب السؤال زادت نقاطه.', 'المقدّم يقرأ السؤال ويشغّل الوقت. جاوب صح وخذ النقاط.', 'غلطتوا أو خلص الوقت؟ الفريق الثاني عنده فرصة قصيرة يخطف السؤال… خطفة!', 'إذا خلصت اللوحة، الفريق صاحب أعلى نقاط يفوز.']]
 };
-let LANG = 'ar';
+let LANG = 'en';
 const setLang = l => {
   LANG = l === 'en' ? 'en' : 'ar';
 };
@@ -539,111 +607,240 @@ function pick(obj, lang) {
 const hasBoth = obj => !!(obj && typeof obj === 'object' && obj.ar && obj.ar.trim() && obj.en && obj.en.trim());
 const looksArabic = s => /[؀-ۿ]/.test(s || '');
 const teamName = team => team ? team.name : '';
-const qq = (id, tier, qAr, qEn, aAr, aEn, note) => ({
-  id,
-  tier,
-  type: 'text',
-  q: {
-    ar: qAr,
-    en: qEn
-  },
-  a: {
-    ar: aAr,
-    en: aEn
-  },
-  ...(note ? {
-    note
-  } : {})
+const POINTS = [200, 400, 600];
+const STRICT_WINDOW = 50;
+const MIX_ID = 'mix';
+function indexBank(raw) {
+  const B = raw || typeof window !== 'undefined' && window.KH_BANK || {
+    groups: [],
+    cats: [],
+    questions: []
+  };
+  const byCat = {};
+  B.cats.forEach(c => {
+    byCat[c.id] = [];
+  });
+  B.questions.forEach(q => {
+    if (q.tier && byCat[q.cat]) byCat[q.cat].push(q);
+  });
+  return {
+    groups: B.groups,
+    cats: B.cats,
+    byCat,
+    total: B.questions.filter(q => q.tier).length,
+    errors: B.errors || []
+  };
+}
+const tierCounts = qs => [1, 2, 3].map(t => qs.filter(q => q.tier === t).length);
+const nicheCounts = qs => [1, 2, 3].map(t => qs.filter(q => q.tier === t && q.x).length);
+function rowTiers(rules) {
+  const lo = clamp(rules.minTier || 1, 1, 3),
+    hi = clamp(Math.max(rules.maxTier || 3, lo), 1, 3);
+  return [1, 2, 3].map(t => clamp(t, lo, hi));
+}
+function tiersNeeded(rules) {
+  const need = [0, 0, 0];
+  rowTiers(rules).forEach(t => {
+    need[t - 1] += rules.perValue;
+  });
+  return need;
+}
+function categoryShortfall(qs, rules) {
+  const have = tierCounts(rules.nicheOnly ? qs.filter(q => q.x) : qs);
+  const need = tiersNeeded(rules);
+  return need.map((n, i) => Math.max(0, n - have[i]));
+}
+function weightOf(q, tier, rules, recent, gameNo) {
+  let w = 1;
+  const curve = rules.curve || 'standard';
+  if (curve === 'steep' && tier >= 2) w *= q.x ? 4 : 0.5;
+  if (curve === 'brutal') w *= q.x ? tier >= 2 ? 8 : 3 : tier >= 2 ? 0.25 : 0.6;
+  if (rules.niche) w *= q.x ? 3 : 1;
+  const seen = recent && recent[q.id];
+  if (seen != null && gameNo != null) {
+    const age = Math.max(1, gameNo - seen);
+    w *= age <= 1 ? 0.01 : age <= 3 ? 0.05 : age <= 10 ? 0.2 : 0.6;
+  }
+  return w;
+}
+function weightedPick(items, weights, rand) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  if (total <= 0) return items[Math.floor(rand() * items.length)];
+  let r = rand() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+function selectQuestions(pool, tier, count, rules, ctx) {
+  const rand = ctx.rand || Math.random;
+  const keys = q => q.facts && q.facts.length ? q.facts : [q.id];
+  const clash = q => keys(q).some(k => ctx.facts.has(k));
+  const free = q => q.tier === tier && !ctx.used.has(q.id) && !clash(q);
+  let cands = pool.filter(free);
+  let nicheShort = 0;
+  if (rules.nicheOnly) {
+    const n = cands.filter(q => q.x);
+    if (n.length >= count) cands = n;else {
+      nicheShort = count - n.length;
+    }
+  }
+  const picked = [];
+  let repeats = 0;
+  for (let k = 0; k < count; k++) {
+    const left = cands.filter(q => !ctx.used.has(q.id) && !clash(q));
+    if (!left.length) break;
+    let choose = left;
+    const recentOf = q => ctx.recent && ctx.recent[q.id] != null && ctx.gameNo != null && ctx.gameNo - ctx.recent[q.id] <= STRICT_WINDOW;
+    if (rules.strict) {
+      const fresh = left.filter(q => !recentOf(q));
+      if (fresh.length) choose = fresh;else {
+        const oldest = Math.min(...left.map(q => ctx.recent[q.id]));
+        choose = left.filter(q => ctx.recent[q.id] === oldest);
+      }
+    }
+    const q = weightedPick(choose, choose.map(x => weightOf(x, tier, rules, ctx.recent, ctx.gameNo)), rand);
+    if (recentOf(q)) repeats++;
+    picked.push(q);
+    ctx.used.add(q.id);
+    keys(q).forEach(k => ctx.facts.add(k));
+  }
+  return {
+    picked,
+    repeats,
+    nicheShort
+  };
+}
+function selectMix(bank, allowed, tier, count, rules, c) {
+  const out = {
+    picked: [],
+    repeats: 0,
+    nicheShort: 0
+  };
+  const usedGroups = new Set();
+  const usedCats = new Set();
+  for (let k = 0; k < count; k++) {
+    const cats = allowed.map(id => bank.cats.find(x => x.id === id)).filter(Boolean);
+    const groups = [...new Set(cats.map(x => x.group))];
+    const freshGroups = groups.filter(g => !usedGroups.has(g));
+    const tryGroups = shuffleWith(freshGroups.length ? freshGroups : groups, c.rand);
+    let done = false;
+    for (const g of tryGroups) {
+      const inGroup = shuffleWith(cats.filter(x => x.group === g && !usedCats.has(x.id)), c.rand);
+      for (const cat of inGroup) {
+        const r = selectQuestions(bank.byCat[cat.id] || [], tier, 1, rules, c);
+        if (r.picked.length) {
+          out.picked.push(r.picked[0]);
+          out.repeats += r.repeats;
+          out.nicheShort += r.nicheShort;
+          usedGroups.add(g);
+          usedCats.add(cat.id);
+          done = true;
+          break;
+        }
+      }
+      if (done) break;
+    }
+    if (!done) break;
+  }
+  return out;
+}
+function shuffleWith(arr, rand) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function selectBoard(cats, bank, rules, ctx) {
+  const c = {
+    used: new Set(ctx.used || []),
+    facts: new Set(ctx.facts || []),
+    recent: ctx.recent || {},
+    gameNo: ctx.gameNo,
+    rand: ctx.rand || Math.random
+  };
+  const report = {
+    exhausted: [],
+    repeats: 0,
+    nicheShort: 0
+  };
+  const cells = [];
+  const rows = rowTiers(rules);
+  const order = [...cats].sort((a, b) => (a.id === MIX_ID) - (b.id === MIX_ID));
+  const byCatCells = {};
+  order.forEach(cat => {
+    const isMix = cat.id === MIX_ID;
+    const pool = isMix ? null : bank.byCat[cat.id] || [];
+    const out = [];
+    const need = {};
+    rows.forEach(tier => {
+      need[tier] = (need[tier] || 0) + rules.perValue;
+    });
+    const got = {};
+    Object.keys(need).forEach(tier => {
+      const r = isMix ? selectMix(bank, ctx.allowed || Object.keys(bank.byCat), +tier, need[tier], rules, c) : selectQuestions(pool, +tier, need[tier], rules, c);
+      got[tier] = r.picked;
+      report.repeats += r.repeats;
+      report.nicheShort += r.nicheShort;
+      if (r.picked.length < need[tier]) report.exhausted.push({
+        cat: cat.id,
+        tier: +tier,
+        missing: need[tier] - r.picked.length
+      });
+    });
+    rows.forEach((tier, row) => {
+      for (let k = 0; k < rules.perValue; k++) {
+        const q = got[tier].shift() || null;
+        out.push({
+          id: cat.id + ':' + (row + 1) + ':' + k,
+          cat: cat.id,
+          tier,
+          value: POINTS[tier - 1],
+          q,
+          status: q ? 'open' : 'empty',
+          why: q ? undefined : 'exhausted'
+        });
+      }
+    });
+    byCatCells[cat.id] = out;
+  });
+  cats.forEach(cat => cells.push(...byCatCells[cat.id]));
+  return {
+    cells,
+    report
+  };
+}
+const emptyHistory = () => ({
+  n: 0,
+  seen: {}
 });
-const SAMPLE_PACK = {
-  id: 'sample-v1',
-  builtIn: true,
-  sample: true,
-  name: {
-    ar: 'حزمة تجريبية',
-    en: 'Sample pack'
-  },
-  categories: [{
-    id: 'c-geo',
-    emoji: '🌍',
-    name: {
-      ar: 'جغرافيا',
-      en: 'Geography'
-    },
-    questions: [qq('geo1', 1, 'ما عاصمة اليابان؟', 'What is the capital of Japan?', 'طوكيو', 'Tokyo'), qq('geo2', 1, 'ما أكبر محيط في العالم؟', 'What is the largest ocean on Earth?', 'المحيط الهادئ', 'The Pacific Ocean'), qq('geo3', 2, 'أي نهر يمر بمدينة القاهرة؟', 'Which river flows through Cairo?', 'نهر النيل', 'The Nile'), qq('geo4', 2, 'ما عاصمة كندا؟', 'What is the capital of Canada?', 'أوتاوا', 'Ottawa', {
-      ar: 'كثيرون يظنونها تورونتو، أكبر مدنها.',
-      en: 'Many people guess Toronto, its largest city.'
-    }), qq('geo5', 3, 'ما أصغر دولة في العالم من حيث المساحة؟', 'What is the smallest country in the world by area?', 'الفاتيكان', 'Vatican City'), qq('geo6', 3, 'ما اسم الصحراء الكبيرة في جنوب شبه الجزيرة العربية؟', 'What is the name of the huge desert in the south of the Arabian Peninsula?', 'الربع الخالي', 'The Rub’ al Khali (Empty Quarter)')]
-  }, {
-    id: 'c-sci',
-    emoji: '🔬',
-    name: {
-      ar: 'علوم',
-      en: 'Science'
-    },
-    questions: [qq('sci1', 1, 'ما الصيغة الكيميائية للماء؟', 'What is the chemical formula for water?', 'H₂O', 'H₂O'), qq('sci2', 1, 'كم عدد كواكب المجموعة الشمسية؟', 'How many planets are in the Solar System?', '٨ كواكب', '8 planets'), qq('sci3', 2, 'أي غاز تمتصه النباتات لتقوم بالبناء الضوئي؟', 'Which gas do plants take in for photosynthesis?', 'ثاني أكسيد الكربون', 'Carbon dioxide (CO₂)'), qq('sci4', 2, 'ما أقسى مادة طبيعية معروفة؟', 'What is the hardest natural material?', 'الألماس', 'Diamond'), qq('sci5', 3, 'ما الرمز الكيميائي للذهب؟', 'What is the chemical symbol for gold?', 'Au', 'Au', {
-      ar: 'من الكلمة اللاتينية Aurum.',
-      en: 'From the Latin word aurum.'
-    }), qq('sci6', 3, 'كم عظمة في جسم الإنسان البالغ تقريباً؟', 'About how many bones are in an adult human body?', '٢٠٦ عظمات', '206')]
-  }, {
-    id: 'c-ani',
-    emoji: '🐪',
-    name: {
-      ar: 'حيوانات',
-      en: 'Animals'
-    },
-    questions: [qq('ani1', 1, 'ما أسرع حيوان بري؟', 'What is the fastest land animal?', 'الفهد (الشيتا)', 'The cheetah'), qq('ani2', 1, 'كم رِجلاً للعنكبوت؟', 'How many legs does a spider have?', '٨', '8'), qq('ani3', 2, 'ما أكبر حيوان عاش على الأرض؟', 'What is the largest animal ever known to have lived?', 'الحوت الأزرق', 'The blue whale'), qq('ani4', 2, 'ما الحيوان الثديي الوحيد القادر على الطيران فعلاً؟', 'Which is the only mammal that can truly fly?', 'الخفاش', 'The bat'), qq('ani5', 3, 'كم قلباً للأخطبوط؟', 'How many hearts does an octopus have?', 'ثلاثة', 'Three'), qq('ani6', 3, 'ماذا يُسمّى صغير الناقة في اللغة العربية؟', 'In Arabic, what is a baby camel called?', 'الحُوار', 'Ḥuwār (حُوار)')]
-  }, {
-    id: 'c-num',
-    emoji: '🔢',
-    name: {
-      ar: 'أرقام',
-      en: 'Numbers'
-    },
-    questions: [qq('num1', 1, 'كم حاصل ٧ × ٨؟', 'What is 7 × 8?', '٥٦', '56'), qq('num2', 1, 'كم دقيقة في ثلاث ساعات؟', 'How many minutes are in three hours?', '١٨٠ دقيقة', '180'), qq('num3', 2, 'كم ضلعاً للشكل السداسي؟', 'How many sides does a hexagon have?', '٦', '6'), qq('num4', 2, 'ما الجذر التربيعي للعدد ١٤٤؟', 'What is the square root of 144?', '١٢', '12'), qq('num5', 3, 'كم ثانية في اليوم الواحد؟', 'How many seconds are in one day?', '٨٦٤٠٠ ثانية', '86,400'), qq('num6', 3, 'كم يساوي ١٥٪ من ٢٠٠؟', 'What is 15% of 200?', '٣٠', '30')]
-  }, {
-    id: 'c-arb',
-    emoji: '✍️',
-    name: {
-      ar: 'لغتنا',
-      en: 'Arabic language'
-    },
-    questions: [qq('arb1', 1, 'كم عدد حروف الأبجدية العربية؟', 'How many letters are in the Arabic alphabet?', '٢٨ حرفاً', '28'), qq('arb2', 1, 'ما عكس كلمة «كبير»؟', 'What is the opposite of the Arabic word «كبير» (big)?', 'صغير', 'صغير (small)'), qq('arb3', 2, 'ما جمع كلمة «كتاب»؟', 'What is the plural of the Arabic word «كتاب» (book)?', 'كُتُب', 'كُتُب (kutub)'), qq('arb4', 2, 'تُسمّى العربية «لغة …» أيّ حرف؟', 'Arabic is called “the language of the letter …” which letter?', 'الضاد (ض)', 'Ḍād (ض)'), qq('arb5', 3, 'كم نقطة في كلمة «ثقة»؟', 'How many dots are in the Arabic word «ثقة»?', '٧ نقاط', '7', {
-      ar: 'ث = ٣، ق = ٢، ة = ٢',
-      en: 'ث has 3, ق has 2, ة has 2.'
-    }), qq('arb6', 3, 'ما مفرد كلمة «أقلام»؟', 'What is the singular of the Arabic word «أقلام» (pens)?', 'قلم', 'قلم (qalam)')]
-  }, {
-    id: 'c-food',
-    emoji: '🍽️',
-    name: {
-      ar: 'أكل',
-      en: 'Food'
-    },
-    questions: [qq('food1', 1, 'ما المكوّن الأساسي للحمّص؟', 'What is the main ingredient of hummus?', 'الحمّص (الحبوب)', 'Chickpeas'), qq('food2', 1, 'ما الحبوب الأساسية في الكبسة؟', 'What grain is the base of kabsa?', 'الأرز', 'Rice'), qq('food3', 2, 'من أي بذور يُصنع الطحينة؟', 'Tahini is made from which seeds?', 'السمسم', 'Sesame'), qq('food4', 2, 'ما البهار الذي يعطي القهوة العربية نكهتها المعروفة؟', 'Which spice gives Arabic coffee its well-known flavour?', 'الهيل', 'Cardamom'), qq('food5', 3, 'أي جزء من زهرة الزعفران يُستخدم كبهار؟', 'Which part of the saffron flower is used as the spice?', 'المياسم (الخيوط الحمراء)', 'The stigmas (red threads)'), qq('food6', 3, 'من أي مكسرات تُصنع حلوى المرزبان؟', 'Which nut is marzipan made from?', 'اللوز', 'Almonds')]
-  }, {
-    id: 'c-spt',
-    emoji: '⚽',
-    name: {
-      ar: 'رياضة',
-      en: 'Sport'
-    },
-    questions: [qq('spt1', 1, 'كم لاعباً لكل فريق داخل ملعب كرة القدم؟', 'How many players does each team have on a football pitch?', '١١ لاعباً', '11'), qq('spt2', 1, 'كم حلقة في علم الألعاب الأولمبية؟', 'How many rings are on the Olympic flag?', '٥ حلقات', '5'), qq('spt3', 2, 'في أي رياضة تُستخدم حركة «السلام دانك»؟', 'In which sport do you do a “slam dunk”?', 'كرة السلة', 'Basketball'), qq('spt4', 2, 'كم لاعباً لكل فريق داخل ملعب الكرة الطائرة؟', 'How many players per team are on a volleyball court?', '٦ لاعبين', '6'), qq('spt5', 3, 'كم طول سباق الماراثون؟', 'How long is a marathon?', '٤٢٫١٩٥ كم', '42.195 km'), qq('spt6', 3, 'في التنس، ماذا تُسمّى النتيجة صفر؟', 'In tennis, what is a score of zero called?', '«لَڤ» (Love)', 'Love')]
-  }, {
-    id: 'c-spc',
-    emoji: '🚀',
-    name: {
-      ar: 'فضاء',
-      en: 'Space'
-    },
-    questions: [qq('spc1', 1, 'ما أقرب نجم إلى الأرض؟', 'What is the closest star to Earth?', 'الشمس', 'The Sun'), qq('spc2', 1, 'أي كوكب يُلقّب بالكوكب الأحمر؟', 'Which planet is known as the Red Planet?', 'المريخ', 'Mars'), qq('spc3', 2, 'ما أكبر كواكب المجموعة الشمسية؟', 'What is the largest planet in the Solar System?', 'المشتري', 'Jupiter'), qq('spc4', 2, 'كم يستغرق ضوء الشمس تقريباً ليصل إلى الأرض؟', 'Roughly how long does sunlight take to reach Earth?', 'حوالي ٨ دقائق', 'About 8 minutes'), qq('spc5', 3, 'من أول إنسان مشى على سطح القمر؟', 'Who was the first person to walk on the Moon?', 'نيل آرمسترونغ', 'Neil Armstrong', {
-      ar: 'كان ذلك عام ١٩٦٩.',
-      en: 'It was in 1969.'
-    }), qq('spc6', 3, 'أي كوكب سنته هي الأقصر؟', 'Which planet has the shortest year?', 'عطارد', 'Mercury', {
-      ar: 'يدور حول الشمس في نحو ٨٨ يوماً.',
-      en: 'It goes round the Sun in about 88 days.'
-    })]
-  }]
-};
+function markSeen(history, qid, gameNo) {
+  const h = history || emptyHistory();
+  return {
+    ...h,
+    seen: {
+      ...h.seen,
+      [qid]: gameNo
+    }
+  };
+}
+function startGameNo(history) {
+  return (history && history.n || 0) + 1;
+}
+function trimHistory(h, keepGames = 200) {
+  if (!h) return emptyHistory();
+  const seen = {};
+  Object.keys(h.seen || {}).forEach(id => {
+    if (h.n - h.seen[id] < keepGames) seen[id] = h.seen[id];
+  });
+  return {
+    n: h.n || 0,
+    seen
+  };
+}
 const DEFAULT_RULES = {
   values: [200, 400, 600],
   perValue: 2,
@@ -651,24 +848,40 @@ const DEFAULT_RULES = {
   answerTime: 45,
   stealTime: 15,
   steals: true,
+  exclude: [],
+  curve: 'standard',
+  minTier: 1,
+  maxTier: 3,
+  niche: false,
+  nicheOnly: false,
+  strict: false,
+  mixed: false,
+  randomCats: false,
+  progressive: false,
   wrongPenalty: false
 };
-const VALUE_PRESETS = [[200, 400, 600], [100, 200, 300], [300, 600, 900]];
 const TIME_CHOICES = [20, 30, 45, 60, 90];
 const STEAL_CHOICES = [10, 15, 20, 30];
+const CURVES = ['standard', 'steep', 'brutal'];
 const HISTORY_MAX = 40;
 function cleanRules(r) {
   const x = {
     ...DEFAULT_RULES,
     ...(r || {})
   };
-  if (!Array.isArray(x.values) || x.values.length !== 3 || x.values.some(v => typeof v !== 'number' || v <= 0)) x.values = [...DEFAULT_RULES.values];
+  x.values = [200, 400, 600];
   x.perValue = x.perValue === 1 ? 1 : 2;
   x.catsPerTeam = clamp(Math.round(x.catsPerTeam) || 3, 1, 6);
   x.answerTime = clamp(Math.round(x.answerTime) || 45, 5, 300);
   x.stealTime = clamp(Math.round(x.stealTime) || 15, 5, 120);
   x.steals = x.steals !== false;
-  x.wrongPenalty = !!x.wrongPenalty;
+  x.exclude = Array.isArray(x.exclude) ? x.exclude.filter(id => typeof id === 'string') : [];
+  x.curve = CURVES.includes(x.curve) ? x.curve : 'standard';
+  x.minTier = clamp(Math.round(x.minTier) || 1, 1, 3);
+  x.maxTier = clamp(Math.round(x.maxTier) || 3, x.minTier, 3);
+  ['niche', 'nicheOnly', 'strict', 'mixed', 'randomCats', 'progressive', 'wrongPenalty'].forEach(k => {
+    x[k] = !!x[k];
+  });
   return x;
 }
 const teamById = (g, id) => g.teams.find(t => t.id === id);
@@ -704,17 +917,37 @@ const undoLabel = g => {
   const h = g.history || [];
   return h.length ? h[h.length - 1].label : null;
 };
-function createGame(pack, teams, rules, now = Date.now()) {
+function gamePool(bank, rules) {
+  const pool = bank.cats.filter(c => !rules.exclude.includes(c.id) && (bank.byCat[c.id] || []).length).map(c => ({
+    id: c.id,
+    emoji: c.emoji,
+    name: c.name,
+    group: c.group,
+    popular: c.popular,
+    nicheTopic: c.nicheTopic,
+    count: tierCounts(bank.byCat[c.id]),
+    short: categoryShortfall(bank.byCat[c.id], rules)
+  }));
+  if (rules.mixed && pool.length) pool.push({
+    id: MIX_ID,
+    emoji: '🎲',
+    name: {
+      en: 'Random Mix',
+      ar: 'خلطة عشوائية'
+    },
+    group: 'mix',
+    count: null,
+    short: [0, 0, 0]
+  });
+  return pool;
+}
+function createGame(bank, teams, rules, now = Date.now(), opts = {}) {
   const r = cleanRules(rules);
   return {
-    v: 1,
+    v: 2,
     id: uid(),
     createdAt: now,
-    pack: {
-      id: pack.id,
-      name: pack.name,
-      sample: !!pack.sample
-    },
+    gameNo: opts.gameNo || 1,
     rules: r,
     teams: teams.map((tm, i) => ({
       id: 't' + i,
@@ -723,15 +956,11 @@ function createGame(pack, teams, rules, now = Date.now()) {
       emoji: tm.emoji || EMOJIS[i],
       score: 0
     })),
-    pool: pack.categories.map(c => ({
-      id: c.id,
-      emoji: c.emoji,
-      name: c.name,
-      questions: c.questions
-    })),
+    pool: gamePool(bank, r),
     cats: [],
     cells: [],
     log: [],
+    report: null,
     phase: 'pick',
     turn: 0,
     current: null,
@@ -740,11 +969,11 @@ function createGame(pack, teams, rules, now = Date.now()) {
 }
 const picksNeeded = g => g.rules.catsPerTeam * g.teams.length;
 const pickingTeam = g => g.teams[g.cats.length % g.teams.length];
-const usable = c => c.questions && c.questions.length > 0;
-function pickCategory(g, catId) {
+const canPick = (g, c) => !!c && !g.cats.some(x => x.id === c.id) && (c.short || [0, 0, 0]).every(n => n === 0);
+function pickCategory(g, catId, ctx) {
   if (g.phase !== 'pick') return g;
   const c = g.pool.find(x => x.id === catId);
-  if (!c || !usable(c) || g.cats.some(x => x.id === catId)) return g;
+  if (!canPick(g, c)) return g;
   const by = pickingTeam(g).id;
   let n = withHistory(g, 'pick');
   n = {
@@ -756,46 +985,62 @@ function pickCategory(g, catId) {
       by
     }]
   };
-  if (n.cats.length >= picksNeeded(n)) n = buildBoard(n);
+  if (n.cats.length >= picksNeeded(n)) n = buildBoard(n, ctx);
   return n;
 }
-function randomPick(g) {
-  const left = g.pool.filter(c => usable(c) && !g.cats.some(x => x.id === c.id));
-  return left.length ? pickCategory(g, left[Math.floor(Math.random() * left.length)].id) : g;
+function randomPick(g, ctx) {
+  const left = g.pool.filter(c => canPick(g, c));
+  if (!left.length) return g;
+  const rand = ctx && ctx.rand || Math.random;
+  const usedGroups = new Set(g.cats.map(c => (g.pool.find(p => p.id === c.id) || {}).group));
+  const freshGroups = [...new Set(left.map(c => c.group))].filter(x => !usedGroups.has(x));
+  const groups = freshGroups.length ? freshGroups : [...new Set(left.map(c => c.group))];
+  const grp = groups[Math.floor(rand() * groups.length)];
+  const inGroup = left.filter(c => c.group === grp);
+  return pickCategory(g, inGroup[Math.floor(rand() * inGroup.length)].id, ctx);
 }
-function buildBoard(g) {
-  const cells = [];
-  g.cats.forEach(cat => {
-    const src = g.pool.find(x => x.id === cat.id);
-    const used = new Set();
-    const byTier = tier => shuffle(src.questions.filter(q => (q.tier || 1) === tier && !used.has(q.id)));
-    [1, 2, 3].forEach(tier => {
-      for (let k = 0; k < g.rules.perValue; k++) {
-        let q = byTier(tier)[0];
-        if (!q) q = shuffle(src.questions.filter(x => !used.has(x.id))).sort((a, b) => Math.abs((a.tier || 1) - tier) - Math.abs((b.tier || 1) - tier))[0];
-        if (q) used.add(q.id);
-        cells.push({
-          id: cat.id + ':' + tier + ':' + k,
-          cat: cat.id,
-          tier,
-          value: g.rules.values[tier - 1],
-          q: q || null,
-          status: q ? 'open' : 'empty'
-        });
-      }
-    });
+function autoPick(g, ctx) {
+  let n = g;
+  let guard = 0;
+  while (n.phase === 'pick' && guard++ < 50) {
+    const next = randomPick(n, ctx);
+    if (next === n) break;
+    n = next;
+  }
+  return {
+    ...n,
+    history: []
+  };
+}
+const pickable = g => g.pool.filter(c => canPick(g, c)).length;
+function buildBoard(g, ctx) {
+  if (!ctx || !ctx.bank) return g;
+  const allowed = g.pool.filter(c => c.id !== MIX_ID).map(c => c.id);
+  const {
+    cells,
+    report
+  } = selectBoard(g.cats, ctx.bank, g.rules, {
+    recent: ctx.recent,
+    gameNo: g.gameNo,
+    rand: ctx.rand,
+    allowed
   });
   return {
     ...g,
     cells,
+    report,
     phase: 'board',
     turn: 0,
-    pool: undefined
+    pool: g.pool
   };
+}
+function isLocked(g, c) {
+  if (!g.rules.progressive || c.status !== 'open') return false;
+  return g.cells.some(x => x.cat === c.cat && x.status === 'open' && x.tier < c.tier);
 }
 function openCell(g, cellId, now = Date.now()) {
   const c = cellById(g, cellId);
-  if (g.phase !== 'board' || !c || c.status !== 'open') return g;
+  if (g.phase !== 'board' || !c || c.status !== 'open' || isLocked(g, c)) return g;
   const n = withHistory(g, 'open');
   return {
     ...n,
@@ -1078,8 +1323,8 @@ function gameStats(g) {
     sharpest: by('acc')
   };
 }
-function rematch(g, pack, now = Date.now()) {
-  return createGame(pack, g.teams.map(({
+function rematch(g, bank, now = Date.now(), opts = {}) {
+  return createGame(bank, g.teams.map(({
     name,
     color,
     emoji
@@ -1087,13 +1332,13 @@ function rematch(g, pack, now = Date.now()) {
     name,
     color,
     emoji
-  })), g.rules, now);
+  })), g.rules, now, opts);
 }
 const pastEntry = g => ({
   id: g.id,
   createdAt: g.createdAt,
   endedAt: g.endedAt,
-  pack: g.pack,
+  gameNo: g.gameNo,
   rules: g.rules,
   teams: g.teams,
   cats: g.cats,
@@ -1591,7 +1836,10 @@ function Home({
     onClick: () => p.prompt()
   }, "\uD83D\uDCF2 ", t('install'))), React.createElement("p", {
     className: "hint center"
-  }, t('sampleNote')), past.length > 0 && React.createElement("section", {
+  }, t('bankNote', {
+    q: BANK.total,
+    c: BANK.cats.length
+  })), past.length > 0 && React.createElement("section", {
     className: "stack-sm"
   }, React.createElement("span", {
     className: "eyebrow"
@@ -1632,7 +1880,6 @@ function HowTo({
     onClick: onClose
   }, t('close'))));
 }
-const PACKS = () => [SAMPLE_PACK];
 const freshTeams = () => [{
   name: t('defaultTeam1'),
   color: COLORS[0],
@@ -1695,28 +1942,68 @@ function TeamEditor({
     })
   }))));
 }
+function Section({
+  icon,
+  title,
+  sub,
+  children,
+  startOpen
+}) {
+  const [open, setOpen] = useState(!!startOpen);
+  return React.createElement("section", {
+    className: "rsec"
+  }, React.createElement("button", {
+    className: "rtitle",
+    "aria-expanded": open,
+    onClick: () => setOpen(!open)
+  }, React.createElement("span", {
+    className: "re"
+  }, icon), React.createElement("span", {
+    className: "grow"
+  }, React.createElement("b", null, title), sub && React.createElement("span", {
+    className: "small muted rsum"
+  }, sub)), React.createElement("span", {
+    className: "chev"
+  }, open ? '▲' : '▼')), open && React.createElement("div", {
+    className: "rbody stack"
+  }, children));
+}
+const tierLabel = tier => POINTS[tier - 1] + ' · ' + t(['tierEasy', 'tierHard', 'tierBrutal'][tier - 1]);
+function difficultySummary(r) {
+  const parts = [t('curve_' + r.curve)];
+  if (r.minTier > 1 || r.maxTier < 3) parts.push(POINTS[r.minTier - 1] + '–' + POINTS[r.maxTier - 1]);
+  if (r.niche) parts.push(t('nicheMode'));
+  if (r.nicheOnly) parts.push(t('nicheOnly'));
+  if (r.strict) parts.push(t('strictRepeats'));
+  if (r.progressive) parts.push(t('progressive'));
+  return parts.join(' · ');
+}
 function Setup({
   initial,
+  bank,
   onBack,
   onStart
 }) {
   const [teams, setTeams] = useState(() => initial && initial.teams || freshTeams());
   const [rules, setRules] = useState(() => cleanRules(initial && initial.rules));
-  const [open, setOpen] = useState(false);
-  const pack = PACKS()[0];
-  const usableCats = pack.categories.filter(c => c.questions.length).length;
-  const need = rules.catsPerTeam * teams.length;
-  const problems = [];
-  if (teams.some(tm => !tm.name.trim())) problems.push(t('needNames'));
-  if (need > usableCats) problems.push(t('needCats', {
-    have: usableCats,
-    need
-  }));
-  const set = (k, v) => setRules({
+  const [browse, setBrowse] = useState(false);
+  const set = (k, v) => setRules(cleanRules({
     ...rules,
     [k]: v
-  });
-  const maxCats = Math.max(1, Math.floor(usableCats / teams.length));
+  }));
+  const pool = useMemo(() => gamePool(bank, rules), [bank, rules]);
+  const real = pool.filter(c => c.id !== MIX_ID);
+  const playable = pool.filter(c => (c.short || [0, 0, 0]).every(n => n === 0));
+  const shortCats = real.filter(c => c.short.some(n => n > 0));
+  const need = rules.catsPerTeam * teams.length;
+  const included = bank.cats.length - rules.exclude.filter(id => bank.byCat[id]).length;
+  const qIncluded = real.reduce((n, c) => n + c.count[0] + c.count[1] + c.count[2], 0);
+  const problems = [];
+  if (teams.some(tm => !tm.name.trim())) problems.push(t('needNames'));
+  if (playable.length < need) problems.push(t('needCats', {
+    have: playable.length,
+    need
+  }));
   return React.createElement("div", {
     className: "app"
   }, React.createElement(TopBar, {
@@ -1736,50 +2023,51 @@ function Setup({
     className: "card stack-sm"
   }, React.createElement("span", {
     className: "eyebrow"
-  }, t('pack')), React.createElement("div", {
+  }, t('categories')), React.createElement("div", {
     className: "row"
   }, React.createElement("span", {
     className: "packem"
-  }, "\uD83E\uDDEA"), React.createElement("b", {
+  }, "\uD83D\uDCDA"), React.createElement("b", {
     className: "grow"
-  }, React.createElement(Txt, {
-    v: pack.name
+  }, t('catsOn', {
+    n: included,
+    of: bank.cats.length
   })), React.createElement("span", {
-    className: "small muted"
+    className: "small muted num"
   }, t('questionsN', {
-    n: pack.categories.reduce((n, c) => n + c.questions.length, 0)
-  })))), React.createElement("section", {
-    className: "rsec"
-  }, React.createElement("button", {
-    className: "rtitle",
-    "aria-expanded": open,
-    onClick: () => setOpen(!open)
-  }, React.createElement("span", {
-    className: "re"
-  }, "\u2699\uFE0F"), React.createElement("span", {
-    className: "grow"
-  }, React.createElement("b", null, t('houseRules')), React.createElement("span", {
-    className: "small muted rsum"
-  }, t('rulesSummary', {
-    vals: rules.values.join('/'),
-    per: rules.perValue,
-    cats: rules.catsPerTeam,
-    a: rules.answerTime,
-    s: rules.stealTime
-  }))), React.createElement("span", {
-    className: "chev"
-  }, open ? '▲' : '▼')), open && React.createElement("div", {
-    className: "rbody stack"
-  }, React.createElement("div", {
-    className: "field"
-  }, React.createElement("span", {
-    className: "label"
-  }, t('pointValues')), React.createElement(Seg, {
-    value: rules.values.join('/'),
-    options: VALUE_PRESETS.map(v => [v.join('/'), v.join('/')]),
-    onChange: v => set('values', v.split('/').map(Number)),
-    label: t('pointValues')
-  })), React.createElement("div", {
+    n: qIncluded
+  }))), shortCats.length > 0 && React.createElement("p", {
+    className: "hint"
+  }, "\u26A0 ", t('catsShort', {
+    n: shortCats.length
+  })), React.createElement("button", {
+    className: "btn btn-sm",
+    style: {
+      width: '100%'
+    },
+    onClick: () => setBrowse(true)
+  }, t('chooseCats')), React.createElement(Toggle, {
+    on: rules.randomCats,
+    onChange: v => set('randomCats', v),
+    title: t('randomCats'),
+    sub: t('randomCatsSub')
+  }), React.createElement(Toggle, {
+    on: rules.mixed,
+    onChange: v => set('mixed', v),
+    title: t('mixedCats'),
+    sub: t('mixedCatsSub')
+  })), React.createElement(Section, {
+    icon: "\u2699\uFE0F",
+    title: t('houseRules'),
+    sub: t('rulesSummary', {
+      per: rules.perValue,
+      cats: rules.catsPerTeam,
+      a: rules.answerTime,
+      s: rules.stealTime
+    })
+  }, React.createElement("p", {
+    className: "hint"
+  }, t('valuesFixed')), React.createElement("div", {
     className: "field"
   }, React.createElement("span", {
     className: "label"
@@ -1794,7 +2082,7 @@ function Setup({
     className: "label"
   }, t('catsPerTeam')), React.createElement(Seg, {
     value: rules.catsPerTeam,
-    options: [1, 2, 3, 4].filter(n => n <= maxCats).map(n => [n, String(n)]),
+    options: [1, 2, 3, 4].map(n => [n, String(n)]),
     onChange: v => set('catsPerTeam', v),
     label: t('catsPerTeam')
   })), React.createElement("div", {
@@ -1824,28 +2112,99 @@ function Setup({
     })]),
     onChange: v => set('stealTime', v),
     label: t('stealTime')
-  })), React.createElement("div", {
-    className: "stack-sm"
+  }))), React.createElement(Section, {
+    icon: "\uD83C\uDF36\uFE0F",
+    title: t('difficulty'),
+    sub: difficultySummary(rules)
+  }, React.createElement("div", {
+    className: "field"
   }, React.createElement("span", {
     className: "label"
-  }, t('modifiers')), React.createElement("p", {
+  }, t('curve')), React.createElement(Seg, {
+    value: rules.curve,
+    options: CURVES.map(c => [c, t('curve_' + c)]),
+    onChange: v => set('curve', v),
+    label: t('curve')
+  }), React.createElement("p", {
     className: "hint"
-  }, t('modifiersSub')), React.createElement(Toggle, {
+  }, t('curveSub_' + rules.curve))), React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('minDiff')), React.createElement(Seg, {
+    value: rules.minTier,
+    options: [1, 2, 3].map(n => [n, String(POINTS[n - 1])]),
+    onChange: v => setRules(cleanRules({
+      ...rules,
+      minTier: v,
+      maxTier: Math.max(v, rules.maxTier)
+    })),
+    label: t('minDiff')
+  })), React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('maxDiff')), React.createElement(Seg, {
+    value: rules.maxTier,
+    options: [1, 2, 3].map(n => [n, String(POINTS[n - 1])]),
+    onChange: v => setRules(cleanRules({
+      ...rules,
+      maxTier: v,
+      minTier: Math.min(v, rules.minTier)
+    })),
+    label: t('maxDiff')
+  }), (rules.minTier > 1 || rules.maxTier < 3) && React.createElement("p", {
+    className: "hint"
+  }, t('minMaxSub', {
+    rows: rowTiers(rules).map(x => POINTS[x - 1]).join(' / ')
+  }))), React.createElement(Toggle, {
+    on: rules.niche,
+    onChange: v => set('niche', v),
+    title: t('nicheMode'),
+    sub: t('nicheModeSub')
+  }), React.createElement(Toggle, {
+    on: rules.nicheOnly,
+    onChange: v => set('nicheOnly', v),
+    title: t('nicheOnly'),
+    sub: t('nicheOnlySub')
+  }), React.createElement(Toggle, {
+    on: rules.strict,
+    onChange: v => set('strict', v),
+    title: t('strictRepeats'),
+    sub: t('strictRepeatsSub')
+  }), React.createElement(Toggle, {
+    on: rules.progressive,
+    onChange: v => set('progressive', v),
+    title: t('progressive'),
+    sub: t('progressiveSub')
+  })), React.createElement(Section, {
+    icon: "\uD83E\uDDE9",
+    title: t('modifiers'),
+    sub: t('modifiersSub')
+  }, React.createElement(Toggle, {
     on: rules.wrongPenalty,
     onChange: v => set('wrongPenalty', v),
     title: t('wrongPenalty'),
     sub: t('wrongPenaltySub')
-  })))), problems.map(p => React.createElement("p", {
+  })), problems.map(p => React.createElement("p", {
     key: p,
     className: "warn"
   }, p)), React.createElement("button", {
     className: "btn btn-gold",
     disabled: problems.length > 0,
-    onClick: () => onStart(pack, teams.map(tm => ({
+    onClick: () => onStart(teams.map(tm => ({
       ...tm,
       name: tm.name.trim()
     })), rules)
-  }, t('pickCategories')));
+  }, rules.randomCats ? t('startGame') : t('pickCategories')), browse && React.createElement(CategoryBrowser, {
+    bank: bank,
+    rules: rules,
+    onChange: exclude => setRules(cleanRules({
+      ...rules,
+      exclude
+    })),
+    onClose: () => setBrowse(false)
+  }));
 }
 function useNow(active, every = 200) {
   const [now, setNow] = useState(Date.now());
@@ -1877,6 +2236,7 @@ const undoText = g => {
 };
 function CategoryGrid({
   g,
+  cats,
   onPick,
   big
 }) {
@@ -1886,12 +2246,13 @@ function CategoryGrid({
   };
   return React.createElement("div", {
     className: 'catgrid' + (big ? ' big' : '')
-  }, (g.pool || []).map(c => {
+  }, (cats || g.pool || []).map(c => {
     const by = pickedBy(c.id);
-    const off = !!by || !c.questions.length;
+    const short = (c.short || [0, 0, 0]).some(n => n > 0);
+    const off = !!by || short;
     return React.createElement("button", {
       key: c.id,
-      className: 'catcard' + (by ? ' taken' : ''),
+      className: 'catcard' + (by ? ' taken' : '') + (short ? ' short' : ''),
       disabled: off || !onPick,
       style: by ? tStyle(by) : undefined,
       onClick: () => onPick && onPick(c.id),
@@ -1905,16 +2266,25 @@ function CategoryGrid({
       className: "cc-by"
     }, by.emoji, " ", React.createElement(Name, {
       team: by
-    })) : React.createElement("span", {
+    })) : short ? React.createElement("span", {
+      className: "cc-n small"
+    }, "\u26A0 ", t('notEnough')) : c.id === MIX_ID ? React.createElement("span", {
       className: "cc-n small muted"
-    }, t('questionsN', {
-      n: c.questions.length
+    }, t('mixSub')) : React.createElement(TierCounts, {
+      count: c.count
+    }), !by && !short && c.id !== MIX_ID && (c.popular || c.nicheTopic || c.count && c.count[0] + c.count[1] + c.count[2] >= BIG_BANK) && React.createElement("span", {
+      className: "cbadges"
+    }, React.createElement(CatBadges, {
+      c: c,
+      total: c.count ? c.count[0] + c.count[1] + c.count[2] : 0
     })));
   }));
 }
 function CategoryPick({
   g,
   act,
+  ctx,
+  bank,
   onMenu,
   onTv
 }) {
@@ -1944,19 +2314,31 @@ function CategoryPick({
     className: "small"
   }, t('picksLeft', {
     n: left
-  }))), React.createElement(CategoryGrid, {
-    g: g,
-    onPick: id => act(x => pickCategory(x, id))
-  }), React.createElement("div", {
+  }))), g.cats.length > 0 && React.createElement("div", {
+    className: "chips picked"
+  }, g.cats.map(c => {
+    const by = teamById(g, c.by);
+    return React.createElement("span", {
+      key: c.id,
+      className: "pchip",
+      style: tStyle(by)
+    }, c.emoji, " ", React.createElement(Txt, {
+      v: c.name
+    }));
+  })), React.createElement("div", {
     className: "row"
   }, React.createElement("button", {
-    className: "btn btn-ghost grow",
+    className: "btn btn-ghost btn-sm grow",
     disabled: !g.cats.length,
     onClick: () => act(undo)
   }, "\u21B6 ", t('undoPick')), React.createElement("button", {
-    className: "btn btn-ghost grow",
-    onClick: () => act(randomPick)
-  }, "\uD83C\uDFB2 ", t('randomPick'))));
+    className: "btn btn-ghost btn-sm grow",
+    onClick: () => act(x => randomPick(x, ctx()))
+  }, "\uD83C\uDFB2 ", t('randomPick'))), React.createElement(CategoryPicker, {
+    g: g,
+    bank: bank,
+    onPick: id => act(x => pickCategory(x, id, ctx()))
+  }));
 }
 function Tile({
   g,
@@ -1965,8 +2347,15 @@ function Tile({
 }) {
   if (cell.status === 'empty') return React.createElement("span", {
     className: "tile empty",
-    "aria-label": t('emptyCell')
-  }, "\u2013");
+    title: t('tierExhausted', {
+      v: cell.value
+    }),
+    "aria-label": t('tierExhausted', {
+      v: cell.value
+    })
+  }, React.createElement("span", {
+    className: "num"
+  }, cell.value), React.createElement("i", null, "\u2205"));
   if (cell.status === 'done') {
     const r = cell.result || {};
     const team = r.team ? teamById(g, r.team) : null;
@@ -1980,13 +2369,15 @@ function Tile({
     }, cell.value), React.createElement("i", null, mark));
   }
   const active = g.current && g.current.cell === cell.id;
+  const locked = isLocked(g, cell);
   return React.createElement("button", {
-    className: 'tile open' + (active ? ' active' : ''),
-    disabled: !onOpen,
+    className: 'tile open' + (active ? ' active' : '') + (locked ? ' locked' : ''),
+    disabled: !onOpen || locked,
+    "aria-label": locked ? cell.value + ' · ' + t('lockedTile') : undefined,
     onClick: () => onOpen && onOpen(cell.id)
   }, React.createElement("span", {
     className: "num"
-  }, cell.value));
+  }, cell.value), locked && React.createElement("i", null, "\uD83D\uDD12"));
 }
 function BoardGrid({
   g,
@@ -2048,10 +2439,35 @@ function Board({
     style: tStyle(team)
   }, React.createElement("span", null, team.emoji), " ", t('turnOf', {
     team: teamName(team)
-  })), React.createElement(BoardGrid, {
+  })), React.createElement(BoardReport, {
+    g: g
+  }), React.createElement(BoardGrid, {
     g: g,
     onOpen: id => act(x => openCell(x, id, Date.now()))
   }));
+}
+function BoardReport({
+  g
+}) {
+  const [hide, setHide] = useState(false);
+  const r = g.report;
+  if (hide || !r || !r.exhausted.length && !r.repeats && !r.nicheShort) return null;
+  return React.createElement("div", {
+    className: "card boardnote",
+    role: "status"
+  }, r.exhausted.length > 0 && React.createElement("p", null, "\u26A0 ", t('reportExhausted', {
+    list: r.exhausted.map(e => {
+      const c = catById(g, e.cat);
+      return (c ? pick(c.name) : e.cat) + ' ' + POINTS[e.tier - 1];
+    }).join(', ')
+  })), r.repeats > 0 && React.createElement("p", null, "\u21BA ", t('reportRepeats', {
+    n: r.repeats
+  })), r.nicheShort > 0 && React.createElement("p", null, "\uD83C\uDF36\uFE0F ", t('reportNiche', {
+    n: r.nicheShort
+  })), React.createElement("button", {
+    className: "btn btn-sm btn-ghost",
+    onClick: () => setHide(true)
+  }, t('dismiss')));
 }
 function Clock({
   g,
@@ -2080,10 +2496,12 @@ function Clock({
     }
   })));
 }
+const altList = q => q.alt ? [...(q.alt[LANG] || []), ...(q.alt[LANG === 'ar' ? 'en' : 'ar'] || [])] : [];
 function QuestionCard({
   cell,
   big,
-  showAnswer
+  showAnswer,
+  host
 }) {
   const q = cell.q;
   return React.createElement("div", {
@@ -2101,11 +2519,23 @@ function QuestionCard({
     as: "p",
     className: "atext",
     both: true
-  }), q.note && React.createElement(Txt, {
+  }), host && altList(q).length > 0 && React.createElement("p", {
+    className: "aalt"
+  }, React.createElement("b", null, t('alsoAccept')), " ", React.createElement("bdi", {
+    dir: "auto"
+  }, altList(q).join(' · '))), q.note && React.createElement(Txt, {
     v: q.note,
     as: "p",
     className: "anote"
-  })));
+  }), host && q.asOf && React.createElement("p", {
+    className: "aalt"
+  }, t('asOf', {
+    d: q.asOf
+  })), host && q.hint && React.createElement("p", {
+    className: "aalt"
+  }, "\uD83D\uDCA1 ", React.createElement("b", null, t('hintForHost')), " ", React.createElement(Txt, {
+    v: q.hint
+  }))));
 }
 function QHead({
   g,
@@ -2238,7 +2668,8 @@ function QuestionScreen({
     g: g
   }), React.createElement(QuestionCard, {
     cell: cell,
-    showAnswer: reveal || peek
+    showAnswer: reveal || peek,
+    host: true
   }), cell.q.check && React.createElement("p", {
     className: "checkbadge"
   }, t('needsCheck')), reveal && React.createElement(ResultBanner, {
@@ -2556,6 +2987,259 @@ function GameMenu({
     onClick: onClose
   }, t('close'))));
 }
+const normSearch = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ًͯ-ْ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+function catMatches(c, q, bank) {
+  if (!q) return true;
+  const g = bank && bank.groups.find(x => x.id === c.group);
+  const subs = c.subs ? Object.values(c.subs) : [];
+  const hay = [c.name.en, c.name.ar, g && g.name.en, g && g.name.ar, ...subs.map(s => s.en + ' ' + s.ar)].map(normSearch).join(' | ');
+  return normSearch(q).split(/\s+/).filter(Boolean).every(w => hay.includes(w));
+}
+function TierCounts({
+  count,
+  short
+}) {
+  if (!count) return null;
+  return React.createElement("span", {
+    className: "tiercounts num",
+    dir: "ltr"
+  }, count.map((n, i) => React.createElement("span", {
+    key: i,
+    className: 'tc t' + (i + 1) + (short && short[i] > 0 ? ' short' : ''),
+    title: POINTS[i] + ': ' + n
+  }, n)));
+}
+const BIG_BANK = 30;
+const catTotal = (bank, id) => (bank.byCat[id] || []).length;
+function CatBadges({
+  c,
+  total
+}) {
+  return React.createElement(React.Fragment, null, c.popular ? React.createElement("span", {
+    className: "cbadge pop"
+  }, "\u2605 ", t('popular')) : null, c.nicheTopic ? React.createElement("span", {
+    className: "cbadge niche"
+  }, "\uD83C\uDF36\uFE0F ", t('nicheTopics')) : null, total >= BIG_BANK ? React.createElement("span", {
+    className: "cbadge big"
+  }, "\uD83D\uDCDA ", t('bigBank')) : null);
+}
+function FilterChips({
+  value,
+  onChange,
+  groups
+}) {
+  return React.createElement("div", {
+    className: "fchips",
+    role: "tablist"
+  }, React.createElement("button", {
+    className: 'fchip' + (value === 'all' ? ' on' : ''),
+    role: "tab",
+    "aria-selected": value === 'all',
+    onClick: () => onChange('all')
+  }, t('all')), React.createElement("button", {
+    className: 'fchip' + (value === 'popular' ? ' on' : ''),
+    role: "tab",
+    "aria-selected": value === 'popular',
+    onClick: () => onChange('popular')
+  }, "\u2605 ", t('popular')), React.createElement("button", {
+    className: 'fchip' + (value === 'niche' ? ' on' : ''),
+    role: "tab",
+    "aria-selected": value === 'niche',
+    onClick: () => onChange('niche')
+  }, "\uD83C\uDF36\uFE0F ", t('nicheTopics')), groups.map(x => React.createElement("button", {
+    key: x.id,
+    className: 'fchip' + (value === x.id ? ' on' : ''),
+    role: "tab",
+    "aria-selected": value === x.id,
+    onClick: () => onChange(x.id)
+  }, x.emoji, " ", React.createElement(Txt, {
+    v: x.name
+  }))));
+}
+const filterMatch = (c, f) => f === 'all' || f === 'popular' && c.popular || f === 'niche' && c.nicheTopic || c.group === f;
+function CategoryBrowser({
+  bank,
+  rules,
+  onChange,
+  onClose
+}) {
+  const [q, setQ] = useState('');
+  const [flt, setFlt] = useState('all');
+  const [open, setOpen] = useState({});
+  const [subsOpen, setSubsOpen] = useState(null);
+  const off = new Set(rules.exclude);
+  const toggle = id => {
+    const n = new Set(off);
+    if (n.has(id)) n.delete(id);else n.add(id);
+    onChange([...n]);
+  };
+  const setMany = (ids, on) => {
+    const n = new Set(off);
+    ids.forEach(id => on ? n.delete(id) : n.add(id));
+    onChange([...n]);
+  };
+  const searching = q.trim().length > 0;
+  const visible = bank.cats.filter(c => filterMatch(c, flt) && catMatches(c, q, bank)).map(c => c.id);
+  return React.createElement(Sheet, {
+    onClose: onClose
+  }, React.createElement("div", {
+    className: "stack catbrowser"
+  }, React.createElement("div", {
+    className: "row"
+  }, React.createElement("h2", {
+    className: "display grow"
+  }, t('chooseCats')), React.createElement("button", {
+    className: "btn btn-sm btn-gold",
+    onClick: onClose
+  }, t('done'))), React.createElement("input", {
+    className: "input",
+    type: "search",
+    dir: "auto",
+    value: q,
+    placeholder: t('searchCats'),
+    "aria-label": t('searchCats'),
+    onChange: e => setQ(e.target.value)
+  }), React.createElement("div", {
+    className: "row"
+  }, React.createElement("button", {
+    className: "btn btn-sm grow",
+    onClick: () => setMany(visible, true)
+  }, t(searching || flt !== 'all' ? 'shownOn' : 'allOn')), React.createElement("button", {
+    className: "btn btn-sm btn-ghost grow",
+    onClick: () => setMany(visible, false)
+  }, t(searching || flt !== 'all' ? 'shownOff' : 'allOff'))), React.createElement(FilterChips, {
+    value: flt,
+    onChange: setFlt,
+    groups: bank.groups
+  }), React.createElement("p", {
+    className: "hint"
+  }, t('countsKey')), bank.groups.map(g => {
+    const cats = bank.cats.filter(c => c.group === g.id && filterMatch(c, flt) && catMatches(c, q, bank));
+    if (!cats.length) return null;
+    const onN = cats.filter(c => !off.has(c.id)).length;
+    const expanded = searching || flt !== 'all' || open[g.id];
+    return React.createElement("section", {
+      key: g.id,
+      className: "cgroup"
+    }, React.createElement("div", {
+      className: "cg-head"
+    }, React.createElement("button", {
+      className: "cg-title",
+      "aria-expanded": !!expanded,
+      onClick: () => setOpen({
+        ...open,
+        [g.id]: !open[g.id]
+      })
+    }, React.createElement("span", {
+      className: "cg-em"
+    }, g.emoji), React.createElement("b", {
+      className: "grow"
+    }, React.createElement(Txt, {
+      v: g.name
+    })), React.createElement("span", {
+      className: "small muted num"
+    }, onN, "/", cats.length), React.createElement("span", {
+      className: "chev"
+    }, expanded ? '▲' : '▼')), React.createElement("button", {
+      className: "mini-sw",
+      role: "switch",
+      "aria-checked": onN === cats.length,
+      "aria-label": t('allInGroup', {
+        g: pick(g.name)
+      }),
+      onClick: () => setMany(cats.map(c => c.id), onN !== cats.length)
+    }, React.createElement("span", null))), expanded && React.createElement("div", {
+      className: "stack-sm cg-body"
+    }, cats.map(c => {
+      const qs = bank.byCat[c.id] || [];
+      const count = tierCounts(qs);
+      const short = categoryShortfall(qs, rules);
+      const subs = Object.keys(c.subs || {});
+      return React.createElement("div", {
+        key: c.id,
+        className: 'crow' + (off.has(c.id) ? ' off' : '')
+      }, React.createElement("button", {
+        className: "crow-main",
+        role: "switch",
+        "aria-checked": !off.has(c.id),
+        onClick: () => toggle(c.id)
+      }, React.createElement("span", {
+        className: "cr-em"
+      }, c.emoji), React.createElement("span", {
+        className: "grow cr-txt"
+      }, React.createElement(Txt, {
+        v: c.name,
+        className: "cr-name"
+      }), React.createElement("span", {
+        className: "cbadges"
+      }, React.createElement(CatBadges, {
+        c: c,
+        total: qs.length
+      })), React.createElement("span", {
+        className: "small muted"
+      }, t('questionsN', {
+        n: qs.length
+      }), short.some(n => n) ? ' · ⚠ ' + t('shortFor', {
+        tiers: short.map((n, i) => n ? POINTS[i] : null).filter(Boolean).join('/')
+      }) : '')), React.createElement(TierCounts, {
+        count: count,
+        short: short
+      }), React.createElement("span", {
+        className: 'cr-check' + (off.has(c.id) ? '' : ' on'),
+        "aria-hidden": "true"
+      }, off.has(c.id) ? '' : '✓')), subs.length > 0 && React.createElement("button", {
+        className: "cr-subbtn",
+        "aria-expanded": subsOpen === c.id,
+        onClick: () => setSubsOpen(subsOpen === c.id ? null : c.id)
+      }, t('subcats', {
+        n: subs.length
+      }), " ", subsOpen === c.id ? '▲' : '▼'), subsOpen === c.id && React.createElement("ul", {
+        className: "sublist"
+      }, subs.map(k => {
+        const n = qs.filter(x => x.sub === k);
+        return React.createElement("li", {
+          key: k
+        }, React.createElement(Txt, {
+          v: c.subs[k]
+        }), " ", React.createElement(TierCounts, {
+          count: tierCounts(n)
+        }));
+      })));
+    })));
+  })));
+}
+function CategoryPicker({
+  g,
+  bank,
+  onPick
+}) {
+  const [q, setQ] = useState('');
+  const [grp, setGrp] = useState('all');
+  const groups = bank.groups.filter(x => g.pool.some(c => c.group === x.id));
+  const meta = c => bank.cats.find(x => x.id === c.id) || c;
+  const list = g.pool.filter(c => (c.id === MIX_ID ? grp === 'all' : filterMatch(c, grp)) && (c.id === MIX_ID ? !q : catMatches(meta(c), q, bank)));
+  return React.createElement("div", {
+    className: "stack-sm"
+  }, React.createElement("input", {
+    className: "input",
+    type: "search",
+    dir: "auto",
+    value: q,
+    placeholder: t('searchCats'),
+    "aria-label": t('searchCats'),
+    onChange: e => setQ(e.target.value)
+  }), React.createElement(FilterChips, {
+    value: grp,
+    onChange: setGrp,
+    groups: groups
+  }), list.length ? React.createElement(CategoryGrid, {
+    g: g,
+    cats: list,
+    onPick: onPick
+  }) : React.createElement("p", {
+    className: "hint center"
+  }, t('noMatch')));
+}
 const TV_CHANNEL = 'khatfa-tv';
 const tvUrl = () => location.origin + location.pathname + '#tv';
 const canChannel = () => typeof window !== 'undefined' && 'BroadcastChannel' in window;
@@ -2579,7 +3263,10 @@ function tvGame(g) {
       q: {
         ...c.q,
         a: null,
-        note: null
+        alt: null,
+        note: null,
+        hint: null,
+        ref: null
       }
     } : c)
   };
@@ -2701,8 +3388,11 @@ function TvView({
       className: "pk-t"
     }, t('yourPick', {
       team: teamName(team)
-    })))), React.createElement(CategoryGrid, {
+    })), React.createElement("span", null, t('picksLeft', {
+      n: picksNeeded(g) - g.cats.length
+    })))), g.cats.length > 0 && React.createElement(CategoryGrid, {
       g: g,
+      cats: g.cats.map(c => g.pool.find(p => p.id === c.id) || c),
       big: true
     }));
   } else if (g.phase === 'board') {
@@ -2874,7 +3564,10 @@ function SettingsScreen({
   state,
   onRestore,
   onClearAll,
-  onBack
+  onBack,
+  bank,
+  qhist,
+  onResetHistory
 }) {
   const [ask, setAsk] = useState(null);
   const [msg, setMsg] = useState(null);
@@ -2969,7 +3662,25 @@ function SettingsScreen({
     options: [[0.85, 'S'], [1, 'M'], [1.2, 'L'], [1.4, 'XL']],
     onChange: v => set('tvZoom', v),
     label: t('tvZoom')
-  }))), React.createElement("section", {
+  }))), bank && React.createElement("section", {
+    className: "card stack"
+  }, React.createElement("h3", null, t('qbank')), React.createElement("p", {
+    className: "hint"
+  }, t('qbankSub', {
+    q: bank.total,
+    c: bank.cats.length
+  })), React.createElement("p", {
+    className: "hint"
+  }, t('historySub', {
+    n: Object.keys(qhist && qhist.seen || {}).length,
+    g: qhist && qhist.n || 0
+  })), React.createElement("button", {
+    className: "btn",
+    disabled: !qhist || !Object.keys(qhist.seen || {}).length,
+    onClick: () => setAsk({
+      kind: 'hist'
+    })
+  }, t('resetHistory'))), React.createElement("section", {
     className: "card stack"
   }, React.createElement("h3", null, t('backup')), React.createElement("p", {
     className: "hint"
@@ -3023,6 +3734,12 @@ function SettingsScreen({
       });
     },
     onClose: () => setAsk(null)
+  }), ask && ask.kind === 'hist' && React.createElement(Confirm, {
+    title: t('resetHistoryQ'),
+    body: t('resetHistoryBody'),
+    yes: t('resetHistory'),
+    onYes: onResetHistory,
+    onClose: () => setAsk(null)
   }), ask && ask.kind === 'clear' && React.createElement(Confirm, {
     title: t('clearAllQ'),
     body: t('clearAllBody'),
@@ -3036,8 +3753,15 @@ function SettingsScreen({
     onClose: () => setMsg(null)
   }));
 }
+const deviceLang = () => {
+  try {
+    return /^ar\b/i.test(navigator.languages && navigator.languages[0] || navigator.language || '') ? 'ar' : 'en';
+  } catch (e) {
+    return 'en';
+  }
+};
 const DEFAULT_SETTINGS = {
-  lang: 'ar',
+  lang: deviceLang(),
   qLang: 'auto',
   motion: 'system',
   tvZoom: 1,
@@ -3049,12 +3773,20 @@ function applyDocLang(lang) {
   el.setAttribute('lang', lang === 'en' ? 'en' : 'ar');
   el.setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
 }
-const findPack = id => PACKS().find(p => p.id === id) || PACKS()[0];
+const BANK = indexBank();
 function App() {
   const [ready, setReady] = useState(false);
   const [settings, setSettingsRaw] = useState(DEFAULT_SETTINGS);
   const [game, setGameRaw] = useState(null);
   const [past, setPast] = useState([]);
+  const [qhist, setQhistRaw] = useState(emptyHistory());
+  const histRef = useRef(qhist);
+  histRef.current = qhist;
+  const setQhist = h => {
+    histRef.current = h;
+    setQhistRaw(h);
+    store.set(K.history, h);
+  };
   const [screen, setScreen] = useState('home');
   const [flash, setFlash] = useState(null);
   const [sheet, setSheet] = useState(null);
@@ -3075,6 +3807,11 @@ function App() {
       const cur = store.get(K.current, null);
       if (cur && Array.isArray(cur.teams)) setGameRaw(cur);
       setPast(store.get(K.past, []));
+      const h = store.get(K.history, null);
+      if (h && h.seen) {
+        histRef.current = h;
+        setQhistRaw(h);
+      }
       setReady(true);
     });
   }, []);
@@ -3093,6 +3830,14 @@ function App() {
     setGameRaw(prev => {
       const g = typeof next === 'function' ? next(prev) : next;
       if (g) store.set(K.current, g);else store.del(K.current);
+      if (g && prev && prev.id === g.id && prev.phase === 'pick' && g.phase === 'board' && histRef.current.n < g.gameNo) setQhist({
+        ...histRef.current,
+        n: g.gameNo
+      });
+      if (g && g.current && (!prev || !prev.current || prev.current.cell !== g.current.cell)) {
+        const c = cellById(g, g.current.cell);
+        if (c && c.q) setQhist(trimHistory(markSeen(histRef.current, c.q.id, g.gameNo)));
+      }
       if (g && g.phase === 'done' && (!prev || prev.phase !== 'done' || prev.id !== g.id)) {
         setPast(p => {
           const list = [pastEntry(g), ...p.filter(x => x.id !== g.id)].slice(0, 30);
@@ -3104,6 +3849,22 @@ function App() {
     });
   };
   const act = fn => setGame(g => g ? fn(g) : g);
+  const ctx = () => ({
+    bank: BANK,
+    recent: histRef.current.seen,
+    rand: Math.random
+  });
+  const begin = g => {
+    if (g.rules.randomCats) {
+      const b = autoPick(g, ctx());
+      if (histRef.current.n < b.gameNo && b.phase === 'board') setQhist({
+        ...histRef.current,
+        n: b.gameNo
+      });
+      return b;
+    }
+    return g;
+  };
   const sendTv = useTvSender(game, settings);
   const doFlash = info => {
     setFlash(info);
@@ -3115,13 +3876,15 @@ function App() {
   if (!ready) return React.createElement("div", {
     className: "boot"
   }, React.createElement("div", null, "\u062E\u0637\u0641\u0629", React.createElement("small", null, "KHATFA")));
-  const startNew = (pack, teams, rules) => {
+  const startNew = (teams, rules) => {
     setSettings({
       ...settings,
       rules,
       lastTeams: teams
     });
-    setGame(createGame(pack, teams, rules, Date.now()));
+    setGame(begin(createGame(BANK, teams, rules, Date.now(), {
+      gameNo: startGameNo(histRef.current)
+    })));
     setScreen('game');
   };
   const goHome = () => {
@@ -3129,7 +3892,9 @@ function App() {
     setScreen('home');
   };
   const playAgain = () => {
-    setGame(rematch(game, findPack(game.pack && game.pack.id), Date.now()));
+    setGame(begin(rematch(game, BANK, Date.now(), {
+      gameNo: startGameNo(histRef.current)
+    })));
     setScreen('game');
   };
   const restore = d => {
@@ -3142,6 +3907,7 @@ function App() {
     setPast(d.past || []);
     store.set(K.past, d.past || []);
     store.set(K.packs, d.packs || []);
+    if (d.history) setQhist(d.history);
   };
   const clearAll = () => {
     Object.values(K).forEach(k => store.del(k));
@@ -3149,6 +3915,8 @@ function App() {
     setLang(DEFAULT_SETTINGS.lang);
     setGameRaw(null);
     setPast([]);
+    histRef.current = emptyHistory();
+    setQhistRaw(emptyHistory());
     setScreen('home');
   };
   let view;
@@ -3159,12 +3927,20 @@ function App() {
       settings,
       game,
       past,
-      packs: store.get(K.packs, [])
+      packs: store.get(K.packs, []),
+      history: qhist
     },
     onRestore: restore,
     onClearAll: clearAll,
+    bank: BANK,
+    qhist: qhist,
+    onResetHistory: () => setQhist({
+      n: histRef.current.n,
+      seen: {}
+    }),
     onBack: () => setScreen('home')
   });else if (screen === 'setup') view = React.createElement(Setup, {
+    bank: BANK,
     initial: {
       teams: settings.lastTeams,
       rules: settings.rules
@@ -3175,6 +3951,8 @@ function App() {
     const common = {
       g: game,
       act,
+      ctx,
+      bank: BANK,
       onMenu: () => setSheet('menu'),
       onTv: () => setSheet('tv')
     };
@@ -3229,7 +4007,23 @@ function App() {
 if (window.__KH_TEST__) window.__KH = {
   store,
   K,
-  SAMPLE_PACK,
+  BANK,
+  indexBank,
+  selectBoard,
+  selectQuestions,
+  rowTiers,
+  tiersNeeded,
+  categoryShortfall,
+  gamePool,
+  autoPick,
+  isLocked,
+  markSeen,
+  trimHistory,
+  emptyHistory,
+  startGameNo,
+  tierCounts,
+  POINTS,
+  MIX_ID,
   DEFAULT_RULES,
   cleanRules,
   createGame,

@@ -37,18 +37,29 @@ async function run(browser, base, { lang, w, h, tag }) {
     await page.waitForTimeout(150);
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (wide > 1) fail(tag + ' ' + name + ': scrolls sideways by ' + wide + 'px');
-    await page.screenshot({ path: path.join(outDir, tag + '-' + name + '.png'), fullPage: w < 900 });
+    await page.screenshot({ path: path.join(outDir, tag + '-' + name + '.png'), fullPage: w < 900 && !(await page.locator('.sheet, .modal').count()) });
   };
   const click = async (sel) => { await page.locator(sel).first().click(); await page.waitForTimeout(80); };
   await shot('1-home');
   await click('.btn-gold'); // new game
   await page.waitForSelector('.teamedit');
   await click('.rtitle');
+  await page.locator('.rtitle').nth(1).click(); await page.waitForTimeout(80);
   await shot('2-setup');
+  // the host's category browser: groups, counts, badges, subcategories
+  await click('button.btn-sm[style*="width: 100%"]');
+  await page.waitForSelector('.catbrowser');
+  await click('.catbrowser .cg-title');
+  await click('.catbrowser .cr-subbtn');
+  await shot('2b-categories');
+  await page.fill('.catbrowser input[type=search]', 'pop');
+  await shot('2c-category-search');
+  await click('.catbrowser .btn-gold');
   await click('.app > .btn-gold'); // pick categories
   await page.waitForSelector('.catgrid');
   for (let i = 0; i < 3; i++) await click('.catcard:not([disabled])');
   await shot('3-pick');
+  await page.screenshot({ path: path.join(outDir, tag + '-3b-pick-top.png') });
   for (let i = 0; i < 3; i++) await click('.catcard:not([disabled])');
   await page.waitForSelector('.board');
   await shot('4-board');

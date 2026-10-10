@@ -31,7 +31,7 @@ const reducedMotion = () => {
    An in-memory copy the UI reads synchronously. Writes go to IndexedDB,
    falling back to localStorage, then memory only. The game never waits.
    ============================================================ */
-const K = { settings: 'kh_settings_v1', current: 'kh_current_v1', past: 'kh_past_v1', packs: 'kh_packs_v1' };
+const K = { settings: 'kh_settings_v1', current: 'kh_current_v1', past: 'kh_past_v1', packs: 'kh_packs_v1', history: 'kh_qhistory_v1' };
 const STORE_KEYS = Object.values(K);
 
 const store = (() => {
@@ -134,7 +134,7 @@ const todayStamp = () => { const d = new Date(); return d.getFullYear() + '-' + 
 const BACKUP_FORMAT = 1;
 function makeBackup(state) {
   return { app: 'khatfa', format: BACKUP_FORMAT, exportedAt: new Date().toISOString(),
-    data: { settings: state.settings || {}, current: state.game || null, past: state.past || [], packs: state.packs || [] } };
+    data: { settings: state.settings || {}, current: state.game || null, past: state.past || [], packs: state.packs || [], history: state.history || null } };
 }
 // Returns { ok, error (string key), data, summary }
 function validateBackup(obj) {
@@ -145,6 +145,7 @@ function validateBackup(obj) {
   const games = [...d.past, ...(d.current ? [d.current] : [])];
   if (games.some((g) => !g || !Array.isArray(g.teams) || !Array.isArray(g.cells) || !g.rules)) return { ok: false, error: 'bkDamaged' };
   if (d.packs.some((p) => !p || typeof p.id !== 'string' || !Array.isArray(p.categories))) return { ok: false, error: 'bkDamaged' };
+  if (d.history != null && (typeof d.history !== 'object' || typeof d.history.seen !== 'object')) return { ok: false, error: 'bkDamaged' };
   return { ok: true, data: d, summary: { past: d.past.length, current: !!d.current, packs: d.packs.length, exportedAt: obj.exportedAt } };
 }
 

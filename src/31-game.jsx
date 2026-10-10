@@ -16,25 +16,30 @@ const UNDO_TXT = {
 const undoText = (g) => { const l = undoLabel(g); return l ? t('undoWhat', { what: (UNDO_TXT[l] || [l, l])[LANG === 'ar' ? 1 : 0] }) : t('nothingToUndo'); };
 
 /* ---------- category pick ---------- */
-function CategoryGrid({ g, onPick, big }) {
+function CategoryGrid({ g, cats, onPick, big }) {
   const pickedBy = (id) => { const c = g.cats.find((x) => x.id === id); return c ? teamById(g, c.by) : null; };
   return (
     <div className={'catgrid' + (big ? ' big' : '')}>
-      {(g.pool || []).map((c) => {
+      {(cats || g.pool || []).map((c) => {
         const by = pickedBy(c.id);
-        const off = !!by || !c.questions.length;
+        const short = (c.short || [0, 0, 0]).some((n) => n > 0);
+        const off = !!by || short;
         return (
-          <button key={c.id} className={'catcard' + (by ? ' taken' : '')} disabled={off || !onPick} style={by ? tStyle(by) : undefined} onClick={() => onPick && onPick(c.id)} aria-pressed={!!by}>
+          <button key={c.id} className={'catcard' + (by ? ' taken' : '') + (short ? ' short' : '')} disabled={off || !onPick} style={by ? tStyle(by) : undefined} onClick={() => onPick && onPick(c.id)} aria-pressed={!!by}>
             <span className="cc-em">{c.emoji}</span>
             <Txt v={c.name} className="cc-name" />
-            {by ? <span className="cc-by">{by.emoji} <Name team={by} /></span> : <span className="cc-n small muted">{t('questionsN', { n: c.questions.length })}</span>}
+            {by ? <span className="cc-by">{by.emoji} <Name team={by} /></span>
+              : short ? <span className="cc-n small">⚠ {t('notEnough')}</span>
+              : c.id === MIX_ID ? <span className="cc-n small muted">{t('mixSub')}</span>
+              : <TierCounts count={c.count} />}
+            {!by && !short && c.id !== MIX_ID && (c.popular || c.nicheTopic || (c.count && c.count[0] + c.count[1] + c.count[2] >= BIG_BANK)) && <span className="cbadges"><CatBadges c={c} total={c.count ? c.count[0] + c.count[1] + c.count[2] : 0} /></span>}
           </button>
         );
       })}
     </div>
   );
 }
-function CategoryPick({ g, act, onMenu, onTv }) {
+function CategoryPick({ g, act, ctx, bank, onMenu, onTv }) {
   const team = pickingTeam(g);
   const left = picksNeeded(g) - g.cats.length;
   return (
@@ -45,18 +50,19 @@ function CategoryPick({ g, act, onMenu, onTv }) {
         <b className="pk-t">{t('yourPick', { team: teamName(team) })}</b>
         <span className="small">{t('picksLeft', { n: left })}</span>
       </div>
-      <CategoryGrid g={g} onPick={(id) => act((x) => pickCategory(x, id))} />
+      {g.cats.length > 0 && <div className="chips picked">{g.cats.map((c) => { const by = teamById(g, c.by); return <span key={c.id} className="pchip" style={tStyle(by)}>{c.emoji} <Txt v={c.name} /></span>; })}</div>}
       <div className="row">
-        <button className="btn btn-ghost grow" disabled={!g.cats.length} onClick={() => act(undo)}>↶ {t('undoPick')}</button>
-        <button className="btn btn-ghost grow" onClick={() => act(randomPick)}>🎲 {t('randomPick')}</button>
+        <button className="btn btn-ghost btn-sm grow" disabled={!g.cats.length} onClick={() => act(undo)}>↶ {t('undoPick')}</button>
+        <button className="btn btn-ghost btn-sm grow" onClick={() => act((x) => randomPick(x, ctx()))}>🎲 {t('randomPick')}</button>
       </div>
+      <CategoryPicker g={g} bank={bank} onPick={(id) => act((x) => pickCategory(x, id, ctx()))} />
     </div>
   );
 }
 
 /* ---------- board ---------- */
 function Tile({ g, cell, onOpen }) {
-  if (cell.status === 'empty') return <span className="tile empty" aria-label={t('emptyCell')}>–</span>;
+  if (cell.status === 'empty') return <span className="tile empty" title={t('tierExhausted', { v: cell.value })} aria-label={t('tierExhausted', { v: cell.value })}><span className="num">{cell.value}</span><i>∅</i></span>;
   if (cell.status === 'done') {
     const r = cell.result || {};
     const team = r.team ? teamById(g, r.team) : null;
@@ -64,7 +70,8 @@ function Tile({ g, cell, onOpen }) {
     return <span className={'tile done k-' + r.kind} style={team ? tStyle(team) : undefined} aria-label={cell.value + ' ' + (team ? teamName(team) : t('logMissed'))}><span className="num">{cell.value}</span><i>{mark}</i></span>;
   }
   const active = g.current && g.current.cell === cell.id;
-  return <button className={'tile open' + (active ? ' active' : '')} disabled={!onOpen} onClick={() => onOpen && onOpen(cell.id)}><span className="num">{cell.value}</span></button>;
+  const locked = isLocked(g, cell);
+  return <button className={'tile open' + (active ? ' active' : '') + (locked ? ' locked' : '')} disabled={!onOpen || locked} aria-label={locked ? cell.value + ' · ' + t('lockedTile') : undefined} onClick={() => onOpen && onOpen(cell.id)}><span className="num">{cell.value}</span>{locked && <i>🔒</i>}</button>;
 }
 function BoardGrid({ g, onOpen, big }) {
   return (
@@ -91,7 +98,23 @@ function Board({ g, act, onMenu, onTv }) {
       <TopBar left={<MenuBtn onClick={onMenu} />} title={t('leftN', { n: openCells(g).length })} right={<TvButton onTv={onTv} />} dense />
       <ScoreBar g={g} activeId={team.id} label={t('turnShort')} />
       <p className="turnline" style={tStyle(team)}><span>{team.emoji}</span> {t('turnOf', { team: teamName(team) })}</p>
+      <BoardReport g={g} />
       <BoardGrid g={g} onOpen={(id) => act((x) => openCell(x, id, Date.now()))} />
+    </div>
+  );
+}
+
+// Tells the host when the bank couldn't fill every tile, or had to reuse recent questions.
+function BoardReport({ g }) {
+  const [hide, setHide] = useState(false);
+  const r = g.report;
+  if (hide || !r || (!r.exhausted.length && !r.repeats && !r.nicheShort)) return null;
+  return (
+    <div className="card boardnote" role="status">
+      {r.exhausted.length > 0 && <p>⚠ {t('reportExhausted', { list: r.exhausted.map((e) => { const c = catById(g, e.cat); return (c ? pick(c.name) : e.cat) + ' ' + POINTS[e.tier - 1]; }).join(', ') })}</p>}
+      {r.repeats > 0 && <p>↺ {t('reportRepeats', { n: r.repeats })}</p>}
+      {r.nicheShort > 0 && <p>🌶️ {t('reportNiche', { n: r.nicheShort })}</p>}
+      <button className="btn btn-sm btn-ghost" onClick={() => setHide(true)}>{t('dismiss')}</button>
     </div>
   );
 }
@@ -114,7 +137,8 @@ function Clock({ g, big }) {
     </div>
   );
 }
-function QuestionCard({ cell, big, showAnswer }) {
+const altList = (q) => (q.alt ? [...(q.alt[LANG] || []), ...(q.alt[LANG === 'ar' ? 'en' : 'ar'] || [])] : []);
+function QuestionCard({ cell, big, showAnswer, host }) {
   const q = cell.q;
   return (
     <div className={'qcard' + (big ? ' big' : '')}>
@@ -123,7 +147,10 @@ function QuestionCard({ cell, big, showAnswer }) {
         <div className="qans">
           <span className="eyebrow">{t('answer')}</span>
           <Txt v={q.a} as="p" className="atext" both />
+          {host && altList(q).length > 0 && <p className="aalt"><b>{t('alsoAccept')}</b> <bdi dir="auto">{altList(q).join(' · ')}</bdi></p>}
           {q.note && <Txt v={q.note} as="p" className="anote" />}
+          {host && q.asOf && <p className="aalt">{t('asOf', { d: q.asOf })}</p>}
+          {host && q.hint && <p className="aalt">💡 <b>{t('hintForHost')}</b> <Txt v={q.hint} /></p>}
         </div>
       )}
     </div>
@@ -183,7 +210,7 @@ function QuestionScreen({ g, act, flash, onMenu, onTv }) {
       <QHead g={g} cell={cell} />
       <StageBanner g={g} />
       <Clock g={g} />
-      <QuestionCard cell={cell} showAnswer={reveal || peek} />
+      <QuestionCard cell={cell} showAnswer={reveal || peek} host />
       {cell.q.check && <p className="checkbadge">{t('needsCheck')}</p>}
       {reveal && <ResultBanner g={g} />}
       {!reveal && <button className="btn btn-ghost btn-sm peek" aria-pressed={peek} onClick={() => setPeek(!peek)}>👁 {peek ? t('hideAnswer') : t('showAnswer')}</button>}
