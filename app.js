@@ -1,7 +1,7 @@
-/* Khatfa 4bd3db90db — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa 73133d3247 — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "4bd3db90db";
+const APP_VERSION = "73133d3247";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -2781,7 +2781,7 @@ function CategoryPick({
   const team = pickingTeam(g);
   const left = picksNeeded(g) - g.cats.length;
   return React.createElement("div", {
-    className: "app"
+    className: "app pickscreen"
   }, React.createElement(TopBar, {
     left: React.createElement(MenuBtn, {
       onClick: onMenu

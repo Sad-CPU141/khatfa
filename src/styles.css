@@ -484,3 +484,24 @@ select.input{appearance:auto}
 .qf-actions .btn{min-height:52px}
 .focuspick .qimg{cursor:crosshair}
 .preview .qcard{margin:0}
+
+/* Laptops / desktops (host screens): use the width, keep everything on one screen */
+@media (min-width:1024px){
+  .app.wide{max-width:1280px}
+  .board.n6:not(.big),.board.n5:not(.big){grid-template-columns:repeat(6,minmax(0,1fr))}
+  .board.n4:not(.big),.board.n8:not(.big){grid-template-columns:repeat(4,minmax(0,1fr))}
+  .board.n3:not(.big){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .board:not(.big) .bc-head{min-height:62px;align-items:center}
+  .board:not(.big) .tile{min-height:clamp(46px,9vh,96px);font-size:clamp(22px,1.9vw,30px)}
+  .app.qscreen{max-width:720px}
+}
+/* TV view: equal header heights so tile rows line up even when names wrap */
+.board.big .bc-head{min-height:clamp(56px,6vw,100px)}
+@media (min-width:1024px){
+  .app.pickscreen{max-width:1100px}
+  .pickscreen .catgrid:not(.big){grid-template-columns:repeat(4,minmax(0,1fr))}
+  .pickscreen .fchips{flex-wrap:wrap}
+  /* tile rows line up across columns even when a category name wraps */
+  .board{grid-auto-rows:auto}
+  .board .bcat{display:grid;grid-row:span 2;grid-template-rows:subgrid;align-content:start}
+}

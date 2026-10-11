@@ -43,7 +43,7 @@ function CategoryPick({ g, act, ctx, bank, onMenu, onTv }) {
   const team = pickingTeam(g);
   const left = picksNeeded(g) - g.cats.length;
   return (
-    <div className="app">
+    <div className="app pickscreen">
       <TopBar left={<MenuBtn onClick={onMenu} />} title={t('pickTitle')} right={<TvButton onTv={onTv} />} dense />
       <div className="picker" style={tStyle(team)}>
         <span className="pk-em">{team.emoji}</span>

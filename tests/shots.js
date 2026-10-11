@@ -37,7 +37,7 @@ async function run(browser, base, { lang, w, h, tag }) {
     await page.waitForTimeout(150);
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (wide > 1) fail(tag + ' ' + name + ': scrolls sideways by ' + wide + 'px');
-    await page.screenshot({ path: path.join(outDir, tag + '-' + name + '.png'), fullPage: w < 900 && !(await page.locator('.sheet, .modal').count()) });
+    await page.screenshot({ path: path.join(outDir, tag + '-' + name + '.png'), fullPage: w < 1600 && !(await page.locator('.sheet, .modal').count()) });
   };
   const click = async (sel) => { await page.locator(sel).first().click(); await page.waitForTimeout(80); };
   await shot('1-home');
@@ -119,6 +119,8 @@ async function run(browser, base, { lang, w, h, tag }) {
     { lang: 'en', w: 360, h: 780, tag: 'phone-en' },
     { lang: 'ar', w: 1920, h: 1080, tag: 'tv-ar' },
     { lang: 'en', w: 1920, h: 1080, tag: 'tv-en' },
+    { lang: 'en', w: 1366, h: 768, tag: 'laptop-en' },
+    { lang: 'ar', w: 1440, h: 900, tag: 'laptop-ar' },
   ]) {
     try { await run(browser, base, cfg); } catch (e) { fail(cfg.tag + ' crashed: ' + e.message.split('\n')[0]); }
   }
