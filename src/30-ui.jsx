@@ -123,7 +123,7 @@ function useDelta(value) {
   useEffect(() => { if (!d) return undefined; const id = setTimeout(() => setD(null), 1600); return () => clearTimeout(id); }, [d]);
   return d;
 }
-function ScoreCard({ team, active, label, big, onEdit }) {
+function ScoreCard({ team, active, label, big, onEdit, g }) {
   const d = useDelta(team.score);
   const El = onEdit ? 'button' : 'div';
   return (
@@ -134,13 +134,14 @@ function ScoreCard({ team, active, label, big, onEdit }) {
       <span className="s-score"><AnimatedNumber value={team.score} /></span>
       {active && label && <span className="s-turn">{label}</span>}
       {d && <span key={d.k} dir="ltr" className={'s-delta' + (d.n < 0 ? ' neg' : '')}>{d.n > 0 ? '+' : '−'}{Math.abs(d.n)}</span>}
+      {g && g.phase !== 'pick' && <LlDots g={g} team={team} />}
     </El>
   );
 }
 function ScoreBar({ g, activeId, label, big, onEdit }) {
   return (
     <div className={'scorebar n' + g.teams.length + (big ? ' big' : '')}>
-      {g.teams.map((tm) => <ScoreCard key={tm.id} team={tm} active={tm.id === activeId} label={label} big={big} onEdit={onEdit} />)}
+      {g.teams.map((tm) => <ScoreCard key={tm.id} team={tm} active={tm.id === activeId} label={label} big={big} onEdit={onEdit} g={g.ll ? g : null} />)}
     </div>
   );
 }
@@ -149,11 +150,14 @@ function ScoreBar({ g, activeId, label, big, onEdit }) {
 function Flash({ f, g, onDone }) {
   useEffect(() => { const id = setTimeout(onDone, ms(f.kind === 'stolen' ? 1700 : 1300)); return () => clearTimeout(id); }, [f]);
   const team = f.team && g ? teamById(g, f.team) : null;
-  const big = { correct: t('flashCorrect'), stolen: t('flashSteal'), wrong: t('flashWrong'), missed: t('flashMissed'), timeup: t('timeUp'), invalid: '⚠ ' + t('flashInvalid') }[f.kind];
+  const ll = f.kind === 'lifeline' ? LIFELINES.find((x) => x.id === f.ll) : null;
+  const big = ll ? <><span className="fl-ic" aria-hidden="true">{ll.icon}</span> <span lang="ar" dir="rtl">{ll.ar}</span></> : { correct: t('flashCorrect'), stolen: t('flashSteal'), wrong: t('flashWrong'), missed: t('flashMissed'), timeup: t('timeUp'), invalid: '⚠ ' + t('flashInvalid') }[f.kind];
   return (
     <div className={'flash k-' + f.kind} onClick={onDone} role="status" aria-live="assertive" style={team ? tStyle(team) : undefined}>
       <div className="inner">
         <div className="big">{big}</div>
+        {ll && <div className="fl-en" lang="en" dir="ltr">{ll.en}</div>}
+        {ll && team && <div className="to">{teamName(team)}</div>}
         {team && f.points > 0 && <div className="to">{t('pointsTo', { n: f.points, team: teamName(team) })}</div>}
         {team && f.points < 0 && <div className="to">{t('lostPoints', { n: -f.points, team: teamName(team) })}</div>}
       </div>
@@ -350,6 +354,11 @@ function Setup({ initial, bank, onBack, onStart }) {
       </Section>
       <Section icon="🧩" title={t('modifiers')} sub={t('modifiersSub')}>
         <Toggle on={rules.wrongPenalty} onChange={(v) => set('wrongPenalty', v)} title={t('wrongPenalty')} sub={t('wrongPenaltySub')} />
+        <Toggle on={rules.lifelines !== false} onChange={(v) => set('lifelines', v)} title={t('llMain')} sub={t('llMainSub')} />
+        {rules.lifelines !== false && <>
+          <Toggle on={!!rules.extraTime} onChange={(v) => set('extraTime', v)} title={t('llExtra')} sub={t('llExtraSub')} />
+          <Toggle on={!!rules.swap} onChange={(v) => set('swap', v)} title={t('llSwapOpt')} sub={t('llSwapSub')} />
+        </>}
       </Section>
       {problems.map((p) => <p key={p} className="warn">{p}</p>)}
       <button className="btn btn-gold" disabled={problems.length > 0} onClick={() => onStart(teams.map((tm) => ({ ...tm, name: tm.name.trim() })), rules)}>{rules.randomCats ? t('startGame') : t('pickCategories')}</button>

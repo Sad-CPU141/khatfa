@@ -24,6 +24,10 @@ const DEFAULT_RULES = {
   randomCats: false,        // Random Categories: categories are chosen automatically
   progressive: false,       // Progressive Difficulty: 200s before 400s before 600s in each category
   wrongPenalty: false,
+  // lifelines: the three defaults are on; the two extras are optional and OFF by default
+  lifelines: true,
+  extraTime: false,
+  swap: false,
 };
 const TIME_CHOICES = [20, 30, 45, 60, 90];
 const STEAL_CHOICES = [10, 15, 20, 30];
@@ -42,7 +46,8 @@ function cleanRules(r) {
   x.curve = CURVES.includes(x.curve) ? x.curve : 'standard';
   x.minTier = clamp(Math.round(x.minTier) || 1, 1, 3);
   x.maxTier = clamp(Math.round(x.maxTier) || 3, x.minTier, 3);
-  ['niche', 'nicheOnly', 'strict', 'mixed', 'randomCats', 'progressive', 'wrongPenalty'].forEach((k) => { x[k] = !!x[k]; });
+  ['niche', 'nicheOnly', 'strict', 'mixed', 'randomCats', 'progressive', 'wrongPenalty', 'extraTime', 'swap'].forEach((k) => { x[k] = !!x[k]; });
+  x.lifelines = x.lifelines !== false;
   return x;
 }
 
@@ -85,6 +90,7 @@ function createGame(bank, teams, rules, now = Date.now(), opts = {}) {
     pool: gamePool(bank, r),
     cats: [], cells: [], log: [], report: null,
     phase: 'pick', turn: 0, current: null, history: [],
+    ll: freshLifelines(teams.map((tm, i) => 't' + i)), swapped: [],
   };
 }
 const picksNeeded = (g) => g.rules.catsPerTeam * g.teams.length;
@@ -178,19 +184,23 @@ function pauseTimer(g, now = Date.now()) {
   return { ...g, current: { ...cur, pausedLeft: Math.max(0, cur.endsAt - now) } };
 }
 function resumeTimer(g, now = Date.now()) {
-  const cur = g.current; if (!cur || cur.pausedLeft == null) return g;
+  const cur = g.current; if (!cur || cur.pausedLeft == null || helpRunning(cur)) return g; // the clock restarts when Call for Help ends
   return { ...g, current: { ...cur, endsAt: now + cur.pausedLeft, pausedLeft: null } };
 }
+// What the open question is worth right now (Double It doubles it for everyone, steals included).
+const curValue = (g) => { const c = curCell(g); const fx = (g.current && g.current.fx) || {}; return c ? c.value * (fx.double ? 2 : 1) : 0; };
+const helpRunning = (cur) => !!(cur && cur.fx && cur.fx.help && !cur.fx.help.ended);
 const addScore = (g, teamId, d) => ({ ...g, teams: g.teams.map((tm) => (tm.id === teamId ? { ...tm, score: tm.score + d } : tm)) });
 
 // Host marks the answer right. During a steal, the stealing team gets the points.
 function markCorrect(g) {
   const cur = g.current; const c = curCell(g);
   if (g.phase !== 'question' || !cur || !c || (cur.stage !== 'answer' && cur.stage !== 'steal')) return g;
+  const value = curValue(g);
   let n = withHistory(g, cur.stage === 'steal' ? 'stolen' : 'correct');
-  n = addScore(n, cur.team, c.value);
+  n = addScore(n, cur.team, value);
   const kind = cur.stage === 'steal' ? 'stolen' : 'correct';
-  return { ...n, current: { ...cur, stage: 'reveal', pausedLeft: null, result: { kind, team: cur.team, points: c.value, answeredBy: cur.answeredBy || cur.team, penalty: cur.penalty || 0 } } };
+  return { ...n, current: { ...cur, fx: closeHelp(cur.fx), stage: 'reveal', pausedLeft: null, result: { kind, team: cur.team, points: value, answeredBy: cur.answeredBy || cur.team, penalty: cur.penalty || 0 } } };
 }
 // Host marks it wrong (or nobody answered). With steals on, the next team gets a chance.
 function markWrong(g, now = Date.now()) {
@@ -198,14 +208,16 @@ function markWrong(g, now = Date.now()) {
   if (g.phase !== 'question' || !cur || !c) return g;
   if (cur.stage === 'answer') {
     let n = withHistory(g, 'wrong');
-    const penalty = n.rules.wrongPenalty ? c.value : 0;
+    const penalty = n.rules.wrongPenalty ? curValue(g) : 0;
     if (penalty) n = addScore(n, cur.team, -penalty);
     const idx = n.teams.findIndex((tm) => tm.id === cur.team);
-    if (n.rules.steals && n.teams.length > 1) {
+    const fx = closeHelp(cur.fx);
+    // Shield (درع): no steal on this question.
+    if (n.rules.steals && n.teams.length > 1 && !(fx && fx.shield)) {
       const thief = n.teams[nextTeamIndex(n, idx)].id;
-      return { ...n, current: { ...cur, stage: 'steal', answeredBy: cur.team, team: thief, penalty, endsAt: now + ms(n.rules.stealTime * 1000), pausedLeft: null } };
+      return { ...n, current: { ...cur, fx, stage: 'steal', answeredBy: cur.team, team: thief, penalty, endsAt: now + ms(n.rules.stealTime * 1000), pausedLeft: null } };
     }
-    return { ...n, current: { ...cur, stage: 'reveal', pausedLeft: null, penalty, result: { kind: 'missed', team: null, points: 0, answeredBy: cur.team, penalty } } };
+    return { ...n, current: { ...cur, fx, stage: 'reveal', pausedLeft: null, penalty, result: { kind: 'missed', team: null, points: 0, answeredBy: cur.team, penalty, shielded: !!(fx && fx.shield && n.rules.steals) } } };
   }
   if (cur.stage === 'steal') {
     const n = withHistory(g, 'missed');
@@ -218,14 +230,15 @@ function skipQuestion(g) {
   const cur = g.current;
   if (g.phase !== 'question' || !cur || cur.stage === 'reveal') return g;
   const n = withHistory(g, 'skip');
-  return { ...n, current: { ...cur, stage: 'reveal', pausedLeft: null, result: { kind: 'skipped', team: null, points: 0, answeredBy: cur.answeredBy || cur.team, penalty: cur.penalty || 0 } } };
+  return { ...n, current: { ...cur, fx: closeHelp(cur.fx), stage: 'reveal', pausedLeft: null, result: { kind: 'skipped', team: null, points: 0, answeredBy: cur.answeredBy || cur.team, penalty: cur.penalty || 0 } } };
 }
 // Opened by mistake: back on the board, same team still to pick. Only before anyone was marked.
 function putBack(g) {
   const cur = g.current;
   if (g.phase !== 'question' || !cur || cur.stage !== 'answer') return g;
   const n = withHistory(g, 'putBack');
-  return { ...n, phase: 'board', current: null };
+  // Lifelines used on a question that goes back on the board are returned.
+  return { ...returnLifelines(n, cur.cell, Date.now()), phase: 'board', current: null };
 }
 // After the reveal: close the cell, log it, next team's turn.
 function finishQuestion(g, now = Date.now()) {
@@ -233,7 +246,8 @@ function finishQuestion(g, now = Date.now()) {
   if (g.phase !== 'question' || !cur || cur.stage !== 'reveal' || !c) return g;
   const r = cur.result || {};
   let n = withHistory(g, 'next');
-  const entry = { cell: c.id, qid: c.q && c.q.id, cat: c.cat, tier: c.tier, value: c.value, turnTeam: turnTeam(n).id, kind: r.kind, team: r.team, points: r.points || 0, penalty: r.penalty || 0, answeredBy: r.answeredBy || null, at: now };
+  const fx = cur.fx || {};
+  const entry = { cell: c.id, qid: c.q && c.q.id, cat: c.cat, tier: c.tier, value: c.value, turnTeam: turnTeam(n).id, kind: r.kind, team: r.team, points: r.points || 0, penalty: r.penalty || 0, answeredBy: r.answeredBy || null, doubled: fx.double ? 1 : 0, shield: fx.shield ? 1 : 0, at: now };
   n = { ...n, cells: n.cells.map((x) => (x.id === c.id ? { ...x, status: 'done', result: { kind: r.kind, team: r.team } } : x)), log: [...n.log, entry], current: null, turn: nextTeamIndex(n, n.turn), phase: 'board' };
   if (isBoardDone(n)) n = { ...n, phase: 'done', endedAt: now };
   return n;
@@ -265,11 +279,11 @@ function gameStats(g) {
     const own = per[e.turnTeam]; if (own) own.own++;
     if (e.kind === 'correct' && per[e.team]) {
       per[e.team].correct++; per[e.team].streak++; per[e.team].best = Math.max(per[e.team].best, per[e.team].streak);
-      if (!biggestWin || e.value > biggestWin.value) biggestWin = e;
+      if (!biggestWin || (e.points || e.value) > (biggestWin.points || biggestWin.value)) biggestWin = e;
     } else if (own) own.streak = 0;
     if (e.kind === 'stolen' && per[e.team]) {
       per[e.team].steals++; per[e.team].stolenPts += e.points;
-      if (!biggestSteal || e.value > biggestSteal.value) biggestSteal = e;
+      if (!biggestSteal || (e.points || e.value) > (biggestSteal.points || biggestSteal.value)) biggestSteal = e;
     }
   });
   const list = g.teams.map((tm) => ({ team: tm, ...per[tm.id], acc: per[tm.id].own ? Math.round((per[tm.id].correct / per[tm.id].own) * 100) : 0 }));
@@ -317,6 +331,7 @@ function gameUsed(g) {
   const used = new Set(); const facts = new Set();
   g.cells.forEach((c) => { if (c.q) { used.add(c.q.id); (c.q.facts && c.q.facts.length ? c.q.facts : [c.q.id]).forEach((k) => facts.add(k)); } });
   (g.invalid || []).forEach((x) => { used.add(x.qid); (x.facts || []).forEach((k) => facts.add(k)); });
+  (g.swapped || []).forEach((x) => { used.add(x.qid); (x.facts || []).forEach((k) => facts.add(k)); });
   return { used, facts };
 }
 // Same value, same category (same subcategory first). ctx: { bank, recent, rand, exclude:[ids] }
@@ -384,6 +399,7 @@ function invalidateQuestion(g, cellId, opts) {
     return rep ? { ...rest, q: rep.q, status: 'open', replaced: (x.replaced || 0) + 1, why: undefined } : { ...rest, q: null, status: 'empty', why: 'invalid' };
   });
   n = { ...n, cells, log, invalid: [...(n.invalid || []), record] };
+  n = returnLifelines(n, cellId, now); // lifelines used on a broken question are given back
   if (isCur) {
     // The team that opened it gets the replacement straight away (fresh clock); with no replacement they pick again.
     if (rep) n = { ...n, phase: 'question', current: { cell: cellId, stage: 'answer', team: opener, opener, endsAt: now + ms(n.rules.answerTime * 1000), pausedLeft: null, result: null, play: freshPlay(), reveal: 0 } };
@@ -392,4 +408,108 @@ function invalidateQuestion(g, cellId, opts) {
   if (n.phase === 'done' && !n.endedEarly && openCells(n).length) n = { ...n, phase: 'board', endedAt: undefined };
   if (n.phase === 'board' && isBoardDone(n)) n = { ...n, phase: 'done', endedAt: now };
   return n;
+}
+
+/* ---------- Lifelines ----------
+   Each team gets one use of each lifeline per game. The three defaults (ضاعفها, فزعة, درع)
+   are on unless the host turns lifelines off; تمديد and بدّل are optional (OFF by default).
+   A lifeline can only be used by the team that is answering, during its own answer
+   (before the host marks it). Effects live on game.current.fx, so they belong to that one
+   question and disappear with it. Every activation is one undo step and one log entry.
+   Rules (the value stays attached to the question):
+   · Double It: the question is worth ×2 for whoever scores it (a steal too); the optional
+     wrong-answer penalty is ×2 as well. Refunds use the points actually given.
+   · Call for Help: a 30 s countdown with its own deadline; the answer clock pauses and
+     carries on (from the deadline) when it ends.
+   · Shield: if the answer is wrong, the other team can't steal.
+   · Extra Time: +30 s on the running clock (the help countdown if it's running).
+   · Swap: a new question of the same value from the same category; not used up if none is left.
+   A lifeline used on a question that is put back or removed with "This is wrong" is returned. */
+const LIFELINES = [
+  { id: 'double', icon: '✖2', ar: 'ضاعفها', en: 'Double It' },
+  { id: 'help', icon: '📞', ar: 'فزعة', en: 'Call for Help' },
+  { id: 'shield', icon: '🛡️', ar: 'درع', en: 'Shield' },
+  { id: 'extra', icon: '⏱️', ar: 'تمديد', en: 'Extra Time', optional: true },
+  { id: 'swap', icon: '🔄', ar: 'بدّل', en: 'Swap', optional: true },
+];
+const HELP_SECONDS = 30, EXTRA_SECONDS = 30;
+const freshLifelines = (ids) => { const o = {}; ids.forEach((id) => { o[id] = {}; }); return o; };
+function enabledLifelines(g) {
+  const r = g.rules || {};
+  if (r.lifelines === false) return [];
+  return LIFELINES.filter((l) => !l.optional || (l.id === 'extra' && r.extraTime) || (l.id === 'swap' && r.swap)).map((l) => l.id);
+}
+const lifelineUsed = (g, team, id) => !!(g.ll && g.ll[team] && g.ll[team][id]);
+function closeHelp(fx) { return fx && fx.help && !fx.help.ended ? { ...fx, help: { ...fx.help, ended: true } } : fx; }
+// Why a lifeline can't be used right now ('' = it can).
+function lifelineBlock(g, id) {
+  const cur = g.current;
+  if (!enabledLifelines(g).includes(id)) return 'off';
+  if (g.phase !== 'question' || !cur || cur.stage !== 'answer') return 'notNow';
+  if (lifelineUsed(g, cur.team, id)) return 'used';
+  const fx = cur.fx || {};
+  if (id === 'double' && fx.double) return 'active';
+  if (id === 'shield' && fx.shield) return 'active';
+  if (id === 'help' && fx.help) return 'active';
+  return '';
+}
+// opts: { now, ctx (bank etc., for Swap) }. Returns the same game if it can't be used.
+function useLifeline(g, id, opts) {
+  const o = opts || {}; const now = o.now || Date.now();
+  if (lifelineBlock(g, id)) return g;
+  const cur = g.current; const c = curCell(g); const team = cur.team;
+  let rep = null;
+  if (id === 'swap') { rep = findReplacement(g, c, o.ctx); if (!rep) return g; }
+  let n = withHistory(g, 'lifeline:' + id);
+  const fx = { ...(cur.fx || {}) };
+  let next = { ...cur };
+  if (id === 'double') fx.double = 1;
+  else if (id === 'shield') fx.shield = 1;
+  else if (id === 'help') {
+    const mainLeft = timeLeft(g, now);
+    fx.help = { start: now, endsAt: now + ms(HELP_SECONDS * 1000), ended: false, mainLeft, wasPaused: cur.pausedLeft != null };
+    next.pausedLeft = mainLeft; // the answer clock waits
+  } else if (id === 'extra') {
+    const add = ms(EXTRA_SECONDS * 1000);
+    if (helpRunning(cur)) fx.help = { ...fx.help, endsAt: fx.help.endsAt + add };
+    else if (cur.pausedLeft != null) next.pausedLeft = cur.pausedLeft + add;
+    else next.endsAt = Math.max(cur.endsAt, now) + add;
+    fx.extra = (fx.extra || 0) + 1;
+  }
+  next.fx = fx;
+  const entry = { kind: 'lifeline', ll: id, team, cell: c.id, cat: c.cat, value: c.value, at: now };
+  let cells = n.cells;
+  if (rep) {
+    entry.from = c.q.id; entry.to = rep.q.id;
+    cells = n.cells.map((x) => (x.id === c.id ? { ...x, q: rep.q } : x));
+    // The new question gets a fresh answer clock (it waits if Call for Help is running).
+    const fresh = ms(n.rules.answerTime * 1000);
+    if (helpRunning({ fx })) { fx.help = { ...fx.help, mainLeft: fresh }; next = { ...next, pausedLeft: fresh }; }
+    else next = { ...next, endsAt: now + fresh, pausedLeft: null };
+    next = { ...next, play: freshPlay(), reveal: 0 };
+    n = { ...n, swapped: [...(n.swapped || []), { qid: c.q.id, facts: c.q.facts || [], cell: c.id, at: now }] };
+  }
+  const ll = { ...(n.ll || {}) }; ll[team] = { ...(ll[team] || {}), [id]: 1 };
+  return { ...n, cells, ll, current: next, log: [...n.log, entry] };
+}
+// Call for Help is over (time ran out, or the host ended it early). Idempotent; not an undo step.
+function endHelp(g, now = Date.now()) {
+  const cur = g.current;
+  if (!helpRunning(cur)) return g;
+  const h = cur.fx.help;
+  const at = Math.min(now, h.endsAt); // based on the deadline, so a late timer can't steal time
+  const next = { ...cur, fx: { ...cur.fx, help: { ...h, ended: true, endedAt: at } } };
+  if (h.wasPaused) next.pausedLeft = h.mainLeft;
+  else { next.pausedLeft = null; next.endsAt = at + h.mainLeft; }
+  const c = curCell(g);
+  return { ...g, current: next, log: [...g.log, { kind: 'help-end', team: cur.team, cell: c ? c.id : null, cat: c ? c.cat : null, value: c ? c.value : null, early: now < h.endsAt, at }] };
+}
+// Give back lifelines used on a cell (the question was put back or removed as wrong).
+function returnLifelines(g, cellId, now) {
+  const back = g.log.filter((e) => e.kind === 'lifeline' && e.cell === cellId && !e.void);
+  if (!back.length) return g;
+  const ll = { ...(g.ll || {}) };
+  back.forEach((e) => { ll[e.team] = { ...(ll[e.team] || {}), [e.ll]: 0 }; });
+  const log = g.log.map((e) => (e.kind === 'lifeline' && e.cell === cellId && !e.void ? { ...e, void: true } : e));
+  return { ...g, ll, log: [...log, { kind: 'lifeline-return', cell: cellId, items: back.map((e) => ({ team: e.team, ll: e.ll })), at: now || Date.now() }] };
 }

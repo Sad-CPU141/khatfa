@@ -56,6 +56,17 @@ Read this first in every new chat about this repo.
   - Credits are in `media/CREDITS.md`.
   - The service worker pre-caches media and serves audio byte ranges for offline Safari.
   - No built-in YouTube clips: we can't verify them from the build machine.
+- **Lifelines** are in `20-engine.js`: `LIFELINES`, `enabledLifelines`, `lifelineBlock`, `useLifeline`, `endHelp` and `returnLifelines`. Their UI is in `src/38-lifelines.jsx`.
+  - Team usage is stored in `game.ll[teamId][id]`. Effects for the open question are in `game.current.fx` (`double`, `shield`, `help { start, endsAt, mainLeft }`, `extra`).
+  - `curValue(g)` is the question's value after Double It. markCorrect, markWrong and the penalty all use it, and refunds use the points actually recorded.
+  - Shield blocks the steal in `markWrong`. The Call for Help deadline is ended by the host only (an App effect plus `endHelp`). The TV just shows the deadline.
+  - A lifeline used on a question that is put back or flagged with "This is wrong" is returned.
+  - Rules: `lifelines` (on), `extraTime` and `swap` (off).
+- **Sound** is in `src/37-sound.jsx`, a single `sound` manager.
+  - Source order: your upload in Settings (IndexedDB) → `sounds/<event>.mp3` (listed by build.js in `SOUND_FILES`) → built-in Web Audio synth → silence.
+  - Exactly one device plays: the TV window if open (unless "play here"), otherwise the host. Events come from `soundEvents(prev, next)` in `setGame`, never from renders or undo, and each has a unique id, so nothing plays twice.
+  - Ticks use `tickKey` (from deadlines; last 5 s, once per second).
+  - Settings live in `settings.sound`.
 - `src/20-engine.js` is the game rules as pure functions `(game, …) → game`, with undo history.
 - `src/30-ui.jsx` has the shared UI, home, setup and how-to-play.
 - `src/31-game.jsx` has category pick, board, question, results, menu and fix scores.
@@ -67,12 +78,14 @@ Read this first in every new chat about this repo.
   - `npm run shots` runs a Playwright click-through and screenshots into `shots/`, which is not committed.
   - `npm run media-test` (`tests/media.js`) and `node tests/editor.js` run the media players, TV window, editor and packs in real Chromium.
     - They use a stand-in for YouTube's IFrame API, because YouTube is unreachable from the build machine. Real YouTube is untested.
+  - `node tests/step1.js` checks lifelines and sound in real Chromium: phone, laptop and TV screenshots, real Web Audio, voice-line upload, and the TV window playing alone.
+  - jsdom suites are `tests/lifeline-rules.js` and `tests/sound-rules.js`.
   - Online tests will copy Draft Night's `tests/fake-firebase.js` approach.
 
 ## Roadmap
 1. ✅ Foundation: board, teams, scoring, steals, timer, results, TV mode (this screen and a new window), AR/EN, settings, backup.
 2. ✅ Built-in bank (~1,600 questions, 75 categories, 200/400/600, difficulty settings, no-repeats, category browser, audit). Still to do: the question editor, import/export of packs, and online verification of more questions (only a few are marked `v:` so far).
 3. ✅ Picture, sound and clip questions; "This is wrong"; the question editor and packs. Still to do: a "Check all clips" button, testing real YouTube on devices, and more built-in sounds.
-4. Lifelines with original names. Proposed defaults are Dabbilha ضاعفها (double), Faz'a فزعة (call a friend) and Dir' درع (block the steal). Tamdeed تمديد (extra time) and Baddil بدّل (swap) are OFF by default. Also: steal polish, the owner's uploaded voice lines with the built-in voice as fallback, and generated sound effects.
+4. ✅ Game-night feel (Step 1 of the owner's plan): lifelines (ضاعفها / فزعة / درع, with optional تمديد / بدّل off), the sound manager, built-in generated sounds, a `sounds/` folder, voice lines in Settings, and mute/volume. Still to do: polish, private video files in packs (Step 2).
 5. Online rooms with phones as buzzers or answer pads, the host still judging, and TV on another device.
 6. Hub page and polish.

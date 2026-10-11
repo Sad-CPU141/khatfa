@@ -1,7 +1,8 @@
-/* Khatfa ab18c4c789 — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa 0b1c53eadb — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "ab18c4c789";
+const APP_VERSION = "0b1c53eadb";
+const SOUND_FILES = {};
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -388,7 +389,7 @@ const S = {
   stealOn: ['Steals', 'الخطف'],
   stealOnSub: ['A wrong or missing answer gives the other team a chance to snatch the points.', 'إذا غلط الفريق أو ما جاوب، الفريق الثاني يقدر يخطف النقاط.'],
   modifiers: ['Optional modifiers', 'إضافات اختيارية'],
-  modifiersSub: ['All off by default.', 'كلها مطفأة افتراضياً.'],
+  modifiersSub: ['Extras are off by default; the three standard lifelines are on.', 'الإضافات مطفية افتراضياً؛ وسائل المساعدة الثلاث الأساسية شغّالة.'],
   wrongPenalty: ['Wrong answers lose points', 'الجواب الغلط يخصم نقاط'],
   wrongPenaltySub: ['The answering team loses the question’s value. Steals never lose points.', 'الفريق اللي جاوب يخسر قيمة السؤال. الخطف ما يخصم.'],
   seconds: ['{n}s', '{n} ث'],
@@ -784,7 +785,63 @@ const S = {
   vTooBigAudio: ['That sound is too big (over 5 MB). Trim it first.', 'الصوت كبير مرة (أكثر من ٥ ميغا). قصّه أول.'],
   vUnsupported: ['This browser can’t open that file. Try MP3/M4A for sound or JPG/PNG for pictures.', 'هالمتصفح ما يقدر يفتح الملف. جرّب MP3/M4A للصوت أو JPG/PNG للصور.'],
   vLongSound: ['Saved. It’s longer than 30 seconds, so a shorter clip may play better.', 'انحفظ. بس أطول من ٣٠ ثانية، ومقطع أقصر يكون أحسن.'],
-  clipUnchecked: ['Clip timing not checked yet: play it once before the game and fix the start/end in a pack if needed (or use “This is wrong”).', 'توقيت المقطع ما تأكدنا منه: شغّله مرة قبل اللعبة، وإذا يحتاج صلّح البداية والنهاية (أو استخدم «السؤال غلط»).']
+  clipUnchecked: ['Clip timing not checked yet: play it once before the game and fix the start/end in a pack if needed (or use “This is wrong”).', 'توقيت المقطع ما تأكدنا منه: شغّله مرة قبل اللعبة، وإذا يحتاج صلّح البداية والنهاية (أو استخدم «السؤال غلط»).'],
+  llOf: ['Lifelines: {team}', 'وسائل المساعدة: {team}'],
+  llUse: ['Use', 'استخدم'],
+  llReady: ['Ready', 'جاهزة'],
+  llUsedState: ['Used', 'مستخدمة'],
+  llActiveState: ['Active', 'شغّالة'],
+  llNotNow: ['Not now', 'مو الحين'],
+  llOff: ['Off', 'مطفية'],
+  llLeft: ['{n} lifelines left', 'باقي {n} وسائل مساعدة'],
+  llShieldOn: ['no steal on this question', 'ما فيه خطف على هالسؤال'],
+  llShieldBlocked: ['Shield: no steal', 'الدرع: ما فيه خطف'],
+  llHelpAllowed: ['Call someone outside the team!', 'اتصلوا بأحد من برّا الفريق!'],
+  llHelpDone: ['Done asking', 'خلصنا'],
+  llSwapNone: ['No other question of this value is left in this category, so Swap wasn’t used.', 'ما بقى سؤال ثاني بنفس القيمة في هالفئة، فما انستخدم «بدّل».'],
+  llCant: ['That lifeline can’t be used right now.', 'هالوسيلة ما تنستخدم الحين.'],
+  logLl: ['{team} used {ll}', '{team} استخدم {ll}'],
+  logLlHelp: ['30 seconds to ask for help', '٣٠ ثانية للفزعة'],
+  logLlShield: ['no steal on this question', 'ما فيه خطف على هالسؤال'],
+  logLlSwap: ['question replaced', 'تبدّل السؤال'],
+  logHelpEnd: ['{team}’s help time ended', 'انتهى وقت فزعة {team}'],
+  logLlBack: ['Lifeline returned: {list}', 'رجعت وسيلة المساعدة: {list}'],
+  logLlReturned: ['(returned)', '(رجعت)'],
+  llRules: ['Lifelines', 'وسائل المساعدة'],
+  llRulesSub: ['Each team gets each one once per game, during its own answer.', 'كل فريق يستخدم كل وحدة مرة باللعبة، وقت جوابه.'],
+  llMain: ['Lifelines (ضاعفها, فزعة, درع)', 'وسائل المساعدة (ضاعفها، فزعة، درع)'],
+  llMainSub: ['Double It, Call for Help (30 s) and Shield (no steal).', 'ضاعف النقاط، فزعة ٣٠ ثانية، ودرع ضد الخطف.'],
+  llExtra: ['تمديد · Extra Time', 'تمديد (وقت إضافي)'],
+  llExtraSub: ['+30 seconds once per game (optional).', '+٣٠ ثانية مرة باللعبة (اختياري).'],
+  llSwapOpt: ['بدّل · Swap', 'بدّل (تغيير السؤال)'],
+  llSwapSub: ['A new question of the same value, same category (optional).', 'سؤال ثاني بنفس القيمة ونفس الفئة (اختياري).'],
+  llSettingsNote: ['These are the defaults for new games. You can also change them in New game → Optional modifiers.', 'هذي الإعدادات الافتراضية للألعاب الجديدة، وتقدر تغيّرها بعد من لعبة جديدة ← إضافات اختيارية.'],
+  sndTitle: ['Sound', 'الصوت'],
+  sndMute: ['Mute sounds', 'اكتم الأصوات'],
+  sndUnmute: ['Unmute sounds', 'شغّل الأصوات'],
+  sndMutedTap: ['Sounds are off: tap to turn on', 'الأصوات مكتومة: اضغط عشان تشغّلها'],
+  sndOnTap: ['Sounds are on: tap to mute', 'الأصوات شغّالة: اضغط عشان تكتمها'],
+  sndVolume: ['Volume', 'مستوى الصوت'],
+  sndBuiltin: ['Built-in sounds', 'الأصوات المدمجة'],
+  sndBuiltinSub: ['Simple sounds made by the game, used when there’s no file of your own for an event.', 'أصوات بسيطة يصنعها التطبيق، تشتغل إذا ما فيه ملف منك للحدث.'],
+  sndTest: ['Test sound', 'جرّب الصوت'],
+  sndWhere: ['Sounds play on one screen only: the TV window if one is open, otherwise this device.', 'الأصوات تشتغل على شاشة وحدة بس: نافذة التلفزيون إذا مفتوحة، وإلا هالجهاز.'],
+  sndEvents: ['Sounds and your voice lines', 'الأصوات وتسجيلاتك'],
+  sndEventsSub: ['Upload a recording for any moment, like you shouting “Khatfa!” for a steal. Your recording replaces the sound for that moment. Short MP3 or M4A files work best (up to 20 seconds, 3 MB).', 'ارفع تسجيل لأي لحظة، مثل صوتك وانت تصارخ «خطفة!» لما ينخطف سؤال. تسجيلك ياخذ مكان الصوت لهاللحظة. ملفات MP3 أو M4A قصيرة أفضل (حتى ٢٠ ثانية و٣ ميغا).'],
+  sndVoiceIdea: ['good for a voice line', 'حلو لتسجيل صوتك'],
+  sndSrcCustom: ['Your recording', 'تسجيلك'],
+  sndSrcFile: ['Sound file', 'ملف صوت'],
+  sndSrcBuiltin: ['Built-in sound', 'صوت مدمج'],
+  sndSrcNone: ['No sound', 'بدون صوت'],
+  sndPreview: ['Preview', 'استمع'],
+  sndUpload: ['Upload', 'ارفع'],
+  sndReplace: ['Replace', 'غيّر'],
+  sndRemove: ['Remove', 'احذف'],
+  sndSaved: ['Recording saved.', 'انحفظ التسجيل.'],
+  sndTooBig: ['That file is too big (over 3 MB). Trim it first.', 'الملف كبير (أكثر من ٣ ميغا). قصّه أول.'],
+  sndTooLong: ['That recording is longer than 20 seconds. Trim it first.', 'التسجيل أطول من ٢٠ ثانية. قصّه أول.'],
+  sndStorage: ['Your recordings are saved in this browser only. They’re lost if you clear the browser’s data, and other devices don’t have them. The TV window on this same computer can play them.', 'تسجيلاتك تنحفظ في هالمتصفح بس. تروح إذا مسحت بيانات المتصفح، والأجهزة الثانية ما عندها. نافذة التلفزيون على نفس الكمبيوتر تقدر تشغّلها.'],
+  sndUnlockHint: ['Browsers only allow sound after you tap or click once. Sounds start after your first tap.', 'المتصفحات ما تسمح بالصوت إلا بعد أول ضغطة. الأصوات تشتغل بعد أول ضغطة.']
 };
 let LANG = 'en';
 const setLang = l => {
@@ -1058,7 +1115,10 @@ const DEFAULT_RULES = {
   mixed: false,
   randomCats: false,
   progressive: false,
-  wrongPenalty: false
+  wrongPenalty: false,
+  lifelines: true,
+  extraTime: false,
+  swap: false
 };
 const TIME_CHOICES = [20, 30, 45, 60, 90];
 const STEAL_CHOICES = [10, 15, 20, 30];
@@ -1079,9 +1139,10 @@ function cleanRules(r) {
   x.curve = CURVES.includes(x.curve) ? x.curve : 'standard';
   x.minTier = clamp(Math.round(x.minTier) || 1, 1, 3);
   x.maxTier = clamp(Math.round(x.maxTier) || 3, x.minTier, 3);
-  ['niche', 'nicheOnly', 'strict', 'mixed', 'randomCats', 'progressive', 'wrongPenalty'].forEach(k => {
+  ['niche', 'nicheOnly', 'strict', 'mixed', 'randomCats', 'progressive', 'wrongPenalty', 'extraTime', 'swap'].forEach(k => {
     x[k] = !!x[k];
   });
+  x.lifelines = x.lifelines !== false;
   return x;
 }
 const teamById = (g, id) => g.teams.find(t => t.id === id);
@@ -1164,7 +1225,9 @@ function createGame(bank, teams, rules, now = Date.now(), opts = {}) {
     phase: 'pick',
     turn: 0,
     current: null,
-    history: []
+    history: [],
+    ll: freshLifelines(teams.map((tm, i) => 't' + i)),
+    swapped: []
   };
 }
 const picksNeeded = g => g.rules.catsPerTeam * g.teams.length;
@@ -1328,7 +1391,7 @@ function pauseTimer(g, now = Date.now()) {
 }
 function resumeTimer(g, now = Date.now()) {
   const cur = g.current;
-  if (!cur || cur.pausedLeft == null) return g;
+  if (!cur || cur.pausedLeft == null || helpRunning(cur)) return g;
   return {
     ...g,
     current: {
@@ -1338,6 +1401,12 @@ function resumeTimer(g, now = Date.now()) {
     }
   };
 }
+const curValue = g => {
+  const c = curCell(g);
+  const fx = g.current && g.current.fx || {};
+  return c ? c.value * (fx.double ? 2 : 1) : 0;
+};
+const helpRunning = cur => !!(cur && cur.fx && cur.fx.help && !cur.fx.help.ended);
 const addScore = (g, teamId, d) => ({
   ...g,
   teams: g.teams.map(tm => tm.id === teamId ? {
@@ -1349,19 +1418,21 @@ function markCorrect(g) {
   const cur = g.current;
   const c = curCell(g);
   if (g.phase !== 'question' || !cur || !c || cur.stage !== 'answer' && cur.stage !== 'steal') return g;
+  const value = curValue(g);
   let n = withHistory(g, cur.stage === 'steal' ? 'stolen' : 'correct');
-  n = addScore(n, cur.team, c.value);
+  n = addScore(n, cur.team, value);
   const kind = cur.stage === 'steal' ? 'stolen' : 'correct';
   return {
     ...n,
     current: {
       ...cur,
+      fx: closeHelp(cur.fx),
       stage: 'reveal',
       pausedLeft: null,
       result: {
         kind,
         team: cur.team,
-        points: c.value,
+        points: value,
         answeredBy: cur.answeredBy || cur.team,
         penalty: cur.penalty || 0
       }
@@ -1374,15 +1445,17 @@ function markWrong(g, now = Date.now()) {
   if (g.phase !== 'question' || !cur || !c) return g;
   if (cur.stage === 'answer') {
     let n = withHistory(g, 'wrong');
-    const penalty = n.rules.wrongPenalty ? c.value : 0;
+    const penalty = n.rules.wrongPenalty ? curValue(g) : 0;
     if (penalty) n = addScore(n, cur.team, -penalty);
     const idx = n.teams.findIndex(tm => tm.id === cur.team);
-    if (n.rules.steals && n.teams.length > 1) {
+    const fx = closeHelp(cur.fx);
+    if (n.rules.steals && n.teams.length > 1 && !(fx && fx.shield)) {
       const thief = n.teams[nextTeamIndex(n, idx)].id;
       return {
         ...n,
         current: {
           ...cur,
+          fx,
           stage: 'steal',
           answeredBy: cur.team,
           team: thief,
@@ -1396,6 +1469,7 @@ function markWrong(g, now = Date.now()) {
       ...n,
       current: {
         ...cur,
+        fx,
         stage: 'reveal',
         pausedLeft: null,
         penalty,
@@ -1404,7 +1478,8 @@ function markWrong(g, now = Date.now()) {
           team: null,
           points: 0,
           answeredBy: cur.team,
-          penalty
+          penalty,
+          shielded: !!(fx && fx.shield && n.rules.steals)
         }
       }
     };
@@ -1437,6 +1512,7 @@ function skipQuestion(g) {
     ...n,
     current: {
       ...cur,
+      fx: closeHelp(cur.fx),
       stage: 'reveal',
       pausedLeft: null,
       result: {
@@ -1454,7 +1530,7 @@ function putBack(g) {
   if (g.phase !== 'question' || !cur || cur.stage !== 'answer') return g;
   const n = withHistory(g, 'putBack');
   return {
-    ...n,
+    ...returnLifelines(n, cur.cell, Date.now()),
     phase: 'board',
     current: null
   };
@@ -1465,6 +1541,7 @@ function finishQuestion(g, now = Date.now()) {
   if (g.phase !== 'question' || !cur || cur.stage !== 'reveal' || !c) return g;
   const r = cur.result || {};
   let n = withHistory(g, 'next');
+  const fx = cur.fx || {};
   const entry = {
     cell: c.id,
     qid: c.q && c.q.id,
@@ -1477,6 +1554,8 @@ function finishQuestion(g, now = Date.now()) {
     points: r.points || 0,
     penalty: r.penalty || 0,
     answeredBy: r.answeredBy || null,
+    doubled: fx.double ? 1 : 0,
+    shield: fx.shield ? 1 : 0,
     at: now
   };
   n = {
@@ -1552,12 +1631,12 @@ function gameStats(g) {
       per[e.team].correct++;
       per[e.team].streak++;
       per[e.team].best = Math.max(per[e.team].best, per[e.team].streak);
-      if (!biggestWin || e.value > biggestWin.value) biggestWin = e;
+      if (!biggestWin || (e.points || e.value) > (biggestWin.points || biggestWin.value)) biggestWin = e;
     } else if (own) own.streak = 0;
     if (e.kind === 'stolen' && per[e.team]) {
       per[e.team].steals++;
       per[e.team].stolenPts += e.points;
-      if (!biggestSteal || e.value > biggestSteal.value) biggestSteal = e;
+      if (!biggestSteal || (e.points || e.value) > (biggestSteal.points || biggestSteal.value)) biggestSteal = e;
     }
   });
   const list = g.teams.map(tm => ({
@@ -1643,6 +1722,10 @@ function gameUsed(g) {
     }
   });
   (g.invalid || []).forEach(x => {
+    used.add(x.qid);
+    (x.facts || []).forEach(k => facts.add(k));
+  });
+  (g.swapped || []).forEach(x => {
     used.add(x.qid);
     (x.facts || []).forEach(k => facts.add(k));
   });
@@ -1808,6 +1891,7 @@ function invalidateQuestion(g, cellId, opts) {
     log,
     invalid: [...(n.invalid || []), record]
   };
+  n = returnLifelines(n, cellId, now);
   if (isCur) {
     if (rep) n = {
       ...n,
@@ -1840,6 +1924,236 @@ function invalidateQuestion(g, cellId, opts) {
     endedAt: now
   };
   return n;
+}
+const LIFELINES = [{
+  id: 'double',
+  icon: '✖2',
+  ar: 'ضاعفها',
+  en: 'Double It'
+}, {
+  id: 'help',
+  icon: '📞',
+  ar: 'فزعة',
+  en: 'Call for Help'
+}, {
+  id: 'shield',
+  icon: '🛡️',
+  ar: 'درع',
+  en: 'Shield'
+}, {
+  id: 'extra',
+  icon: '⏱️',
+  ar: 'تمديد',
+  en: 'Extra Time',
+  optional: true
+}, {
+  id: 'swap',
+  icon: '🔄',
+  ar: 'بدّل',
+  en: 'Swap',
+  optional: true
+}];
+const HELP_SECONDS = 30,
+  EXTRA_SECONDS = 30;
+const freshLifelines = ids => {
+  const o = {};
+  ids.forEach(id => {
+    o[id] = {};
+  });
+  return o;
+};
+function enabledLifelines(g) {
+  const r = g.rules || {};
+  if (r.lifelines === false) return [];
+  return LIFELINES.filter(l => !l.optional || l.id === 'extra' && r.extraTime || l.id === 'swap' && r.swap).map(l => l.id);
+}
+const lifelineUsed = (g, team, id) => !!(g.ll && g.ll[team] && g.ll[team][id]);
+function closeHelp(fx) {
+  return fx && fx.help && !fx.help.ended ? {
+    ...fx,
+    help: {
+      ...fx.help,
+      ended: true
+    }
+  } : fx;
+}
+function lifelineBlock(g, id) {
+  const cur = g.current;
+  if (!enabledLifelines(g).includes(id)) return 'off';
+  if (g.phase !== 'question' || !cur || cur.stage !== 'answer') return 'notNow';
+  if (lifelineUsed(g, cur.team, id)) return 'used';
+  const fx = cur.fx || {};
+  if (id === 'double' && fx.double) return 'active';
+  if (id === 'shield' && fx.shield) return 'active';
+  if (id === 'help' && fx.help) return 'active';
+  return '';
+}
+function useLifeline(g, id, opts) {
+  const o = opts || {};
+  const now = o.now || Date.now();
+  if (lifelineBlock(g, id)) return g;
+  const cur = g.current;
+  const c = curCell(g);
+  const team = cur.team;
+  let rep = null;
+  if (id === 'swap') {
+    rep = findReplacement(g, c, o.ctx);
+    if (!rep) return g;
+  }
+  let n = withHistory(g, 'lifeline:' + id);
+  const fx = {
+    ...(cur.fx || {})
+  };
+  let next = {
+    ...cur
+  };
+  if (id === 'double') fx.double = 1;else if (id === 'shield') fx.shield = 1;else if (id === 'help') {
+    const mainLeft = timeLeft(g, now);
+    fx.help = {
+      start: now,
+      endsAt: now + ms(HELP_SECONDS * 1000),
+      ended: false,
+      mainLeft,
+      wasPaused: cur.pausedLeft != null
+    };
+    next.pausedLeft = mainLeft;
+  } else if (id === 'extra') {
+    const add = ms(EXTRA_SECONDS * 1000);
+    if (helpRunning(cur)) fx.help = {
+      ...fx.help,
+      endsAt: fx.help.endsAt + add
+    };else if (cur.pausedLeft != null) next.pausedLeft = cur.pausedLeft + add;else next.endsAt = Math.max(cur.endsAt, now) + add;
+    fx.extra = (fx.extra || 0) + 1;
+  }
+  next.fx = fx;
+  const entry = {
+    kind: 'lifeline',
+    ll: id,
+    team,
+    cell: c.id,
+    cat: c.cat,
+    value: c.value,
+    at: now
+  };
+  let cells = n.cells;
+  if (rep) {
+    entry.from = c.q.id;
+    entry.to = rep.q.id;
+    cells = n.cells.map(x => x.id === c.id ? {
+      ...x,
+      q: rep.q
+    } : x);
+    const fresh = ms(n.rules.answerTime * 1000);
+    if (helpRunning({
+      fx
+    })) {
+      fx.help = {
+        ...fx.help,
+        mainLeft: fresh
+      };
+      next = {
+        ...next,
+        pausedLeft: fresh
+      };
+    } else next = {
+      ...next,
+      endsAt: now + fresh,
+      pausedLeft: null
+    };
+    next = {
+      ...next,
+      play: freshPlay(),
+      reveal: 0
+    };
+    n = {
+      ...n,
+      swapped: [...(n.swapped || []), {
+        qid: c.q.id,
+        facts: c.q.facts || [],
+        cell: c.id,
+        at: now
+      }]
+    };
+  }
+  const ll = {
+    ...(n.ll || {})
+  };
+  ll[team] = {
+    ...(ll[team] || {}),
+    [id]: 1
+  };
+  return {
+    ...n,
+    cells,
+    ll,
+    current: next,
+    log: [...n.log, entry]
+  };
+}
+function endHelp(g, now = Date.now()) {
+  const cur = g.current;
+  if (!helpRunning(cur)) return g;
+  const h = cur.fx.help;
+  const at = Math.min(now, h.endsAt);
+  const next = {
+    ...cur,
+    fx: {
+      ...cur.fx,
+      help: {
+        ...h,
+        ended: true,
+        endedAt: at
+      }
+    }
+  };
+  if (h.wasPaused) next.pausedLeft = h.mainLeft;else {
+    next.pausedLeft = null;
+    next.endsAt = at + h.mainLeft;
+  }
+  const c = curCell(g);
+  return {
+    ...g,
+    current: next,
+    log: [...g.log, {
+      kind: 'help-end',
+      team: cur.team,
+      cell: c ? c.id : null,
+      cat: c ? c.cat : null,
+      value: c ? c.value : null,
+      early: now < h.endsAt,
+      at
+    }]
+  };
+}
+function returnLifelines(g, cellId, now) {
+  const back = g.log.filter(e => e.kind === 'lifeline' && e.cell === cellId && !e.void);
+  if (!back.length) return g;
+  const ll = {
+    ...(g.ll || {})
+  };
+  back.forEach(e => {
+    ll[e.team] = {
+      ...(ll[e.team] || {}),
+      [e.ll]: 0
+    };
+  });
+  const log = g.log.map(e => e.kind === 'lifeline' && e.cell === cellId && !e.void ? {
+    ...e,
+    void: true
+  } : e);
+  return {
+    ...g,
+    ll,
+    log: [...log, {
+      kind: 'lifeline-return',
+      cell: cellId,
+      items: back.map(e => ({
+        team: e.team,
+        ll: e.ll
+      })),
+      at: now || Date.now()
+    }]
+  };
 }
 class Boundary extends React.Component {
   constructor(p) {
@@ -2122,7 +2436,8 @@ function ScoreCard({
   active,
   label,
   big,
-  onEdit
+  onEdit,
+  g
 }) {
   const d = useDelta(team.score);
   const El = onEdit ? 'button' : 'div';
@@ -2154,7 +2469,10 @@ function ScoreCard({
     key: d.k,
     dir: "ltr",
     className: 's-delta' + (d.n < 0 ? ' neg' : '')
-  }, d.n > 0 ? '+' : '−', Math.abs(d.n)));
+  }, d.n > 0 ? '+' : '−', Math.abs(d.n)), g && g.phase !== 'pick' && React.createElement(LlDots, {
+    g: g,
+    team: team
+  }));
 }
 function ScoreBar({
   g,
@@ -2171,7 +2489,8 @@ function ScoreBar({
     active: tm.id === activeId,
     label: label,
     big: big,
-    onEdit: onEdit
+    onEdit: onEdit,
+    g: g.ll ? g : null
   })));
 }
 function Flash({
@@ -2184,7 +2503,14 @@ function Flash({
     return () => clearTimeout(id);
   }, [f]);
   const team = f.team && g ? teamById(g, f.team) : null;
-  const big = {
+  const ll = f.kind === 'lifeline' ? LIFELINES.find(x => x.id === f.ll) : null;
+  const big = ll ? React.createElement(React.Fragment, null, React.createElement("span", {
+    className: "fl-ic",
+    "aria-hidden": "true"
+  }, ll.icon), " ", React.createElement("span", {
+    lang: "ar",
+    dir: "rtl"
+  }, ll.ar)) : {
     correct: t('flashCorrect'),
     stolen: t('flashSteal'),
     wrong: t('flashWrong'),
@@ -2202,7 +2528,13 @@ function Flash({
     className: "inner"
   }, React.createElement("div", {
     className: "big"
-  }, big), team && f.points > 0 && React.createElement("div", {
+  }, big), ll && React.createElement("div", {
+    className: "fl-en",
+    lang: "en",
+    dir: "ltr"
+  }, ll.en), ll && team && React.createElement("div", {
+    className: "to"
+  }, teamName(team)), team && f.points > 0 && React.createElement("div", {
     className: "to"
   }, t('pointsTo', {
     n: f.points,
@@ -2696,7 +3028,22 @@ function Setup({
     onChange: v => set('wrongPenalty', v),
     title: t('wrongPenalty'),
     sub: t('wrongPenaltySub')
-  })), problems.map(p => React.createElement("p", {
+  }), React.createElement(Toggle, {
+    on: rules.lifelines !== false,
+    onChange: v => set('lifelines', v),
+    title: t('llMain'),
+    sub: t('llMainSub')
+  }), rules.lifelines !== false && React.createElement(React.Fragment, null, React.createElement(Toggle, {
+    on: !!rules.extraTime,
+    onChange: v => set('extraTime', v),
+    title: t('llExtra'),
+    sub: t('llExtraSub')
+  }), React.createElement(Toggle, {
+    on: !!rules.swap,
+    onChange: v => set('swap', v),
+    title: t('llSwapOpt'),
+    sub: t('llSwapSub')
+  }))), problems.map(p => React.createElement("p", {
     key: p,
     className: "warn"
   }, p)), React.createElement("button", {
@@ -2987,9 +3334,10 @@ function Clock({
   big
 }) {
   const cur = g.current;
+  const helping = helpRunning(cur);
   const running = cur && cur.stage !== 'reveal' && cur.pausedLeft == null;
   const now = useNow(running, 200);
-  if (!cur || cur.stage === 'reveal') return null;
+  if (!cur || cur.stage === 'reveal' || helping) return null;
   const total = ms((cur.stage === 'steal' ? g.rules.stealTime : g.rules.answerTime) * 1000);
   const left = timeLeft(g, now);
   const secs = Math.ceil(left / ms(1000));
@@ -3067,6 +3415,7 @@ function QHead({
   cell
 }) {
   const cat = catById(g, cell.cat);
+  const doubled = g.current && g.current.cell === cell.id && g.current.fx && g.current.fx.double;
   return React.createElement("div", {
     className: "qhead"
   }, React.createElement("span", {
@@ -3076,8 +3425,12 @@ function QHead({
   }), cell.q && cell.q.media && React.createElement("span", {
     className: "qh-type"
   }, MEDIA_ICON[cell.q.media.type], " ", t('type_' + cell.q.media.type))), React.createElement("span", {
-    className: "qh-val num"
-  }, t('points', {
+    className: 'qh-val num' + (doubled ? ' doubled' : '')
+  }, doubled ? React.createElement(React.Fragment, null, React.createElement("s", {
+    dir: "ltr"
+  }, cell.value), " ", t('points', {
+    n: cell.value * 2
+  })) : t('points', {
     n: cell.value
   })));
 }
@@ -3125,7 +3478,9 @@ function ResultBanner({
   }, t('lostPoints', {
     n: r.penalty,
     team: teamName(answered)
-  })));
+  })), r.shielded && React.createElement("span", {
+    className: "rs-s"
+  }, "\uD83D\uDEE1\uFE0F ", t('llShieldBlocked')));
 }
 function QuestionScreen({
   g,
@@ -3135,7 +3490,9 @@ function QuestionScreen({
   onTv,
   onWrong,
   media,
-  onFix
+  onFix,
+  ctx,
+  onNotice
 }) {
   const cur = g.current;
   const cell = curCell(g);
@@ -3146,23 +3503,24 @@ function QuestionScreen({
   const reveal = cur.stage === 'reveal';
   const correct = () => {
     const kind = cur.stage === 'steal' ? 'stolen' : 'correct';
+    const pts = curValue(g);
     act(markCorrect);
     flash({
       kind,
       team: cur.team,
-      points: cell.value
+      points: pts
     });
     buzz(kind === 'stolen' ? [40, 40, 80] : 40);
   };
   const wrong = () => {
-    const pen = cur.stage === 'answer' && g.rules.wrongPenalty ? -cell.value : 0;
+    const pen = cur.stage === 'answer' && g.rules.wrongPenalty ? -curValue(g) : 0;
     act(x => markWrong(x, Date.now()));
     flash(cur.stage === 'steal' ? {
       kind: 'missed'
     } : {
       kind: 'wrong',
       team: pen ? cur.team : null,
-      points: pen
+      points: pen ? -curValue(g) : 0
     });
     buzz(120);
   };
@@ -3195,6 +3553,11 @@ function QuestionScreen({
     cell: cell
   }), React.createElement(StageBanner, {
     g: g
+  }), React.createElement(FxBadges, {
+    g: g
+  }), React.createElement(HelpClock, {
+    g: g,
+    onEnd: () => act(x => endHelp(x, Date.now()))
   }), React.createElement(Clock, {
     g: g
   }), React.createElement(QuestionCard, {
@@ -3217,6 +3580,16 @@ function QuestionScreen({
     className: "checkbadge"
   }, t('needsCheck')), reveal && React.createElement(ResultBanner, {
     g: g
+  }), React.createElement(LifelineBar, {
+    g: g,
+    act: act,
+    ctx: ctx,
+    onUsed: (id, team) => flash({
+      kind: 'lifeline',
+      ll: id,
+      team: team.id
+    }),
+    onFail: id => onNotice && onNotice(t(id === 'swap' ? 'llSwapNone' : 'llCant'))
   }), onWrong && React.createElement("button", {
     className: "btn btn-sm btn-flag wrongbtn",
     onClick: () => onWrong(cell.id)
@@ -3258,7 +3631,7 @@ function Moments({
     const tm = teamById(g, s.biggestSteal.team);
     items.push({
       k: t('mBiggestSteal'),
-      v: '⚡ ' + s.biggestSteal.value,
+      v: '⚡ ' + (s.biggestSteal.points || s.biggestSteal.value),
       d: teamName(tm) + ' · ' + cname(s.biggestSteal),
       team: tm
     });
@@ -3267,7 +3640,7 @@ function Moments({
     const tm = teamById(g, s.biggestWin.team);
     items.push({
       k: t('mBigWin'),
-      v: s.biggestWin.value,
+      v: s.biggestWin.points || s.biggestWin.value,
       d: teamName(tm) + ' · ' + cname(s.biggestWin),
       team: tm
     });
@@ -3353,6 +3726,27 @@ function GameLog({
   }, g.log.map((e, i) => {
     const tm = e.team ? teamById(g, e.team) : null;
     const c = e.cat ? catById(g, e.cat) : null;
+    if (e.kind === 'lifeline' || e.kind === 'help-end' || e.kind === 'lifeline-return') {
+      const lt = e.team ? teamById(g, e.team) : null;
+      const txt = e.kind === 'lifeline' ? t('logLl', {
+        team: teamName(lt),
+        ll: llInfo(e.ll).ar + ' (' + llInfo(e.ll).en + ')'
+      }) + (e.ll === 'help' ? ' · ' + t('logLlHelp') : e.ll === 'shield' ? ' · ' + t('logLlShield') : e.ll === 'swap' ? ' · ' + t('logLlSwap') : e.ll === 'double' ? ' · ' + e.value + ' → ' + e.value * 2 : '') : e.kind === 'help-end' ? t('logHelpEnd', {
+        team: teamName(lt)
+      }) : t('logLlBack', {
+        list: (e.items || []).map(x => llInfo(x.ll).ar).join('، ')
+      });
+      return React.createElement("li", {
+        key: i,
+        className: 'lg-ll' + (e.void ? ' lg-void' : '')
+      }, c && React.createElement("span", {
+        className: "muted"
+      }, c.emoji, " ", pick(c.name), " ", e.value, " \xB7 "), React.createElement("span", {
+        dir: "auto"
+      }, txt), e.void ? React.createElement("span", {
+        className: "muted"
+      }, " ", t('logLlReturned')) : null);
+    }
     if (e.kind === 'invalid') return React.createElement("li", {
       key: i,
       className: "lg-invalid"
@@ -3378,7 +3772,7 @@ function GameLog({
       className: e.void ? 'lg-void' : undefined
     }, c && React.createElement("span", {
       className: "muted"
-    }, c.emoji, " ", pick(c.name), " ", e.value, " \xB7 "), React.createElement("span", {
+    }, c.emoji, " ", pick(c.name), " ", e.value, e.doubled ? ' ×2' : '', " \xB7 "), React.createElement("span", {
       dir: "auto"
     }, what), e.penalty ? React.createElement("span", {
       className: "muted"
@@ -3552,7 +3946,9 @@ function GameMenu({
   act,
   onClose,
   onHome,
-  onFlagPlayed
+  onFlagPlayed,
+  sound,
+  onSound
 }) {
   const [ask, setAsk] = useState(null);
   const [fix, setFix] = useState(false);
@@ -3600,7 +3996,14 @@ function GameMenu({
   }, "\u23ED ", t('skipQ')), g.phase !== 'pick' && React.createElement("button", {
     className: "btn",
     onClick: () => setFix(true)
-  }, "\xB1 ", t('fixScores')), g.phase !== 'pick' && onFlagPlayed && React.createElement("button", {
+  }, "\xB1 ", t('fixScores')), onSound && React.createElement("button", {
+    className: "btn",
+    "aria-pressed": !!(sound && sound.muted),
+    onClick: () => onSound({
+      ...sound,
+      muted: !(sound && sound.muted)
+    })
+  }, sound && sound.muted ? '🔇 ' + t('sndUnmute') : '🔊 ' + t('sndMute')), g.phase !== 'pick' && onFlagPlayed && React.createElement("button", {
     className: "btn btn-flag",
     onClick: () => {
       onClose();
@@ -4293,6 +4696,12 @@ function TvView({
       cell: cell
     }), React.createElement(StageBanner, {
       g: g
+    }), React.createElement(FxBadges, {
+      g: g,
+      big: true
+    }), React.createElement(HelpClock, {
+      g: g,
+      big: true
     }), React.createElement(Clock, {
       g: g,
       big: true
@@ -4361,7 +4770,11 @@ function LocalTv() {
   const [preview, setPreview] = useState(null);
   const [status, setStatus] = useState(null);
   const [unlocked, setUnlocked] = useState(soundAllowed());
+  const [tvPlays, setTvPlays] = useState(true);
   const chRef = useRef(null);
+  const playsRef = useRef(true);
+  playsRef.current = tvPlays;
+  useTicks(g, tvPlays, (n, id) => sound.play(n, id));
   useEffect(() => {
     if (!canChannel()) return undefined;
     const ch = new BroadcastChannel(TV_CHANNEL);
@@ -4372,7 +4785,10 @@ function LocalTv() {
         type: 'hello',
         tv: TV_ID,
         sound: soundAllowed()
-      });else if (m.type === 'lang') {
+      });else if (m.type === 'sound-cfg') {
+        sound.setConfig(m.cfg);
+        setTvPlays(m.tvPlays !== false);
+      } else if (m.type === 'sfx' && playsRef.current) sound.play(m.name, m.id);else if (m.type === 'lang') {
         setLang(m.lang);
         applyDocLang(m.lang);
         setL(x => x + 1);
@@ -4439,6 +4855,7 @@ function LocalTv() {
     className: "soundunlock",
     onClick: () => {
       setUnlocked(true);
+      sound.unlock();
       if (status && status.s === 'blocked') setStatus(null);
       try {
         chRef.current.postMessage({
@@ -4457,17 +4874,19 @@ function LocalTv() {
     }
   }, "\uD83D\uDD0A ", t('tvAllowSound')), React.createElement(TvExit, null));
 }
-function useTvSender(game, settings, preview) {
+function useTvSender(game, settings, preview, soundState) {
   const ch = useRef(null);
   const latest = useRef({
     game,
     settings,
-    preview
+    preview,
+    soundState
   });
   latest.current = {
     game,
     settings,
-    preview
+    preview,
+    soundState
   };
   const [tvs, setTvs] = useState({});
   const [status, setStatus] = useState(null);
@@ -4489,6 +4908,10 @@ function useTvSender(game, settings, preview) {
         if (latest.current.preview) c.postMessage({
           type: 'preview',
           preview: latest.current.preview
+        });
+        if (latest.current.soundState) c.postMessage({
+          type: 'sound-cfg',
+          ...latest.current.soundState
         });
       }
       if ((m.type === 'hello' || m.type === 'ping') && m.tv) setTvs(x => ({
@@ -4543,12 +4966,25 @@ function useTvSender(game, settings, preview) {
       preview: preview || null
     });
   }, [preview]);
+  useEffect(() => {
+    if (ch.current && soundState) ch.current.postMessage({
+      type: 'sound-cfg',
+      ...soundState
+    });
+  }, [soundState && JSON.stringify(soundState)]);
   const list = Object.values(tvs);
   return {
     send: info => {
       if (ch.current) ch.current.postMessage({
         type: 'flash',
         info
+      });
+    },
+    sfx: (name, id) => {
+      if (ch.current) ch.current.postMessage({
+        type: 'sfx',
+        name,
+        id
       });
     },
     tv: {
@@ -5398,8 +5834,13 @@ const packMediaIds = packs => {
   }));
   return s;
 };
-async function cleanMedia(packs) {
+async function cleanMedia(packsOverride) {
+  const packs = packsOverride || store.get(K.packs, []);
   const used = packMediaIds(packs);
+  const snd = ((store.get(K.settings, {}) || {}).sound || {}).files || {};
+  Object.values(snd).forEach(src => {
+    if (isLocalMedia(src)) used.add(src.slice(4));
+  });
   const keys = await mediaStore.keys();
   await Promise.all((keys || []).filter(k => !used.has(k)).map(k => mediaStore.del(k)));
 }
@@ -5645,7 +6086,7 @@ function QuestionsScreen({
         const rest = packs.filter(x => x.id !== ask.p.id);
         setPacks(rest);
         setOpenId(null);
-        cleanMedia(rest);
+        setTimeout(() => cleanMedia().catch(() => {}), 0);
       },
       onClose: () => setAsk(null)
     })
@@ -5768,7 +6209,7 @@ function PackScreen({
       savePack(next);
       setEdit(null);
       setPreview(null);
-      cleanMedia([next]).catch(() => {});
+      setTimeout(() => cleanMedia().catch(() => {}), 0);
     }
   });
   const catName = id => {
@@ -5928,7 +6369,7 @@ function PackScreen({
         questions: pack.questions.filter(x => x.id !== delQ.id)
       };
       savePack(next);
-      cleanMedia([next]).catch(() => {});
+      setTimeout(() => cleanMedia().catch(() => {}), 0);
     },
     onClose: () => setDelQ(null)
   }), extra);
@@ -6580,6 +7021,666 @@ function QuestionForm({
     onClick: onCancel
   }, t('cancel')));
 }
+const SFX = [{
+  id: 'countdown-tick',
+  en: 'Clock ticks (last 5 s)',
+  ar: 'تكتكة الساعة (آخر ٥ ثواني)'
+}, {
+  id: 'correct',
+  en: 'Correct answer',
+  ar: 'جواب صح',
+  voice: 1
+}, {
+  id: 'wrong',
+  en: 'Wrong answer',
+  ar: 'جواب غلط',
+  voice: 1
+}, {
+  id: 'steal',
+  en: 'Steal (Khatfa!)',
+  ar: 'خطفة!',
+  voice: 1
+}, {
+  id: 'category-reveal',
+  en: 'Category picked',
+  ar: 'اختيار فئة',
+  voice: 1
+}, {
+  id: 'game-intro',
+  en: 'Game intro',
+  ar: 'بداية اللعبة',
+  voice: 1
+}, {
+  id: 'winner-fanfare',
+  en: 'Winner',
+  ar: 'الفائز',
+  voice: 1
+}, {
+  id: 'help-start',
+  en: 'Call for Help starts',
+  ar: 'بداية الفزعة'
+}, {
+  id: 'help-end',
+  en: 'Call for Help ends',
+  ar: 'نهاية الفزعة'
+}, {
+  id: 'double-it',
+  en: 'Double It',
+  ar: 'ضاعفها'
+}, {
+  id: 'shield',
+  en: 'Shield',
+  ar: 'درع'
+}, {
+  id: 'swap',
+  en: 'Swap',
+  ar: 'بدّل'
+}, {
+  id: 'extra-time',
+  en: 'Extra Time',
+  ar: 'تمديد'
+}];
+const DEFAULT_SOUND = {
+  volume: 0.8,
+  muted: false,
+  builtin: true,
+  files: {}
+};
+const cleanSound = s => {
+  const x = {
+    ...DEFAULT_SOUND,
+    ...(s || {})
+  };
+  x.volume = clamp(+x.volume || 0, 0, 1);
+  x.muted = !!x.muted;
+  x.builtin = x.builtin !== false;
+  x.files = x.files && typeof x.files === 'object' ? x.files : {};
+  return x;
+};
+const SOUND_MAX_BYTES = 3 * 1024 * 1024,
+  SOUND_MAX_SECONDS = 20;
+const LL_SOUND = {
+  double: 'double-it',
+  help: 'help-start',
+  shield: 'shield',
+  swap: 'swap',
+  extra: 'extra-time'
+};
+const REPO_SOUNDS = typeof SOUND_FILES !== 'undefined' && SOUND_FILES || {};
+const sound = (() => {
+  let ctx = null;
+  let master = null;
+  let cfg = cleanSound();
+  const seen = new Set();
+  const seenOrder = [];
+  const buffers = new Map();
+  const log = [];
+  const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
+  function ensure() {
+    if (!AC) return null;
+    if (!ctx) {
+      try {
+        ctx = new AC();
+        master = ctx.createGain();
+        master.connect(ctx.destination);
+      } catch (e) {
+        ctx = null;
+        return null;
+      }
+    }
+    master.gain.value = cfg.volume;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }
+  const remember = id => {
+    if (!id) return false;
+    if (seen.has(id)) return true;
+    seen.add(id);
+    seenOrder.push(id);
+    if (seenOrder.length > 400) seen.delete(seenOrder.shift());
+    return false;
+  };
+  async function bufferFor(src) {
+    if (!buffers.has(src)) {
+      buffers.set(src, (async () => {
+        const c = ensure();
+        if (!c) return null;
+        try {
+          let ab;
+          if (isLocalMedia(src)) {
+            const rec = await mediaStore.get(src.slice(4));
+            if (!rec || !rec.blob) return null;
+            ab = await rec.blob.arrayBuffer();
+          } else {
+            const r = await fetch(src);
+            if (!r.ok) return null;
+            ab = await r.arrayBuffer();
+          }
+          return await new Promise(res => {
+            try {
+              const p = c.decodeAudioData(ab, res, () => res(null));
+              if (p && p.catch) p.catch(() => res(null));
+            } catch (e) {
+              res(null);
+            }
+          });
+        } catch (e) {
+          return null;
+        }
+      })());
+    }
+    return buffers.get(src);
+  }
+  const sourceOf = name => cfg.files[name] ? 'custom' : REPO_SOUNDS[name] ? 'file' : cfg.builtin ? 'builtin' : 'none';
+  async function playFile(src) {
+    const c = ensure();
+    if (!c) return false;
+    const b = await bufferFor(src);
+    if (!b) return false;
+    const n = c.createBufferSource();
+    n.buffer = b;
+    n.connect(master);
+    n.start();
+    return true;
+  }
+  async function playNow(name) {
+    const via = sourceOf(name);
+    const entry = {
+      name,
+      via,
+      at: Date.now(),
+      result: 'pending'
+    };
+    log.push(entry);
+    if (log.length > 200) log.shift();
+    let res = 'none';
+    try {
+      if (via === 'custom' && (await playFile(cfg.files[name]))) res = 'custom';else if ((via === 'custom' || via === 'file') && REPO_SOUNDS[name] && (await playFile(REPO_SOUNDS[name]))) res = 'file';else if (cfg.builtin) {
+        const c = ensure();
+        if (c) {
+          synth(c, master, name);
+          res = 'builtin';
+        }
+      }
+    } catch (e) {
+      res = 'error';
+    }
+    entry.result = res;
+    return res;
+  }
+  return {
+    play(name, id) {
+      if (remember(id)) return false;
+      if (cfg.muted || !SFX.some(x => x.id === name)) return false;
+      playNow(name);
+      return true;
+    },
+    preview(name) {
+      if (!cfg.muted) playNow(name);
+    },
+    unlock() {
+      ensure();
+    },
+    setConfig(c) {
+      const next = cleanSound(c);
+      Object.keys(cfg.files).forEach(k => {
+        if (cfg.files[k] !== next.files[k]) buffers.delete(cfg.files[k]);
+      });
+      cfg = next;
+      if (master) master.gain.value = cfg.volume;
+    },
+    get config() {
+      return cfg;
+    },
+    get unlocked() {
+      return !!ctx && ctx.state === 'running';
+    },
+    get gain() {
+      return master ? master.gain.value : null;
+    },
+    sourceOf,
+    log,
+    reset() {
+      seen.clear();
+      seenOrder.length = 0;
+      log.length = 0;
+    }
+  };
+})();
+function synth(c, out, name) {
+  const t0 = c.currentTime + 0.01;
+  const tone = (f, at, dur, {
+    type = 'sine',
+    vol = 0.35,
+    f2 = null,
+    attack = 0.01
+  } = {}) => {
+    const o = c.createOscillator();
+    const g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f, at);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, at + dur);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(vol, at + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g);
+    g.connect(out);
+    o.start(at);
+    o.stop(at + dur + 0.05);
+  };
+  const noise = (at, dur, {
+    from = 400,
+    to = 4000,
+    vol = 0.25
+  } = {}) => {
+    const len = Math.floor(c.sampleRate * dur);
+    const b = c.createBuffer(1, len, c.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const s = c.createBufferSource();
+    s.buffer = b;
+    const f = c.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = 1.2;
+    f.frequency.setValueAtTime(from, at);
+    f.frequency.exponentialRampToValueAtTime(to, at + dur);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(vol, at + dur * 0.3);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    s.connect(f);
+    f.connect(g);
+    g.connect(out);
+    s.start(at);
+    s.stop(at + dur + 0.05);
+  };
+  const seq = (notes, step, opts) => notes.forEach((f, i) => tone(f, t0 + i * step, opts && opts.dur ? opts.dur : step * 1.6, opts));
+  switch (name) {
+    case 'countdown-tick':
+      tone(1600, t0, 0.05, {
+        type: 'square',
+        vol: 0.18,
+        attack: 0.002
+      });
+      tone(800, t0, 0.07, {
+        vol: 0.15,
+        attack: 0.002
+      });
+      break;
+    case 'correct':
+      seq([784, 988, 1319], 0.09, {
+        type: 'triangle',
+        vol: 0.35,
+        dur: 0.35
+      });
+      break;
+    case 'wrong':
+      tone(300, t0, 0.22, {
+        type: 'sawtooth',
+        vol: 0.18,
+        f2: 220
+      });
+      tone(200, t0 + 0.2, 0.35, {
+        type: 'sawtooth',
+        vol: 0.18,
+        f2: 140
+      });
+      break;
+    case 'steal':
+      noise(t0, 0.35, {
+        from: 300,
+        to: 6000,
+        vol: 0.3
+      });
+      seq([880, 1175, 1568, 2093], 0.07, {
+        type: 'triangle',
+        vol: 0.3,
+        dur: 0.3
+      });
+      break;
+    case 'category-reveal':
+      noise(t0, 0.25, {
+        from: 600,
+        to: 5000,
+        vol: 0.18
+      });
+      tone(1047, t0 + 0.2, 0.4, {
+        type: 'triangle',
+        vol: 0.25
+      });
+      break;
+    case 'game-intro':
+      [[392, 0], [523, 0.16], [659, 0.32], [784, 0.48]].forEach(([f, d], i) => tone(f, t0 + d, i === 3 ? 0.9 : 0.18, {
+        type: 'sawtooth',
+        vol: 0.16
+      }));
+      tone(523, t0 + 0.48, 0.9, {
+        type: 'triangle',
+        vol: 0.18
+      });
+      break;
+    case 'winner-fanfare':
+      [[523, 0], [659, 0.15], [784, 0.3], [1047, 0.45], [784, 0.75], [1047, 0.9]].forEach(([f, d], i) => tone(f, t0 + d, i === 5 ? 1.3 : 0.22, {
+        type: 'sawtooth',
+        vol: 0.15
+      }));
+      tone(523, t0 + 0.9, 1.3, {
+        type: 'triangle',
+        vol: 0.18
+      });
+      tone(659, t0 + 0.9, 1.3, {
+        type: 'triangle',
+        vol: 0.15
+      });
+      break;
+    case 'help-start':
+      for (let i = 0; i < 2; i++) {
+        tone(440, t0 + i * 0.5, 0.35, {
+          vol: 0.2
+        });
+        tone(480, t0 + i * 0.5, 0.35, {
+          vol: 0.2
+        });
+      }
+      break;
+    case 'help-end':
+      tone(220, t0, 1.0, {
+        type: 'triangle',
+        vol: 0.3
+      });
+      tone(330, t0, 1.0, {
+        vol: 0.2
+      });
+      break;
+    case 'double-it':
+      tone(400, t0, 0.35, {
+        type: 'sawtooth',
+        vol: 0.12,
+        f2: 1200
+      });
+      seq([1319, 1319], 0.12, {
+        type: 'triangle',
+        vol: 0.3,
+        dur: 0.18
+      });
+      break;
+    case 'shield':
+      [1568, 2093, 2637].forEach(f => tone(f, t0, 0.7, {
+        vol: 0.08
+      }));
+      tone(523, t0, 0.5, {
+        type: 'triangle',
+        vol: 0.2
+      });
+      break;
+    case 'swap':
+      tone(900, t0, 0.15, {
+        vol: 0.2,
+        f2: 500
+      });
+      tone(500, t0 + 0.15, 0.2, {
+        vol: 0.2,
+        f2: 1000
+      });
+      break;
+    case 'extra-time':
+      seq([660, 880, 1100], 0.11, {
+        type: 'square',
+        vol: 0.12,
+        dur: 0.12
+      });
+      break;
+    default:
+      break;
+  }
+}
+function soundEvents(prev, next) {
+  if (!next) return [];
+  if (!prev || prev.id !== next.id) return next.log.length === 0 && next.phase !== 'done' ? ['game-intro'] : [];
+  if ((next.history || []).length < (prev.history || []).length) return [];
+  const out = [];
+  if (next.cats.length > prev.cats.length) out.push('category-reveal');
+  const pc = prev.current,
+    nc = next.current;
+  if (nc && pc && pc.cell === nc.cell) {
+    if (pc.stage === 'answer' && nc.stage === 'steal') out.push('wrong');
+    if ((pc.stage === 'answer' || pc.stage === 'steal') && nc.stage === 'reveal' && nc.result) {
+      if (nc.result.kind === 'correct') out.push('correct');else if (nc.result.kind === 'stolen') out.push('steal');else if (nc.result.kind === 'missed') out.push('wrong');
+    }
+  }
+  next.log.slice(prev.log.length).forEach(e => {
+    if (e.kind === 'lifeline' && LL_SOUND[e.ll]) out.push(LL_SOUND[e.ll]);
+    if (e.kind === 'help-end') out.push('help-end');
+  });
+  if (next.phase === 'done' && prev.phase !== 'done') out.push('winner-fanfare');
+  return out;
+}
+function tickKey(g, now) {
+  const cur = g && g.current;
+  if (!cur || g.phase !== 'question' || cur.stage === 'reveal') return null;
+  let endsAt = null;
+  if (helpRunning(cur)) endsAt = cur.fx.help.endsAt;else if (cur.pausedLeft == null) endsAt = cur.endsAt;
+  if (!endsAt) return null;
+  const left = endsAt - now;
+  const sec = Math.ceil(left / ms(1000));
+  if (left <= 0 || sec > 5 || sec < 1) return null;
+  return cur.cell + ':' + cur.stage + ':' + endsAt + ':' + sec;
+}
+function useTicks(g, enabled, play) {
+  const last = useRef(null);
+  const latest = useRef(g);
+  latest.current = g;
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const id = setInterval(() => {
+      const k = tickKey(latest.current, Date.now());
+      if (k && k !== last.current) {
+        last.current = k;
+        play('countdown-tick', 'tick:' + k);
+      }
+    }, ms(100));
+    return () => clearInterval(id);
+  }, [enabled]);
+}
+const llInfo = id => LIFELINES.find(l => l.id === id);
+function LlName({
+  id,
+  small
+}) {
+  const l = llInfo(id);
+  return React.createElement("span", {
+    className: "llname"
+  }, React.createElement("b", {
+    lang: "ar",
+    dir: "rtl"
+  }, l.ar), !small && React.createElement("small", {
+    lang: "en",
+    dir: "ltr"
+  }, l.en));
+}
+const BLOCK_TXT = {
+  used: 'llUsedState',
+  active: 'llActiveState',
+  notNow: 'llNotNow',
+  off: 'llOff'
+};
+function LifelineBar({
+  g,
+  act,
+  ctx,
+  onUsed,
+  onFail
+}) {
+  const busy = useRef({});
+  const cur = g.current;
+  if (!cur || cur.stage !== 'answer') return null;
+  const ids = enabledLifelines(g);
+  if (!ids.length) return null;
+  const team = teamById(g, cur.team);
+  const fire = id => {
+    if (busy.current[id]) return;
+    busy.current[id] = true;
+    setTimeout(() => {
+      busy.current[id] = false;
+    }, 400);
+    const before = g;
+    const c = ctx ? ctx() : null;
+    const next = useLifeline(before, id, {
+      now: Date.now(),
+      ctx: c
+    });
+    if (next === before) {
+      onFail && onFail(id);
+      return;
+    }
+    act(() => next);
+    onUsed && onUsed(id, team);
+  };
+  return React.createElement("section", {
+    className: "llbar",
+    style: tStyle(team),
+    "aria-label": t('llOf', {
+      team: teamName(team)
+    })
+  }, React.createElement("div", {
+    className: "llhead"
+  }, React.createElement("span", null, team.emoji), " ", React.createElement("b", null, t('llOf', {
+    team: teamName(team)
+  }))), React.createElement("div", {
+    className: 'llbtns n' + ids.length
+  }, ids.map(id => {
+    const fx = cur.fx || {};
+    const on = id === 'double' && fx.double || id === 'shield' && fx.shield || id === 'help' && helpRunning(cur) || id === 'extra' && fx.extra;
+    const why0 = lifelineBlock(g, id);
+    const why = on ? 'active' : why0;
+    const l = llInfo(id);
+    const state = on ? 'active' : why === 'used' ? 'used' : why ? 'off' : 'ready';
+    return React.createElement("button", {
+      key: id,
+      className: 'llbtn s-' + state,
+      disabled: !!why,
+      onClick: () => fire(id),
+      "aria-label": (state === 'ready' ? t('llUse') + ' ' : '') + l.ar + ' (' + l.en + ')' + (why ? ' · ' + t(BLOCK_TXT[why]) : '')
+    }, React.createElement("span", {
+      className: "llicon",
+      "aria-hidden": "true",
+      dir: "ltr"
+    }, l.icon), React.createElement(LlName, {
+      id: id
+    }), React.createElement("span", {
+      className: "llstate"
+    }, state === 'ready' ? t('llReady') : t(BLOCK_TXT[why])));
+  })));
+}
+function FxBadges({
+  g,
+  big
+}) {
+  const cur = g.current;
+  const fx = cur && cur.fx || {};
+  const c = curCell(g);
+  if (!c) return null;
+  const items = [];
+  if (fx.double) items.push(React.createElement("span", {
+    key: "d",
+    className: "fxb fx-double"
+  }, React.createElement("span", {
+    "aria-hidden": "true",
+    dir: "ltr"
+  }, "\u27162"), " ", React.createElement(LlName, {
+    id: "double",
+    small: !big
+  }), " ", React.createElement("b", {
+    className: "num",
+    dir: "ltr"
+  }, c.value, " \u2192 ", c.value * 2)));
+  if (fx.shield) items.push(React.createElement("span", {
+    key: "s",
+    className: "fxb fx-shield"
+  }, React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\uD83D\uDEE1\uFE0F"), " ", React.createElement(LlName, {
+    id: "shield",
+    small: !big
+  }), " ", React.createElement("span", null, t('llShieldOn'))));
+  if (fx.extra) items.push(React.createElement("span", {
+    key: "e",
+    className: "fxb fx-extra"
+  }, React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\u23F1\uFE0F"), " ", React.createElement(LlName, {
+    id: "extra",
+    small: !big
+  }), " ", React.createElement("b", {
+    className: "num",
+    dir: "ltr"
+  }, "+", 30 * fx.extra, "s")));
+  if (!items.length) return null;
+  return React.createElement("div", {
+    className: 'fxbadges' + (big ? ' big' : ''),
+    role: "status"
+  }, items);
+}
+function HelpClock({
+  g,
+  big,
+  onEnd
+}) {
+  const cur = g.current;
+  const running = helpRunning(cur);
+  const now = useNow(running, 200);
+  if (!running || cur.stage !== 'answer') return null;
+  const h = cur.fx.help;
+  const left = Math.max(0, h.endsAt - now);
+  const secs = Math.ceil(left / ms(1000));
+  const total = Math.max(1, h.endsAt - (h.start || h.endsAt - ms(HELP_SECONDS * 1000)));
+  return React.createElement("div", {
+    className: 'helpclock' + (big ? ' big' : '') + (secs <= 5 ? ' hot' : ''),
+    role: "timer",
+    "aria-live": "off"
+  }, React.createElement("div", {
+    className: "hc-row"
+  }, React.createElement("span", {
+    className: "hc-n num"
+  }, secs), React.createElement("div", {
+    className: "hc-top"
+  }, React.createElement("span", {
+    className: "hc-ic",
+    "aria-hidden": "true"
+  }, "\uD83D\uDCDE"), React.createElement(LlName, {
+    id: "help",
+    small: !big
+  }), React.createElement("span", {
+    className: "hc-msg"
+  }, t('llHelpAllowed')))), React.createElement("span", {
+    className: "ck-bar"
+  }, React.createElement("i", {
+    style: {
+      width: Math.min(100, left / total * 100) + '%'
+    }
+  })), onEnd && React.createElement("button", {
+    className: "btn btn-sm btn-ghost",
+    onClick: onEnd
+  }, t('llHelpDone')));
+}
+function LlDots({
+  g,
+  team
+}) {
+  const ids = enabledLifelines(g);
+  if (!ids.length || !g.ll) return null;
+  return React.createElement("span", {
+    className: "lldots",
+    "aria-label": t('llLeft', {
+      n: ids.filter(id => !lifelineUsed(g, team.id, id)).length
+    })
+  }, ids.map(id => React.createElement("i", {
+    key: id,
+    dir: "ltr",
+    className: lifelineUsed(g, team.id, id) ? 'used' : '',
+    title: llInfo(id).ar + ' · ' + llInfo(id).en + (lifelineUsed(g, team.id, id) ? ' (' + t('llUsedState') + ')' : '')
+  }, llInfo(id).icon)));
+}
 function SettingsScreen({
   settings,
   setSettings,
@@ -6845,6 +7946,229 @@ function SettingsScreen({
     onClose: () => setMsg(null)
   }));
 }
+function LifelineDefaults({
+  settings,
+  setSettings
+}) {
+  const r = cleanRules(settings.rules || {});
+  const set = (k, v) => setSettings({
+    ...settings,
+    rules: cleanRules({
+      ...r,
+      [k]: v
+    })
+  });
+  return React.createElement("section", {
+    className: "card stack"
+  }, React.createElement("h3", null, "\uD83D\uDEDF ", t('llRules')), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('llRulesSub')), React.createElement(Toggle, {
+    on: r.lifelines !== false,
+    onChange: v => set('lifelines', v),
+    title: t('llMain'),
+    sub: t('llMainSub')
+  }), React.createElement(Toggle, {
+    on: !!r.extraTime,
+    onChange: v => set('extraTime', v),
+    title: t('llExtra'),
+    sub: t('llExtraSub')
+  }), React.createElement(Toggle, {
+    on: !!r.swap,
+    onChange: v => set('swap', v),
+    title: t('llSwapOpt'),
+    sub: t('llSwapSub')
+  }), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('llSettingsNote')));
+}
+function SoundSettings({
+  settings,
+  setSettings
+}) {
+  const cfg = cleanSound(settings.sound);
+  const setCfg = patch => setSettings({
+    ...settings,
+    sound: cleanSound({
+      ...cfg,
+      ...patch
+    })
+  });
+  const [busy, setBusy] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [, force] = useState(0);
+  const fileRef = useRef(null);
+  const target = useRef(null);
+  useEffect(() => {
+    const u = () => force(x => x + 1);
+    const id = setInterval(u, 1500);
+    return () => clearInterval(id);
+  }, []);
+  const upload = async (name, file) => {
+    if (!file) return;
+    setBusy(name);
+    setMsg(null);
+    try {
+      if (file.size > SOUND_MAX_BYTES) throw new Error('sndTooBig');
+      const len = await checkAudio(file);
+      if (len > SOUND_MAX_SECONDS) throw new Error('sndTooLong');
+      const id = await mediaStore.put({
+        blob: file,
+        name: '',
+        size: file.size,
+        at: Date.now()
+      });
+      const old = cfg.files[name];
+      setCfg({
+        files: {
+          ...cfg.files,
+          [name]: 'idb:' + id
+        }
+      });
+      if (isLocalMedia(old)) mediaStore.del(old.slice(4));
+      setMsg({
+        text: t('sndSaved'),
+        ok: true
+      });
+    } catch (e) {
+      setMsg({
+        text: t(/quota/i.test(e.message) ? 'storeFull' : S[e.message] ? e.message : 'vUnsupported')
+      });
+    }
+    setBusy(null);
+  };
+  const remove = name => {
+    const old = cfg.files[name];
+    const files = {
+      ...cfg.files
+    };
+    delete files[name];
+    setCfg({
+      files
+    });
+    if (isLocalMedia(old)) mediaStore.del(old.slice(4));
+  };
+  const SRC = {
+    custom: 'sndSrcCustom',
+    file: 'sndSrcFile',
+    builtin: 'sndSrcBuiltin',
+    none: 'sndSrcNone'
+  };
+  const srcOf = name => cfg.files[name] ? 'custom' : REPO_SOUNDS[name] ? 'file' : cfg.builtin ? 'builtin' : 'none';
+  return React.createElement("section", {
+    className: "card stack soundset"
+  }, React.createElement("h3", null, "\uD83D\uDD0A ", t('sndTitle')), React.createElement("button", {
+    className: 'btn ' + (cfg.muted ? 'btn-danger' : 'btn-gold'),
+    "aria-pressed": cfg.muted,
+    onClick: () => setCfg({
+      muted: !cfg.muted
+    })
+  }, cfg.muted ? '🔇 ' + t('sndMutedTap') : '🔊 ' + t('sndOnTap')), React.createElement("label", {
+    className: "vol"
+  }, React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\uD83D\uDD08"), React.createElement("input", {
+    type: "range",
+    min: "0",
+    max: "1",
+    step: "0.05",
+    value: cfg.volume,
+    "aria-label": t('sndVolume'),
+    onChange: e => setCfg({
+      volume: +e.target.value
+    })
+  }), React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\uD83D\uDD0A"), React.createElement("b", {
+    className: "num"
+  }, Math.round(cfg.volume * 100), "%")), React.createElement(Toggle, {
+    on: cfg.builtin,
+    onChange: v => setCfg({
+      builtin: v
+    }),
+    title: t('sndBuiltin'),
+    sub: t('sndBuiltinSub')
+  }), React.createElement("button", {
+    className: "btn btn-sm",
+    onClick: () => {
+      sound.unlock();
+      sound.preview('correct');
+    }
+  }, "\u25B6 ", t('sndTest')), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('sndWhere')), React.createElement("details", {
+    className: "sndlist",
+    open: true
+  }, React.createElement("summary", {
+    className: "label"
+  }, t('sndEvents')), React.createElement("p", {
+    className: "hint"
+  }, t('sndEventsSub')), React.createElement("ul", null, SFX.map(x => {
+    const src = srcOf(x.id);
+    return React.createElement("li", {
+      key: x.id,
+      className: "sndrow"
+    }, React.createElement("span", {
+      className: "grow"
+    }, React.createElement("b", null, pick({
+      en: x.en,
+      ar: x.ar
+    })), x.voice ? React.createElement("span", {
+      className: "voicetag"
+    }, "\uD83C\uDF99\uFE0F ", t('sndVoiceIdea')) : null, React.createElement("small", {
+      className: 'muted src-' + src
+    }, t(SRC[src]), src === 'file' ? ' (' + REPO_SOUNDS[x.id] + ')' : '')), React.createElement("button", {
+      className: "mini",
+      "aria-label": t('sndPreview') + ': ' + x.en,
+      disabled: src === 'none',
+      onClick: () => {
+        sound.unlock();
+        sound.preview(x.id);
+      }
+    }, "\u25B6"), React.createElement("button", {
+      className: "btn btn-sm",
+      disabled: busy === x.id,
+      onClick: () => {
+        target.current = x.id;
+        fileRef.current.click();
+      }
+    }, cfg.files[x.id] ? t('sndReplace') : t('sndUpload')), cfg.files[x.id] && React.createElement("button", {
+      className: "btn btn-sm btn-ghost",
+      onClick: () => remove(x.id)
+    }, t('sndRemove')));
+  }))), React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "audio/*,.mp3,.m4a,.wav,.ogg",
+    hidden: true,
+    onChange: e => {
+      upload(target.current, e.target.files[0]);
+      e.target.value = '';
+    }
+  }), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('sndStorage')), !sound.unlocked && React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('sndUnlockHint')), msg && React.createElement(Toast, {
+    msg: msg.text,
+    ok: msg.ok,
+    onClose: () => setMsg(null)
+  }));
+}
 const deviceLang = () => {
   try {
     return /^ar\b/i.test(navigator.languages && navigator.languages[0] || navigator.language || '') ? 'ar' : 'en';
@@ -6859,13 +8183,15 @@ const DEFAULT_SETTINGS = {
   tvZoom: 1,
   rules: null,
   lastTeams: null,
-  skipReported: true
+  skipReported: true,
+  sound: DEFAULT_SOUND
 };
 function applyDocLang(lang) {
   const el = document.documentElement;
   el.setAttribute('lang', lang === 'en' ? 'en' : 'ar');
   el.setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
 }
+const SESSION_ID = Math.random().toString(36).slice(2, 8);
 const BASE_BANK = typeof window !== 'undefined' ? window.KH_BANK : null;
 function App() {
   const [ready, setReady] = useState(false);
@@ -6946,9 +8272,19 @@ function App() {
     setSettingsRaw(s);
     store.set(K.settings, s);
   };
+  const sfxSeq = useRef(0);
+  const emitSfx = names => names.forEach(name => {
+    const id = SESSION_ID + ':' + ++sfxSeq.current;
+    const o = outRef.current;
+    if (o.here) sound.play(name, id);else o.tv.sfx(name, id);
+  });
   const setGame = next => {
     setGameRaw(prev => {
       const g = typeof next === 'function' ? next(prev) : next;
+      if (g !== prev) {
+        const evs = soundEvents(prev, g);
+        if (evs.length) setTimeout(() => emitSfx(evs), 0);
+      }
       if (g) store.set(K.current, g);else store.del(K.current);
       if (g && prev && prev.id === g.id && prev.phase === 'pick' && g.phase === 'board' && histRef.current.n < g.gameNo) setQhist({
         ...histRef.current,
@@ -6988,16 +8324,56 @@ function App() {
     return g;
   };
   const [preview, setPreview] = useState(null);
-  const tvLink = useTvSender(game, settings, preview);
-  const sendTv = tvLink.send;
   const [playHere, setPlayHere] = useState(false);
+  const soundCfg = cleanSound(settings.sound);
+  const tvLink = useTvSender(game, settings, preview, {
+    cfg: soundCfg,
+    tvPlays: !playHere
+  });
+  const sendTv = tvLink.send;
   const [localStatus, setLocalStatus] = useState(null);
   const curKey = game && game.current ? game.current.cell + '|' + ((cellById(game, game.current.cell) || {}).q || {}).id : '';
   useEffect(() => {
     setLocalStatus(null);
     tvLink.setStatus(null);
   }, [curKey]);
+  const helpEnds = game && game.current && helpRunning(game.current) ? game.current.fx.help.endsAt : null;
+  useEffect(() => {
+    if (!helpEnds || tvRoute) return undefined;
+    const check = () => {
+      if (Date.now() >= helpEnds) act(x => endHelp(x, Date.now()));
+    };
+    const id = setTimeout(check, Math.max(0, helpEnds - Date.now()) + 30);
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('focus', check);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener('visibilitychange', check);
+      window.removeEventListener('focus', check);
+    };
+  }, [helpEnds]);
   const outputHere = !tvLink.tv.open || playHere;
+  const outRef = useRef({
+    here: outputHere,
+    tv: tvLink
+  });
+  outRef.current = {
+    here: outputHere,
+    tv: tvLink
+  };
+  useEffect(() => {
+    sound.setConfig(soundCfg);
+  }, [JSON.stringify(soundCfg)]);
+  useEffect(() => {
+    const u = () => sound.unlock();
+    window.addEventListener('pointerdown', u);
+    window.addEventListener('keydown', u);
+    return () => {
+      window.removeEventListener('pointerdown', u);
+      window.removeEventListener('keydown', u);
+    };
+  }, []);
+  useTicks(game, outputHere && !tvRoute && screen === 'game', (n, id) => sound.play(n, id));
   const doFlash = info => {
     setFlash(info);
     sendTv(info);
@@ -7088,6 +8464,13 @@ function App() {
     },
     issues: issues,
     onClearIssues: () => setIssues([]),
+    extra: React.createElement(React.Fragment, null, React.createElement(LifelineDefaults, {
+      settings: settings,
+      setSettings: setSettings
+    }), React.createElement(SoundSettings, {
+      settings: settings,
+      setSettings: setSettings
+    })),
     onRestore: restore,
     onClearAll: clearAll,
     bank: BANK,
@@ -7126,6 +8509,9 @@ function App() {
       onExit: () => setTvHere(false)
     }));else if (game.phase === 'pick') view = React.createElement(CategoryPick, common);else if (game.phase === 'board') view = React.createElement(Board, common);else if (game.phase === 'question') view = React.createElement(QuestionScreen, _extends({}, common, {
       flash: doFlash,
+      onNotice: text => setToast({
+        text
+      }),
       media: {
         output: outputHere,
         onStatus: setLocalStatus,
@@ -7173,7 +8559,12 @@ function App() {
     act: act,
     onClose: () => setSheet(null),
     onHome: goHome,
-    onFlagPlayed: () => setPlayedList(true)
+    onFlagPlayed: () => setPlayedList(true),
+    sound: soundCfg,
+    onSound: c => setSettings({
+      ...settings,
+      sound: c
+    })
   }), sheet === 'fix' && game && React.createElement(FixScores, {
     g: game,
     act: act,
@@ -7251,6 +8642,21 @@ if (window.__KH_TEST__) window.__KH = {
   openCells,
   isBoardDone,
   tvGame,
+  sound,
+  soundEvents,
+  tickKey,
+  cleanSound,
+  SFX,
+  LIFELINES,
+  enabledLifelines,
+  lifelineUsed,
+  lifelineBlock,
+  useLifeline,
+  endHelp,
+  returnLifelines,
+  curValue,
+  helpRunning,
+  HELP_SECONDS,
   mergePacks,
   packQuestion,
   questionProblems,

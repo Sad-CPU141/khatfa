@@ -82,6 +82,8 @@ function TvView({ g, flash, onFlashDone, onStatus, status, preview }) {
       <div className="tv-q">
         <QHead g={g} cell={cell} />
         <StageBanner g={g} />
+        <FxBadges g={g} big />
+        <HelpClock g={g} big />
         <Clock g={g} big />
         <QuestionCard cell={cell} big showAnswer={reveal} cur={g.current} output onStatus={onStatus} status={status} />
         {reveal && <ResultBanner g={g} />}
@@ -111,7 +113,10 @@ function LocalTv() {
   const [g, setG] = useState(null); const [flash, setFlash] = useState(null); const [, setL] = useState(0);
   const [preview, setPreview] = useState(null); const [status, setStatus] = useState(null);
   const [unlocked, setUnlocked] = useState(soundAllowed());
+  const [tvPlays, setTvPlays] = useState(true);
   const chRef = useRef(null);
+  const playsRef = useRef(true); playsRef.current = tvPlays;
+  useTicks(g, tvPlays, (n, id) => sound.play(n, id));
   useEffect(() => {
     if (!canChannel()) return undefined;
     const ch = new BroadcastChannel(TV_CHANNEL); chRef.current = ch;
@@ -121,6 +126,8 @@ function LocalTv() {
       else if (m.type === 'flash') setFlash(m.info);
       else if (m.type === 'preview') setPreview(m.preview || null);
       else if (m.type === 'host-hello') ch.postMessage({ type: 'hello', tv: TV_ID, sound: soundAllowed() });
+      else if (m.type === 'sound-cfg') { sound.setConfig(m.cfg); setTvPlays(m.tvPlays !== false); }
+      else if (m.type === 'sfx' && playsRef.current) sound.play(m.name, m.id);
       else if (m.type === 'lang') { setLang(m.lang); applyDocLang(m.lang); setL((x) => x + 1); }
     };
     ch.postMessage({ type: 'hello', tv: TV_ID });
@@ -134,17 +141,17 @@ function LocalTv() {
   const needsClick = !unlocked || (status && status.s === 'blocked');
   return <>
     <TvView g={g} flash={flash} onFlashDone={() => setFlash(null)} onStatus={onStatus} status={status} preview={preview} />
-    {needsClick && <button className="soundunlock" onClick={() => { setUnlocked(true); if (status && status.s === 'blocked') setStatus(null); try { chRef.current.postMessage({ type: 'ping', tv: TV_ID, sound: true }); chRef.current.postMessage({ type: 'media-status', tv: TV_ID, status: { s: 'ready' } }); } catch (e) {} }}>🔊 {t('tvAllowSound')}</button>}
+    {needsClick && <button className="soundunlock" onClick={() => { setUnlocked(true); sound.unlock(); if (status && status.s === 'blocked') setStatus(null); try { chRef.current.postMessage({ type: 'ping', tv: TV_ID, sound: true }); chRef.current.postMessage({ type: 'media-status', tv: TV_ID, status: { s: 'ready' } }); } catch (e) {} }}>🔊 {t('tvAllowSound')}</button>}
     <TvExit />
   </>;
 }
 
 // Host side: keeps any TV windows in sync, and knows whether one is open (so sound
 // and clips play there instead of here). Returns { send(flash), sendPreview, tv: { open, sound }, status }.
-function useTvSender(game, settings, preview) {
+function useTvSender(game, settings, preview, soundState) {
   const ch = useRef(null);
-  const latest = useRef({ game, settings, preview });
-  latest.current = { game, settings, preview };
+  const latest = useRef({ game, settings, preview, soundState });
+  latest.current = { game, settings, preview, soundState };
   const [tvs, setTvs] = useState({}); // id → { seen, sound }
   const [status, setStatus] = useState(null);
   useEffect(() => {
@@ -156,6 +163,7 @@ function useTvSender(game, settings, preview) {
         c.postMessage({ type: 'lang', lang: latest.current.settings.lang });
         c.postMessage({ type: 'game', game: tvGame(latest.current.game) });
         if (latest.current.preview) c.postMessage({ type: 'preview', preview: latest.current.preview });
+        if (latest.current.soundState) c.postMessage({ type: 'sound-cfg', ...latest.current.soundState });
       }
       if ((m.type === 'hello' || m.type === 'ping') && m.tv) setTvs((x) => ({ ...x, [m.tv]: { seen: Date.now(), sound: m.sound !== false } }));
       if (m.type === 'bye' && m.tv) setTvs((x) => { const n = { ...x }; delete n[m.tv]; return n; });
@@ -168,6 +176,7 @@ function useTvSender(game, settings, preview) {
   useEffect(() => { if (ch.current) ch.current.postMessage({ type: 'game', game: tvGame(game) }); }, [game]);
   useEffect(() => { if (ch.current) ch.current.postMessage({ type: 'lang', lang: settings.lang }); }, [settings.lang]);
   useEffect(() => { if (ch.current) ch.current.postMessage({ type: 'preview', preview: preview || null }); }, [preview]);
+  useEffect(() => { if (ch.current && soundState) ch.current.postMessage({ type: 'sound-cfg', ...soundState }); }, [soundState && JSON.stringify(soundState)]);
   const list = Object.values(tvs);
-  return { send: (info) => { if (ch.current) ch.current.postMessage({ type: 'flash', info }); }, tv: { open: list.length > 0, sound: list.some((x) => x.sound) }, status, setStatus };
+  return { send: (info) => { if (ch.current) ch.current.postMessage({ type: 'flash', info }); }, sfx: (name, id) => { if (ch.current) ch.current.postMessage({ type: 'sfx', name, id }); }, tv: { open: list.length > 0, sound: list.some((x) => x.sound) }, status, setStatus };
 }

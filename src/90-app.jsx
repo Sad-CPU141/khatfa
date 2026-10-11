@@ -2,12 +2,13 @@
    APP: state, screens, saving, TV sync.
    ============================================================ */
 const deviceLang = () => { try { return /^ar\b/i.test((navigator.languages && navigator.languages[0]) || navigator.language || '') ? 'ar' : 'en'; } catch (e) { return 'en'; } };
-const DEFAULT_SETTINGS = { lang: deviceLang(), qLang: 'auto', motion: 'system', tvZoom: 1, rules: null, lastTeams: null, skipReported: true };
+const DEFAULT_SETTINGS = { lang: deviceLang(), qLang: 'auto', motion: 'system', tvZoom: 1, rules: null, lastTeams: null, skipReported: true, sound: DEFAULT_SOUND };
 function applyDocLang(lang) {
   const el = document.documentElement;
   el.setAttribute('lang', lang === 'en' ? 'en' : 'ar');
   el.setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
 }
+const SESSION_ID = Math.random().toString(36).slice(2, 8);
 const BASE_BANK = typeof window !== 'undefined' ? window.KH_BANK : null;
 
 function App() {
@@ -58,9 +59,16 @@ function App() {
   const latestSettings = useRef(settings); latestSettings.current = settings;
   const setSettings = (s) => { setLang(s.lang); setSettingsRaw(s); store.set(K.settings, s); };
   // Every game change: save it, and archive finished games (one entry per game id).
+  const sfxSeq = useRef(0);
+  const emitSfx = (names) => names.forEach((name) => {
+    const id = SESSION_ID + ':' + (++sfxSeq.current);
+    const o = outRef.current;
+    if (o.here) sound.play(name, id); else o.tv.sfx(name, id);
+  });
   const setGame = (next) => {
     setGameRaw((prev) => {
       const g = typeof next === 'function' ? next(prev) : next;
+      if (g !== prev) { const evs = soundEvents(prev, g); if (evs.length) setTimeout(() => emitSfx(evs), 0); }
       if (g) store.set(K.current, g); else store.del(K.current);
       // Question history: a game counts once its board is built; a question counts once it's shown.
       if (g && prev && prev.id === g.id && prev.phase === 'pick' && g.phase === 'board' && histRef.current.n < g.gameNo) setQhist({ ...histRef.current, n: g.gameNo });
@@ -79,14 +87,30 @@ function App() {
   const ctx = () => ({ bank: bankRef.current, recent: histRef.current.seen, rand: Math.random, exclude: reportedIds() });
   const begin = (g) => { if (g.rules.randomCats) { const b = autoPick(g, ctx()); if (histRef.current.n < b.gameNo && b.phase === 'board') setQhist({ ...histRef.current, n: b.gameNo }); return b; } return g; };
   const [preview, setPreview] = useState(null); // the question editor's "Preview on TV"
-  const tvLink = useTvSender(game, settings, preview);
+  const [playHere, setPlayHere] = useState(false);
+  const soundCfg = cleanSound(settings.sound);
+  const tvLink = useTvSender(game, settings, preview, { cfg: soundCfg, tvPlays: !playHere });
   const sendTv = tvLink.send;
   // Sound and clips play on a TV window when one is open (unless the host says "play here").
-  const [playHere, setPlayHere] = useState(false);
   const [localStatus, setLocalStatus] = useState(null);
   const curKey = game && game.current ? game.current.cell + '|' + ((cellById(game, game.current.cell) || {}).q || {}).id : '';
   useEffect(() => { setLocalStatus(null); tvLink.setStatus(null); }, [curKey]);
+  // Call for Help ends at its deadline. The host is the only device that ends it (the TV just
+  // shows the deadline). Checked again when the app comes back from the background.
+  const helpEnds = game && game.current && helpRunning(game.current) ? game.current.fx.help.endsAt : null;
+  useEffect(() => {
+    if (!helpEnds || tvRoute) return undefined;
+    const check = () => { if (Date.now() >= helpEnds) act((x) => endHelp(x, Date.now())); };
+    const id = setTimeout(check, Math.max(0, helpEnds - Date.now()) + 30);
+    document.addEventListener('visibilitychange', check); window.addEventListener('focus', check);
+    return () => { clearTimeout(id); document.removeEventListener('visibilitychange', check); window.removeEventListener('focus', check); };
+  }, [helpEnds]);
   const outputHere = !tvLink.tv.open || playHere;
+  // Game sounds: exactly one device plays them (see 37-sound.jsx).
+  const outRef = useRef({ here: outputHere, tv: tvLink }); outRef.current = { here: outputHere, tv: tvLink };
+  useEffect(() => { sound.setConfig(soundCfg); }, [JSON.stringify(soundCfg)]);
+  useEffect(() => { const u = () => sound.unlock(); window.addEventListener('pointerdown', u); window.addEventListener('keydown', u); return () => { window.removeEventListener('pointerdown', u); window.removeEventListener('keydown', u); }; }, []);
+  useTicks(game, outputHere && !tvRoute && screen === 'game', (n, id) => sound.play(n, id));
   const doFlash = (info) => { setFlash(info); sendTv(info); };
 
   if (tvRoute) return <QLangCtx.Provider value={settings.qLang}>{ready ? <LocalTv /> : null}</QLangCtx.Provider>;
@@ -117,14 +141,15 @@ function App() {
   };
   let view;
   if (screen === 'questions') view = <QuestionsScreen packs={packs} setPacks={setPacks} bank={BANK} onBack={() => setScreen('home')} tvOpen={tvLink.tv.open} setPreview={setPreview} previewStatus={tvLink.status} />;
-  else if (screen === 'settings') view = <SettingsScreen settings={settings} setSettings={setSettings} state={{ settings, game, past, packs, history: qhist, issues }} issues={issues} onClearIssues={() => setIssues([])} onRestore={restore} onClearAll={clearAll} bank={BANK} qhist={qhist} onResetHistory={() => setQhist({ n: histRef.current.n, seen: {} })} onBack={() => setScreen('home')} />;
+  else if (screen === 'settings') view = <SettingsScreen settings={settings} setSettings={setSettings} state={{ settings, game, past, packs, history: qhist, issues }} issues={issues} onClearIssues={() => setIssues([])}
+      extra={<><LifelineDefaults settings={settings} setSettings={setSettings} /><SoundSettings settings={settings} setSettings={setSettings} /></>} onRestore={restore} onClearAll={clearAll} bank={BANK} qhist={qhist} onResetHistory={() => setQhist({ n: histRef.current.n, seen: {} })} onBack={() => setScreen('home')} />;
   else if (screen === 'setup') view = <Setup bank={BANK} initial={{ teams: settings.lastTeams, rules: settings.rules }} onBack={() => setScreen('home')} onStart={startNew} />;
   else if (screen === 'game' && game) {
     const common = { g: game, act, ctx, bank: BANK, onMenu: () => setSheet('menu'), onTv: () => setSheet('tv'), onWrong: (id) => setWrongCell(id), onFix: () => setSheet('fix') };
     if (tvHere) view = <><TvView g={game} flash={flash} onFlashDone={() => setFlash(null)} onStatus={setLocalStatus} status={localStatus} /><TvExit onExit={() => setTvHere(false)} /></>;
     else if (game.phase === 'pick') view = <CategoryPick {...common} />;
     else if (game.phase === 'board') view = <Board {...common} />;
-    else if (game.phase === 'question') view = <QuestionScreen {...common} flash={doFlash} media={{ output: outputHere, onStatus: setLocalStatus, status: outputHere ? localStatus : tvLink.status,
+    else if (game.phase === 'question') view = <QuestionScreen {...common} flash={doFlash} onNotice={(text) => setToast({ text })} media={{ output: outputHere, onStatus: setLocalStatus, status: outputHere ? localStatus : tvLink.status,
       where: outputHere ? t('playsHere') : t('playsOnTv'),
       swap: tvLink.tv.open ? { label: playHere ? t('playOnTvInstead') : t('playHereInstead'), fn: () => { setPlayHere(!playHere); act((x) => mediaCmd(x, 'pause')); } } : null }} />;
     else view = <Results g={game} act={act} onHome={goHome} onAgain={playAgain} onFlagPlayed={() => setPlayedList(true)} onFix={() => setSheet('fix')} />;
@@ -135,7 +160,7 @@ function App() {
       <div key={settings.lang} className="langroot">
         {view}
         {flash && !tvHere && screen === 'game' && <Flash f={flash} g={game} onDone={() => setFlash(null)} />}
-        {sheet === 'menu' && game && <GameMenu g={game} act={act} onClose={() => setSheet(null)} onHome={goHome} onFlagPlayed={() => setPlayedList(true)} />}
+        {sheet === 'menu' && game && <GameMenu g={game} act={act} onClose={() => setSheet(null)} onHome={goHome} onFlagPlayed={() => setPlayedList(true)} sound={soundCfg} onSound={(c) => setSettings({ ...settings, sound: c })} />}
         {sheet === 'fix' && game && <FixScores g={game} act={act} onClose={() => setSheet(null)} />}
         {playedList && game && <PlayedList g={game} onClose={() => setPlayedList(false)} onPick={(id) => { setPlayedList(false); setWrongCell(id); }} />}
         {wrongCell && game && <WrongSheet g={game} cellId={wrongCell} ctx={ctx} act={act} onClose={() => setWrongCell(null)} onDone={onWrongDone} />}
@@ -147,5 +172,5 @@ function App() {
   );
 }
 
-if (window.__KH_TEST__) window.__KH = { store, K, BANK: indexBank(BASE_BANK), indexBank, selectBoard, selectQuestions, rowTiers, tiersNeeded, categoryShortfall, gamePool, autoPick, isLocked, markSeen, trimHistory, emptyHistory, startGameNo, tierCounts, POINTS, MIX_ID, DEFAULT_RULES, cleanRules, createGame, pickCategory, randomPick, buildBoard, openCell, markCorrect, markWrong, skipQuestion, putBack, finishQuestion, endGame, adjustScore, undo, undoLabel, winners, gameStats, rematch, pastEntry, timeLeft, pauseTimer, resumeTimer, turnTeam, pickingTeam, openCells, isBoardDone, tvGame, mergePacks, packQuestion, questionProblems, validatePack, exportPack, importPack, emptyQuestion, mediaCmd, revealMore, quietMedia, freshPlay, parseYouTube, parseTime, titleSpoils, mediaStore, invalidateQuestion, invalidRefunds, findReplacement, replacementOptions, isInvalidated, addIssue, issueEntry, gameUsed, makeBackup, validateBackup, t, setLang, pick, S };
+if (window.__KH_TEST__) window.__KH = { store, K, BANK: indexBank(BASE_BANK), indexBank, selectBoard, selectQuestions, rowTiers, tiersNeeded, categoryShortfall, gamePool, autoPick, isLocked, markSeen, trimHistory, emptyHistory, startGameNo, tierCounts, POINTS, MIX_ID, DEFAULT_RULES, cleanRules, createGame, pickCategory, randomPick, buildBoard, openCell, markCorrect, markWrong, skipQuestion, putBack, finishQuestion, endGame, adjustScore, undo, undoLabel, winners, gameStats, rematch, pastEntry, timeLeft, pauseTimer, resumeTimer, turnTeam, pickingTeam, openCells, isBoardDone, tvGame, sound, soundEvents, tickKey, cleanSound, SFX, LIFELINES, enabledLifelines, lifelineUsed, lifelineBlock, useLifeline, endHelp, returnLifelines, curValue, helpRunning, HELP_SECONDS, mergePacks, packQuestion, questionProblems, validatePack, exportPack, importPack, emptyQuestion, mediaCmd, revealMore, quietMedia, freshPlay, parseYouTube, parseTime, titleSpoils, mediaStore, invalidateQuestion, invalidRefunds, findReplacement, replacementOptions, isInvalidated, addIssue, issueEntry, gameUsed, makeBackup, validateBackup, t, setLang, pick, S };
 ReactDOM.createRoot(document.getElementById('root')).render(<Boundary><App /></Boundary>);

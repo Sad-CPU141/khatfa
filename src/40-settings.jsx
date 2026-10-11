@@ -89,3 +89,84 @@ function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, o
     </div>
   );
 }
+
+/* ---------- Lifelines: defaults for new games ---------- */
+function LifelineDefaults({ settings, setSettings }) {
+  const r = cleanRules(settings.rules || {});
+  const set = (k, v) => setSettings({ ...settings, rules: cleanRules({ ...r, [k]: v }) });
+  return (
+    <section className="card stack">
+      <h3>🛟 {t('llRules')}</h3>
+      <p className="hint" style={{ margin: 0 }}>{t('llRulesSub')}</p>
+      <Toggle on={r.lifelines !== false} onChange={(v) => set('lifelines', v)} title={t('llMain')} sub={t('llMainSub')} />
+      <Toggle on={!!r.extraTime} onChange={(v) => set('extraTime', v)} title={t('llExtra')} sub={t('llExtraSub')} />
+      <Toggle on={!!r.swap} onChange={(v) => set('swap', v)} title={t('llSwapOpt')} sub={t('llSwapSub')} />
+      <p className="hint" style={{ margin: 0 }}>{t('llSettingsNote')}</p>
+    </section>
+  );
+}
+
+/* ---------- Sound: volume, mute, built-in sounds, your recordings ---------- */
+function SoundSettings({ settings, setSettings }) {
+  const cfg = cleanSound(settings.sound);
+  const setCfg = (patch) => setSettings({ ...settings, sound: cleanSound({ ...cfg, ...patch }) });
+  const [busy, setBusy] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [, force] = useState(0);
+  const fileRef = useRef(null); const target = useRef(null);
+  useEffect(() => { const u = () => force((x) => x + 1); const id = setInterval(u, 1500); return () => clearInterval(id); }, []);
+  const upload = async (name, file) => {
+    if (!file) return;
+    setBusy(name); setMsg(null);
+    try {
+      if (file.size > SOUND_MAX_BYTES) throw new Error('sndTooBig');
+      const len = await checkAudio(file);
+      if (len > SOUND_MAX_SECONDS) throw new Error('sndTooLong');
+      const id = await mediaStore.put({ blob: file, name: '', size: file.size, at: Date.now() });
+      const old = cfg.files[name];
+      setCfg({ files: { ...cfg.files, [name]: 'idb:' + id } });
+      if (isLocalMedia(old)) mediaStore.del(old.slice(4));
+      setMsg({ text: t('sndSaved'), ok: true });
+    } catch (e) {
+      setMsg({ text: t(/quota/i.test(e.message) ? 'storeFull' : S[e.message] ? e.message : 'vUnsupported') });
+    }
+    setBusy(null);
+  };
+  const remove = (name) => {
+    const old = cfg.files[name]; const files = { ...cfg.files }; delete files[name];
+    setCfg({ files }); if (isLocalMedia(old)) mediaStore.del(old.slice(4));
+  };
+  const SRC = { custom: 'sndSrcCustom', file: 'sndSrcFile', builtin: 'sndSrcBuiltin', none: 'sndSrcNone' };
+  const srcOf = (name) => (cfg.files[name] ? 'custom' : REPO_SOUNDS[name] ? 'file' : cfg.builtin ? 'builtin' : 'none');
+  return (
+    <section className="card stack soundset">
+      <h3>🔊 {t('sndTitle')}</h3>
+      <button className={'btn ' + (cfg.muted ? 'btn-danger' : 'btn-gold')} aria-pressed={cfg.muted} onClick={() => setCfg({ muted: !cfg.muted })}>{cfg.muted ? '🔇 ' + t('sndMutedTap') : '🔊 ' + t('sndOnTap')}</button>
+      <label className="vol"><span aria-hidden="true">🔈</span><input type="range" min="0" max="1" step="0.05" value={cfg.volume} aria-label={t('sndVolume')} onChange={(e) => setCfg({ volume: +e.target.value })} /><span aria-hidden="true">🔊</span><b className="num">{Math.round(cfg.volume * 100)}%</b></label>
+      <Toggle on={cfg.builtin} onChange={(v) => setCfg({ builtin: v })} title={t('sndBuiltin')} sub={t('sndBuiltinSub')} />
+      <button className="btn btn-sm" onClick={() => { sound.unlock(); sound.preview('correct'); }}>▶ {t('sndTest')}</button>
+      <p className="hint" style={{ margin: 0 }}>{t('sndWhere')}</p>
+      <details className="sndlist" open>
+        <summary className="label">{t('sndEvents')}</summary>
+        <p className="hint">{t('sndEventsSub')}</p>
+        <ul>
+          {SFX.map((x) => {
+            const src = srcOf(x.id);
+            return (
+              <li key={x.id} className="sndrow">
+                <span className="grow"><b>{pick({ en: x.en, ar: x.ar })}</b>{x.voice ? <span className="voicetag">🎙️ {t('sndVoiceIdea')}</span> : null}<small className={'muted src-' + src}>{t(SRC[src])}{src === 'file' ? ' (' + REPO_SOUNDS[x.id] + ')' : ''}</small></span>
+                <button className="mini" aria-label={t('sndPreview') + ': ' + x.en} disabled={src === 'none'} onClick={() => { sound.unlock(); sound.preview(x.id); }}>▶</button>
+                <button className="btn btn-sm" disabled={busy === x.id} onClick={() => { target.current = x.id; fileRef.current.click(); }}>{cfg.files[x.id] ? t('sndReplace') : t('sndUpload')}</button>
+                {cfg.files[x.id] && <button className="btn btn-sm btn-ghost" onClick={() => remove(x.id)}>{t('sndRemove')}</button>}
+              </li>
+            );
+          })}
+        </ul>
+      </details>
+      <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg" hidden onChange={(e) => { upload(target.current, e.target.files[0]); e.target.value = ''; }} />
+      <p className="hint" style={{ margin: 0 }}>{t('sndStorage')}</p>
+      {!sound.unlocked && <p className="hint" style={{ margin: 0 }}>{t('sndUnlockHint')}</p>}
+      {msg && <Toast msg={msg.text} ok={msg.ok} onClose={() => setMsg(null)} />}
+    </section>
+  );
+}

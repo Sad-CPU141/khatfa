@@ -134,6 +134,8 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
   await require('./bank-rules.js')({ ok, boot });
   await require('./wrong-rules.js')({ ok, boot });
   await require('./pack-rules.js')({ ok, boot });
+  await require('./lifeline-rules.js')({ ok, boot });
+  await require('./sound-rules.js')({ ok, boot });
 
   /* ---------------- language ---------------- */
   console.log('Language');
@@ -338,6 +340,48 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     ok(KH.validateBackup({ app: 'draft-night' }).error === 'bkNotOurs', 'backup: a Draft Night file is refused with a clear message');
     ok(KH.validateBackup({ ...bk, format: 99 }).error === 'bkNewer', 'backup: a newer format is refused');
     ok(KH.validateBackup({ ...bk, data: { ...bk.data, past: [{}] } }).error === 'bkDamaged', 'backup: damaged games are refused');
+  }
+
+  /* ---------------- lifelines + sound in the app ---------------- */
+  console.log('Lifelines and sound in the app (click-through)');
+  {
+    const { w, d, KH } = await boot({ speed: 0.02, idb: false, storage: { kh_settings_v1: JSON.stringify({ lang: 'en' }) } });
+    await click(w, btn(d, 'New game'));
+    await click(w, btn(d, 'Pick categories'));
+    for (let i = 0; i < 6; i++) await click(w, [...d.querySelectorAll('.catcard')].find((c) => !c.disabled));
+    await sleep(30);
+    ok(KH.sound.log.filter((x) => x.name === 'category-reveal').length === 6 && KH.sound.log.filter((x) => x.name === 'game-intro').length === 1, 'sounds: the intro once, and one reveal per category picked');
+    ok(d.querySelectorAll('.scard .lldots').length === 2 && d.querySelectorAll('.scard .lldots i').length === 6, 'each team’s score card shows its 3 lifelines');
+    await click(w, d.querySelector('.tile.open'));
+    ok(!!d.querySelector('.llbar') && d.querySelectorAll('.llbtn.s-ready').length === 3 && /ضاعفها/.test(d.querySelector('.llbar').textContent) && /Double It/.test(d.querySelector('.llbar').textContent), 'the question screen shows the answering team’s 3 lifelines (Arabic names + English)');
+    const v = KH.store.get('kh_current_v1').cells.find((c) => c.id === KH.store.get('kh_current_v1').current.cell).value;
+    await click(w, btn(d, 'ضاعفها'));
+    await sleep(20);
+    ok(/×?2/.test(d.querySelector('.fxbadges').textContent) && d.querySelector('.qh-val.doubled') && new RegExp(String(v * 2)).test(d.querySelector('.qh-val').textContent), 'Double It: the doubled value shows (' + v + ' → ' + v * 2 + ')');
+    ok(d.querySelector('.llbtn.s-active') && d.querySelector('.llbtn.s-active').disabled, 'the used lifeline shows as active and can’t be tapped again');
+    ok(KH.sound.log.filter((x) => x.name === 'double-it').length === 1, 'the Double It sound played once');
+    await click(w, btn(d, 'درع'));
+    ok(/no steal/.test(d.querySelector('.fxbadges').textContent), 'Shield shows “no steal on this question”');
+    await click(w, btn(d, 'فزعة'));
+    await sleep(20);
+    ok(!!d.querySelector('.helpclock') && /Call someone outside the team/.test(d.querySelector('.helpclock').textContent), 'Call for Help shows its countdown');
+    await sleep(30 * 1000 * 0.02 + 250);
+    ok(!d.querySelector('.helpclock') && KH.store.get('kh_current_v1').current.fx.help.ended, 'the help countdown ends by itself at its deadline');
+    ok(KH.sound.log.filter((x) => x.name === 'help-end').length === 1 && KH.store.get('kh_current_v1').log.filter((e) => e.kind === 'help-end').length === 1, 'help ending: one sound, one log entry');
+    await click(w, d.querySelector('.btn-wrong')); await closeFlash(w, d);
+    ok(/Shield: no steal/.test(text(d)) && !d.querySelector('.stage.s-steal'), 'wrong with Shield: no steal chance');
+    ok(KH.sound.log.filter((x) => x.name === 'wrong').length === 1, 'the wrong sound played once');
+    await click(w, btn(d, 'Back to the board'));
+    ok([...d.querySelectorAll('.scard')][0].querySelectorAll('.lldots i.used').length === 3, 'the score card shows the team’s used lifelines');
+    // the other team still has all of theirs
+    await click(w, d.querySelector('.tile.open'));
+    ok(d.querySelectorAll('.llbtn.s-ready').length === 3, 'the other team still has all three');
+    await click(w, d.querySelector('.btn-right')); await closeFlash(w, d);
+    ok(KH.sound.log.filter((x) => x.name === 'correct').length === 1, 'the correct sound played once');
+    await click(w, d.querySelector('[aria-label="Menu"]'));
+    await click(w, btn(d, 'Mute sounds'));
+    ok(KH.store.get('kh_settings_v1').sound.muted === true, 'the menu’s “Mute sounds” mutes (and it’s saved)');
+    w.close();
   }
 
   /* ---------------- TV window link ---------------- */

@@ -30,6 +30,16 @@ A sibling of [Draft Night](https://sad-cpu141.github.io/draft-night/), from the 
   - The clip plays in YouTube's own player, between a start and end time you choose. The player is never covered, and the video is never downloaded.
   - The host is warned if the video's title may give the answer away, or if the video can't be embedded.
   - Clips need internet. There are no built-in clips, because they couldn't be checked from where the game was built.
+- **Lifelines:** each team gets one use of each, during its own answer.
+  - **ضاعفها Double It:** the question scores double, steals included.
+  - **فزعة Call for Help:** a 30-second countdown on the host and TV; the answer clock waits.
+  - **درع Shield:** no steal if the answer is wrong.
+  - Optional, off by default: **تمديد Extra Time** (+30 s) and **بدّل Swap** (a new question of the same value). Turn them on in Settings or in New game.
+  - Undo, "This is wrong" refunds and the game log all handle them.
+- **Sound:**
+  - Clock ticks in the last 5 seconds, plus correct, wrong and steal sounds, category reveal, intro, winner fanfare and lifeline sounds.
+  - Built-in generated sounds, or your own: upload a voice line for any moment in Settings → Sound (for example "Khatfa!" for a steal), or drop files into `sounds/` (see `sounds/README.md`).
+  - Volume, mute and preview controls. Only one screen plays: the TV window if open, otherwise this device.
 - **“This is wrong”** button on every question. It removes a broken or wrong question and reverses only the points that question caused, and nothing is reversed twice. It replaces the question with an unused one of the same value from the same category, or lets the host choose a fallback. Played questions can be flagged from the menu. Flagged questions go to a reported list in Settings, which you can export.
 - **My questions:** an editor for your own packs.
   - Supports text, picture, sound and clip questions, in built-in categories or your own.
@@ -45,7 +55,7 @@ A sibling of [Draft Night](https://sad-cpu141.github.io/draft-night/), from the 
 - TV mode works on this device or in a second window. The TV never shows an answer before the host marks it.
 - Saves on every change. Continue after closing, view recent games, export and import a backup, and install to the home screen. It works offline.
 
-**Not built yet:** lifelines, online rooms with phone buzzers (so no multiplayer sync yet), and multiple-choice questions.
+**Not built yet:** online rooms with phone buzzers (so no multiplayer sync yet), and multiple-choice questions.
 
 ## Install on a phone
 - **iPhone:** open the site in Safari → Share → **Add to Home Screen**.

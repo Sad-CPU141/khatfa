@@ -101,8 +101,13 @@ function checkAudio(blob) {
 }
 // Media ids used by questions (to clean up files nothing uses any more).
 const packMediaIds = (packs) => { const s = new Set(); (packs || []).forEach((p) => (p.questions || []).forEach((q) => { const src = q.media && q.media.src; if (isLocalMedia(src)) s.add(src.slice(4)); })); return s; };
-async function cleanMedia(packs) {
+// Deletes stored files nothing uses any more. It always looks at EVERY pack and the sound
+// uploads (saved state), so cleaning up after one pack can never delete another pack's files.
+async function cleanMedia(packsOverride) {
+  const packs = packsOverride || store.get(K.packs, []);
   const used = packMediaIds(packs);
+  const snd = ((store.get(K.settings, {}) || {}).sound || {}).files || {};
+  Object.values(snd).forEach((src) => { if (isLocalMedia(src)) used.add(src.slice(4)); });
   const keys = await mediaStore.keys();
   await Promise.all((keys || []).filter((k) => !used.has(k)).map((k) => mediaStore.del(k)));
 }
@@ -177,7 +182,7 @@ function QuestionsScreen({ packs, setPacks, bank, onBack, tvOpen, setPreview, pr
   };
   if (pack) return <PackScreen pack={pack} savePack={savePack} bank={bank} onBack={() => { setOpenId(null); setPreview(null); }} tvOpen={tvOpen} setPreview={setPreview} previewStatus={previewStatus}
     onDelete={() => setAsk({ kind: 'delete', p: pack })} onExport={async () => { const data = await exportPack(pack); downloadBlob(new Blob([JSON.stringify(data)], { type: 'application/json' }), 'khatfa-pack-' + pack.name.replace(/[^\p{L}\p{N}]+/gu, '-').slice(0, 40) + '.json'); }}
-    extra={ask && ask.kind === 'delete' && <Confirm title={t('deletePackQ')} body={t('deletePackBody', { n: ask.p.questions.length })} yes={t('deleteIt')} danger onYes={() => { const rest = packs.filter((x) => x.id !== ask.p.id); setPacks(rest); setOpenId(null); cleanMedia(rest); }} onClose={() => setAsk(null)} />} />;
+    extra={ask && ask.kind === 'delete' && <Confirm title={t('deletePackQ')} body={t('deletePackBody', { n: ask.p.questions.length })} yes={t('deleteIt')} danger onYes={() => { const rest = packs.filter((x) => x.id !== ask.p.id); setPacks(rest); setOpenId(null); setTimeout(() => cleanMedia().catch(() => {}), 0); }} onClose={() => setAsk(null)} />} />;
   return (
     <div className="app">
       <TopBar onBack={onBack} title={t('myQuestions')} />
@@ -212,7 +217,7 @@ function PackScreen({ pack, savePack, bank, onBack, onDelete, onExport, extra, t
   const [delQ, setDelQ] = useState(null);
   if (edit) return <QuestionForm initial={edit} pack={pack} bank={bank} tvOpen={tvOpen} setPreview={setPreview} previewStatus={previewStatus}
     onCancel={() => { setEdit(null); setPreview(null); }}
-    onSave={(q) => { const exists = pack.questions.some((x) => x.id === q.id); const next = { ...pack, questions: exists ? pack.questions.map((x) => (x.id === q.id ? q : x)) : [...pack.questions, q] }; savePack(next); setEdit(null); setPreview(null); cleanMedia([next]).catch(() => {}); }} />;
+    onSave={(q) => { const exists = pack.questions.some((x) => x.id === q.id); const next = { ...pack, questions: exists ? pack.questions.map((x) => (x.id === q.id ? q : x)) : [...pack.questions, q] }; savePack(next); setEdit(null); setPreview(null); setTimeout(() => cleanMedia().catch(() => {}), 0); }} />;
   const catName = (id) => { const c = pack.categories.find((x) => x.id === id) || bank.cats.find((x) => x.id === id); return c ? (c.emoji || '') + ' ' + pick(c.name) : '—'; };
   const list = pack.questions.filter((q) => filter === 'all' || (q.type || 'text') === filter);
   return (
@@ -257,7 +262,7 @@ function PackScreen({ pack, savePack, bank, onBack, onDelete, onExport, extra, t
       {catForm && <CategoryForm c={catForm} onClose={() => setCatForm(null)} inUse={pack.questions.filter((q) => q.cat === catForm.id).length}
         onSave={(c) => { const { isNew, ...cc } = c; savePack({ ...pack, categories: isNew ? [...pack.categories, cc] : pack.categories.map((x) => (x.id === cc.id ? cc : x)) }); setCatForm(null); }}
         onDelete={() => { savePack({ ...pack, categories: pack.categories.filter((x) => x.id !== catForm.id) }); setCatForm(null); }} />}
-      {delQ && <Confirm title={t('deleteQQ')} body={pick(delQ.q)} yes={t('deleteIt')} danger onYes={() => { const next = { ...pack, questions: pack.questions.filter((x) => x.id !== delQ.id) }; savePack(next); cleanMedia([next]).catch(() => {}); }} onClose={() => setDelQ(null)} />}
+      {delQ && <Confirm title={t('deleteQQ')} body={pick(delQ.q)} yes={t('deleteIt')} danger onYes={() => { const next = { ...pack, questions: pack.questions.filter((x) => x.id !== delQ.id) }; savePack(next); setTimeout(() => cleanMedia().catch(() => {}), 0); }} onClose={() => setDelQ(null)} />}
       {extra}
     </div>
   );

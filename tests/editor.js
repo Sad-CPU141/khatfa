@@ -144,6 +144,21 @@ const mediaMap = (() => { const s = {}; require('vm').runInNewContext(fs.readFil
   ok(true, 'after import the picture still shows (files restored into this browser)');
   await page.click('text=Cancel');
 
+  // Regression: saving a question in ANOTHER pack must not delete this pack's files
+  await page.click('.topbar .iconbtn'); // back to the pack list
+  await page.click('text=New pack');
+  await page.click('text=Add a question'); await page.click('.typegrid >> text=Text');
+  await page.selectOption('select.input', 'space');
+  await page.locator('textarea.input').nth(0).fill('Another pack question?');
+  await page.locator('.bifield').nth(1).locator('input').first().fill('Yes');
+  await page.click('.qf-actions >> text=Save'); await sleep(400);
+  await page.click('.topbar .iconbtn');
+  await page.click('text=Family Night');
+  await page.click('.qrow >> text=Whose flag is this?');
+  await page.waitForSelector('.preview .qimg img', { timeout: 5000 }).catch(() => {});
+  ok(await page.evaluate(() => { const i = document.querySelector('.preview .qimg img'); return !!i && i.naturalWidth > 0; }), 'saving a question in another pack keeps this pack’s pictures (cleanup bug fixed)');
+  await page.click('text=Cancel');
+
   // Settings / home show the pack questions in the bank
   await page.click('.topbar .iconbtn'); await page.click('.topbar .iconbtn').catch(() => {});
   await page.goto(base); await page.waitForSelector('.hero');

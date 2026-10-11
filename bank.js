@@ -1,4 +1,4 @@
-/* Khatfa question bank ab18c4c789 — built from src/bank/ by build.js. Edit src/bank/, not this file. */
+/* Khatfa question bank 0b1c53eadb — built from src/bank/ by build.js. Edit src/bank/, not this file. */
 /* ---- bank/00-runtime.js ---- */
 /* ============================================================
    QUESTION BANK — runtime for the data files in src/bank/.
