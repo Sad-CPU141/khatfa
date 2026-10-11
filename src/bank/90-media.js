@@ -216,3 +216,73 @@
     ['c03', 400, 'This song was written for which animated film?', 'هالأغنية انكتبت لأي فيلم رسوم متحركة؟', 'Despicable Me 2', 'أنا الحقير ٢ (Despicable Me 2)', { s: 'rnb', r: 'Happy (Pharrell Williams song)', m: clip('ZbZSe6N_BXs', 30, 45) }],
   ]);
 })();
+
+/* ---------------- logos (Simple Icons, symbol only) ----------------
+   Brand symbols from Simple Icons (a CC0 collection; the logos are trademarks of their
+   owners and are shown only to identify the brand). Every logo here was checked by eye:
+   none contains the brand's name. */
+(function () {
+  var SI = 'Simple Icons (simpleicons.org). Trademark of its owner, shown for identification.';
+  var DARK = { renault: 1, opel: 1, snapchat: 1, mcdonalds: 1, smart: 1 }; // yellow logos sit on the dark frame
+  var logo = function (slug, extra) { var m = { type: 'image', src: '@logo-' + slug, alt: ['A logo with no words', 'شعار بدون كلمات'], credit: SI }; if (!DARK[slug]) m.frame = 'light'; for (var k in extra || {}) m[k] = extra[k]; return m; };
+  var CQ = ['Which car brand’s logo is this?', 'شعار أي شركة سيارات هذا؟'];
+  var BQ = ['Which brand’s logo is this?', 'شعار أي علامة تجارية هذا؟'];
+  var ZC = ['A close-up of a car logo (the host can zoom out). Which brand is it?', 'لقطة مقرّبة لشعار سيارة (المقدّم يقدر يبعّد). أي شركة؟'];
+  var ZB = ['A close-up of a logo (the host can zoom out). Which brand is it?', 'لقطة مقرّبة لشعار (المقدّم يقدر يبعّد). أي علامة؟'];
+  var row = function (id, pts, slug, en, ar, o) { o = o || {}; var z = o.zoom; delete o.zoom; var q = z ? (o.car ? ZC : ZB) : (o.car ? CQ : BQ); delete o.car; o.m = logo(slug, z ? { reveal: 'zoom', focus: z } : null); if (pts > 200 && !o.r) o.r = en.replace(/ \(.*\)$/, ''); return [id, pts, q[0], q[1], en, ar, o]; };
+
+  KH_BANK.cat('car-logos', { g: 'brands', e: '🚘', en: 'Guess the Car Logo', ar: 'خمّن شعار السيارة', pop: 1,
+    subs: { europe: ['European', 'أوروبية'], asia: ['Asian', 'آسيوية'], americas: ['American', 'أمريكية'] } }, [
+    row('e01', 200, 'audi', 'Audi', 'أودي', { car: 1, s: 'europe' }),
+    row('e02', 200, 'toyota', 'Toyota', 'تويوتا', { car: 1, s: 'asia' }),
+    row('e03', 200, 'volkswagen', 'Volkswagen', 'فولكس فاغن', { car: 1, s: 'europe', alt: ['VW'] }),
+    row('e04', 200, 'mitsubishi', 'Mitsubishi', 'ميتسوبيشي', { car: 1, s: 'asia' }),
+    row('e05', 200, 'honda', 'Honda', 'هوندا', { car: 1, s: 'asia' }),
+    row('e06', 200, 'tesla', 'Tesla', 'تسلا', { car: 1, s: 'americas' }),
+    row('e07', 200, 'chevrolet', 'Chevrolet', 'شيفروليه', { car: 1, s: 'americas', alt: ['Chevy'] }),
+    row('e08', 200, 'hyundai', 'Hyundai', 'هيونداي', { car: 1, s: 'asia' }),
+    row('h01', 400, 'renault', 'Renault', 'رينو', { car: 1, s: 'europe' }),
+    row('h02', 400, 'citroen', 'Citroën', 'ستروين', { car: 1, s: 'europe', alt: ['Citroen'] }),
+    row('h03', 400, 'subaru', 'Subaru', 'سوبارو', { car: 1, s: 'asia', n: 'The six stars are the Pleiades star cluster ("Subaru" in Japanese).', nAr: 'النجوم الست هي عنقود الثريا («سوبارو» باليابانية).' }),
+    row('h04', 400, 'mazda', 'Mazda', 'مازدا', { car: 1, s: 'asia' }),
+    row('h05', 400, 'suzuki', 'Suzuki', 'سوزوكي', { car: 1, s: 'asia' }),
+    row('h06', 400, 'maserati', 'Maserati', 'مازيراتي', { car: 1, s: 'europe', n: 'The trident comes from the Fountain of Neptune in Bologna.', nAr: 'الرمح الثلاثي مأخوذ من نافورة نبتون في بولونيا.' }),
+    row('h07', 400, 'rollsroyce', 'Rolls-Royce', 'رولز رويس', { car: 1, s: 'europe' }),
+    row('h08', 400, 'seat', 'SEAT', 'سيات', { car: 1, s: 'europe', x: 1 }),
+    row('h09', 400, 'infiniti', 'Infiniti', 'إنفينيتي', { car: 1, s: 'asia', n: 'Nissan’s luxury brand.', nAr: 'العلامة الفاخرة من نيسان.' }),
+    row('x01', 600, 'opel', 'Opel (Vauxhall in the UK)', 'أوبل', { car: 1, s: 'europe', alt: ['Opel', 'Vauxhall'] }),
+    row('x02', 600, 'skoda', 'Škoda', 'سكودا', { car: 1, s: 'europe', alt: ['Skoda'] }),
+    row('x03', 600, 'acura', 'Acura', 'أكيورا', { car: 1, s: 'asia', x: 1, n: 'Honda’s luxury brand.', nAr: 'العلامة الفاخرة من هوندا.' }),
+    row('x04', 600, 'polestar', 'Polestar', 'بولستار', { car: 1, s: 'europe', x: 1 }),
+    row('x05', 600, 'dacia', 'Dacia', 'داسيا', { car: 1, s: 'europe', x: 1 }),
+    row('x06', 600, 'smart', 'Smart', 'سمارت', { car: 1, s: 'europe', x: 1 }),
+    row('x07', 600, 'tata', 'Tata Motors', 'تاتا موتورز', { car: 1, s: 'asia', alt: ['Tata'] }),
+    row('x08', 600, 'cadillac', 'Cadillac', 'كاديلاك', { car: 1, s: 'americas', zoom: [0.5, 0.5] }),
+  ]);
+
+  KH_BANK.cat('brand-logos', { g: 'brands', e: '🏷️', en: 'Guess the Brand Logo', ar: 'خمّن شعار الماركة', pop: 1,
+    subs: { apps: ['Apps & tech', 'تطبيقات وتقنية'], style: ['Food, sport & style', 'أكل ورياضة وموضة'] } }, [
+    row('e01', 200, 'nike', 'Nike', 'نايكي', { s: 'style', f: 'nike-logo' }),
+    row('e02', 200, 'mcdonalds', 'McDonald’s', 'ماكدونالدز', { s: 'style' }),
+    row('e03', 200, 'apple', 'Apple', 'أبل', { s: 'apps' }),
+    row('e04', 200, 'youtube', 'YouTube', 'يوتيوب', { s: 'apps' }),
+    row('e05', 200, 'whatsapp', 'WhatsApp', 'واتساب', { s: 'apps' }),
+    row('e06', 200, 'instagram', 'Instagram', 'إنستغرام', { s: 'apps' }),
+    row('e07', 200, 'spotify', 'Spotify', 'سبوتيفاي', { s: 'apps' }),
+    row('e08', 200, 'netflix', 'Netflix', 'نتفليكس', { s: 'apps' }),
+    row('h01', 400, 'mastercard', 'Mastercard', 'ماستركارد', { s: 'style' }),
+    row('h02', 400, 'snapchat', 'Snapchat', 'سناب شات', { s: 'apps' }),
+    row('h03', 400, 'twitch', 'Twitch', 'تويتش', { s: 'apps' }),
+    row('h04', 400, 'airbnb', 'Airbnb', 'إير بي إن بي', { s: 'apps' }),
+    row('h05', 400, 'telegram', 'Telegram', 'تيليجرام', { s: 'apps' }),
+    row('h06', 400, 'playstation', 'PlayStation', 'بلايستيشن', { s: 'apps' }),
+    row('h07', 400, 'android', 'Android', 'أندرويد', { s: 'apps', n: 'The Android robot is shared by Google under CC BY 3.0.', nAr: 'روبوت أندرويد تنشره قوقل برخصة CC BY 3.0.' }),
+    row('h08', 400, 'tiktok', 'TikTok', 'تيك توك', { s: 'apps' }),
+    row('h09', 400, 'adidas', 'Adidas', 'أديداس', { s: 'style' }),
+    row('x01', 600, 'dropbox', 'Dropbox', 'دروب بوكس', { s: 'apps', x: 1 }),
+    row('x02', 600, 'underarmour', 'Under Armour', 'أندر آرمر', { s: 'style' }),
+    row('x03', 600, 'steam', 'Steam', 'ستيم', { s: 'apps' }),
+    row('x04', 600, 'paypal', 'PayPal', 'باي بال', { s: 'apps', zoom: [0.55, 0.4] }),
+    row('x05', 600, 'pinterest', 'Pinterest', 'بنترست', { s: 'apps', zoom: [0.5, 0.5] }),
+  ]);
+})();

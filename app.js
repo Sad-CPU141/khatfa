@@ -1,7 +1,7 @@
-/* Khatfa 20d3ea0175 — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa af99dfcdf4 — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "20d3ea0175";
+const APP_VERSION = "af99dfcdf4";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -681,7 +681,7 @@ const S = {
   previewOnTv: ['Preview', 'معاينة'],
   tvAllowSound: ['Click here once to allow sound on this screen', 'اضغط هنا مرة عشان تسمح بالصوت على هالشاشة'],
   credits: ['Credits', 'الشكر والمصادر'],
-  creditsBody: ['Flags: flag-icons (MIT). Maps: Natural Earth (public domain) via world-atlas (ISC). Recorded sounds: Kenney and Ben Burnes / Abstraction (CC0). Other tones are generated for Khatfa. Fonts: SIL Open Font License. React: MIT. Clips play in YouTube’s own player and are never downloaded.', 'الأعلام: flag-icons (MIT). الخرائط: Natural Earth (ملكية عامة) عبر world-atlas (ISC). الأصوات المسجّلة: Kenney وBen Burnes / Abstraction (CC0). باقي الأصوات مصنّعة لخطفة. الخطوط: رخصة SIL المفتوحة. React: MIT. المقاطع تشتغل في مشغّل يوتيوب نفسه وما تنحمّل أبداً.'],
+  creditsBody: ['Flags: flag-icons (MIT). Maps: Natural Earth (public domain) via world-atlas (ISC). Recorded sounds: Kenney and Ben Burnes / Abstraction (CC0). Logos: Simple Icons (trademarks of their owners, shown for identification). Other tones are generated for Khatfa. Fonts: SIL Open Font License. React: MIT. Clips play in YouTube’s own player and are never downloaded.', 'الأعلام: flag-icons (MIT). الخرائط: Natural Earth (ملكية عامة) عبر world-atlas (ISC). الأصوات المسجّلة: Kenney وBen Burnes / Abstraction (CC0). الشعارات: Simple Icons (علامات تجارية لأصحابها، معروضة للتعرّف عليها). باقي الأصوات مصنّعة لخطفة. الخطوط: رخصة SIL المفتوحة. React: MIT. المقاطع تشتغل في مشغّل يوتيوب نفسه وما تنحمّل أبداً.'],
   myQuestions: ['My questions', 'أسئلتي'],
   myQuestionsSub: ['Make your own packs: text, picture, sound and clip questions. Switched-on packs join your games at 200, 400 and 600.', 'سوّ حزم أسئلتك: نص وصور وأصوات ومقاطع. الحزم المفعّلة تدخل ألعابك بـ٢٠٠ و٤٠٠ و٦٠٠.'],
   mediaNoStore: ['This browser can’t store files here (private mode?). Pictures and sounds you add will be lost when the page closes.', 'هالمتصفح ما يقدر يحفظ ملفات (وضع التصفح الخفي؟). الصور والأصوات اللي تضيفها بتروح لما تقفل الصفحة.'],

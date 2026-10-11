@@ -23,7 +23,7 @@ KH_BANK.cat('cars', { g: 'brands', pop: 1, e: '🚗', en: 'Cars', ar: 'سيار�
 
 KH_BANK.cat('fashion', { g: 'brands', e: '👟', en: 'Fashion & Sneakers', ar: 'أزياء وأحذية رياضية',
   subs: { sport: ['Sportswear', 'ملابس رياضية'], luxury: ['Luxury', 'ماركات فاخرة'], high: ['High street', 'ماركات شعبية'] } }, [
-  ['e01', 200, 'Which sportswear brand’s logo is the "Swoosh"?', 'أي علامة رياضية شعارها «السووش»؟', 'Nike', 'نايكي', { s: 'sport', r: 'Swoosh' }],
+  ['e01', 200, 'Which sportswear brand’s logo is the "Swoosh"?', 'أي علامة رياضية شعارها «السووش»؟', 'Nike', 'نايكي', { f: 'nike-logo', s: 'sport', r: 'Swoosh' }],
   ['e02', 200, 'Which brand is known for its three stripes?', 'أي علامة تشتهر بالخطوط الثلاثة؟', 'Adidas', 'أديداس', { s: 'sport', r: 'Adidas' }],
   ['e03', 200, 'Which French fashion house has a logo of two interlocking Cs?', 'أي دار أزياء فرنسية شعارها حرفا C متشابكان؟', 'Chanel', 'شانيل', { s: 'luxury', r: 'Chanel' }],
   ['e04', 200, 'Which clothing brand uses a small green crocodile as its logo?', 'أي علامة ملابس شعارها تمساح أخضر صغير؟', 'Lacoste', 'لاكوست', { s: 'high', r: 'Lacoste' }],
