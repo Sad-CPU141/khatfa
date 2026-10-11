@@ -1,7 +1,7 @@
-/* Khatfa f68f06ad8e — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa 4bd3db90db — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "f68f06ad8e";
+const APP_VERSION = "4bd3db90db";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -674,7 +674,109 @@ const S = {
   previewOnTv: ['Preview', 'معاينة'],
   tvAllowSound: ['Click here once to allow sound on this screen', 'اضغط هنا مرة عشان تسمح بالصوت على هالشاشة'],
   credits: ['Credits', 'الشكر والمصادر'],
-  creditsBody: ['Flags: flag-icons (MIT). Maps: Natural Earth (public domain) via world-atlas (ISC). Recorded sounds: Kenney and Ben Burnes / Abstraction (CC0). Other tones are generated for Khatfa. Fonts: SIL Open Font License. React: MIT. Clips play in YouTube’s own player and are never downloaded.', 'الأعلام: flag-icons (MIT). الخرائط: Natural Earth (ملكية عامة) عبر world-atlas (ISC). الأصوات المسجّلة: Kenney وBen Burnes / Abstraction (CC0). باقي الأصوات مصنّعة لخطفة. الخطوط: رخصة SIL المفتوحة. React: MIT. المقاطع تشتغل في مشغّل يوتيوب نفسه وما تنحمّل أبداً.']
+  creditsBody: ['Flags: flag-icons (MIT). Maps: Natural Earth (public domain) via world-atlas (ISC). Recorded sounds: Kenney and Ben Burnes / Abstraction (CC0). Other tones are generated for Khatfa. Fonts: SIL Open Font License. React: MIT. Clips play in YouTube’s own player and are never downloaded.', 'الأعلام: flag-icons (MIT). الخرائط: Natural Earth (ملكية عامة) عبر world-atlas (ISC). الأصوات المسجّلة: Kenney وBen Burnes / Abstraction (CC0). باقي الأصوات مصنّعة لخطفة. الخطوط: رخصة SIL المفتوحة. React: MIT. المقاطع تشتغل في مشغّل يوتيوب نفسه وما تنحمّل أبداً.'],
+  myQuestions: ['My questions', 'أسئلتي'],
+  myQuestionsSub: ['Make your own packs: text, picture, sound and clip questions. Switched-on packs join your games at 200, 400 and 600.', 'سوّ حزم أسئلتك: نص وصور وأصوات ومقاطع. الحزم المفعّلة تدخل ألعابك بـ٢٠٠ و٤٠٠ و٦٠٠.'],
+  mediaNoStore: ['This browser can’t store files here (private mode?). Pictures and sounds you add will be lost when the page closes.', 'هالمتصفح ما يقدر يحفظ ملفات (وضع التصفح الخفي؟). الصور والأصوات اللي تضيفها بتروح لما تقفل الصفحة.'],
+  newPackName: ['My pack {n}', 'حزمتي {n}'],
+  newPack: ['New pack', 'حزمة جديدة'],
+  noPacks: ['No packs yet.', 'ما فيه حزم للحين.'],
+  packCatsN: ['{n} own categories', '{n} فئات خاصة'],
+  packNoCats: ['uses built-in categories', 'تستخدم الفئات الأساسية'],
+  packInGames: ['Use in games', 'استخدمها في الألعاب'],
+  importPack: ['Import a pack', 'استورد حزمة'],
+  exportPack: ['Export pack', 'صدّر الحزمة'],
+  packStorageNote: ['Pictures and sounds are saved in this browser only, and browsers limit how much they keep. Export a pack to back it up or move it to another device: the file includes its pictures and sounds. (Full backups in Settings include pack text and clips, but not the picture and sound files.)', 'الصور والأصوات تنحفظ في هالمتصفح بس، والمتصفحات تحدد كم تحفظ. صدّر الحزمة عشان تحفظ نسخة أو تنقلها لجهاز ثاني: الملف فيه صورها وأصواتها. (النسخة الاحتياطية الكاملة في الإعدادات فيها نصوص الحزم والمقاطع، بس مو ملفات الصور والأصوات.)'],
+  importPackQ: ['Import “{name}”?', 'تستورد «{name}»؟'],
+  importPackBody: ['{questions} questions, {cats} categories, {media} picture/sound files. It’s added as a new pack.', '{questions} سؤال، {cats} فئات، {media} ملف صور/أصوات. بتنضاف كحزمة جديدة.'],
+  importPackBad: ['{n} questions are incomplete and won’t be used until you fix them.', '{n} سؤال ناقص وما بيستخدم لين تصلحه.'],
+  packImported: ['Imported “{name}”.', 'انستوردت «{name}».'],
+  pkNotPack: ['This isn’t a Khatfa question pack.', 'هذا مو ملف حزمة أسئلة خطفة.'],
+  pkBadPoints: ['This pack has questions worth something other than 200, 400 or 600.', 'هالحزمة فيها أسئلة بقيم غير ٢٠٠ و٤٠٠ و٦٠٠.'],
+  vTooBigPack: ['That file is too big to import.', 'الملف كبير مرة عشان ينستورد.'],
+  deletePack: ['Delete pack', 'احذف الحزمة'],
+  deletePackQ: ['Delete this pack?', 'تحذف الحزمة؟'],
+  deletePackBody: ['Its {n} questions and their pictures and sounds are deleted from this device.', 'أسئلتها ({n}) وصورها وأصواتها بتنحذف من هالجهاز.'],
+  packName: ['Pack name', 'اسم الحزمة'],
+  packCategories: ['Your categories', 'فئاتك'],
+  packCategoriesSub: ['Optional. Questions can also go into the built-in categories.', 'اختياري. تقدر تحط الأسئلة في الفئات الأساسية بعد.'],
+  addCategory: ['Add category', 'أضف فئة'],
+  editCategory: ['Edit category', 'عدّل الفئة'],
+  deleteCategory: ['Delete category', 'احذف الفئة'],
+  categoryInUse: ['{n} questions use it. Move or delete them first.', '{n} سؤال يستخدمها. انقلها أو احذفها أول.'],
+  emoji: ['Emoji', 'إيموجي'],
+  nameEn: ['Name (English)', 'الاسم (إنجليزي)'],
+  nameAr: ['Name (Arabic)', 'الاسم (عربي)'],
+  save: ['Save', 'احفظ'],
+  saveVerified: ['Save as verified', 'احفظ كمؤكَّد'],
+  verified: ['verified', 'مؤكَّد'],
+  verifiedOn: ['Verified on {d}.', 'تأكّد في {d}.'],
+  editUnverifies: ['Saving changes removes this; save as verified again after checking.', 'لو حفظت تعديل ينشال التأكيد؛ احفظ كمؤكَّد مرة ثانية بعد ما تتأكد.'],
+  verifyNeeds: ['To mark it verified, fix:', 'عشان تأكّده، صلّح:'],
+  incomplete: ['incomplete', 'ناقص'],
+  deleteQ: ['Delete question', 'احذف السؤال'],
+  deleteQQ: ['Delete this question?', 'تحذف هالسؤال؟'],
+  noQuestionsYet: ['No questions in this pack yet.', 'ما فيه أسئلة في هالحزمة للحين.'],
+  chooseType: ['What kind of question?', 'وش نوع السؤال؟'],
+  addQuestion: ['Add a question', 'أضف سؤال'],
+  packMinNote: ['A category can be picked once it has at least {n} questions at each value it needs (with the default 2 questions per value).', 'الفئة تنختار لما يكون فيها {n} أسئلة على الأقل بكل قيمة تحتاجها (مع الإعداد الافتراضي سؤالين لكل قيمة).'],
+  type_text: ['Text', 'نص'],
+  category: ['Category', 'الفئة'],
+  chooseCategory: ['Choose a category…', 'اختار فئة…'],
+  thisPack: ['This pack', 'هالحزمة'],
+  subcategory: ['Subcategory (optional)', 'فئة فرعية (اختياري)'],
+  pointsLabel: ['Points', 'النقاط'],
+  picture: ['Picture', 'الصورة'],
+  choosePicture: ['Choose a picture', 'اختار صورة'],
+  replacePicture: ['Change picture', 'غيّر الصورة'],
+  orEmoji: ['…or an emoji puzzle', '…أو لغز إيموجي'],
+  pictureDesc: ['Description for screen readers (don’t give the answer)', 'وصف لقارئ الشاشة (لا تكشف الإجابة)'],
+  revealMode: ['Show the picture gradually?', 'تبيّن الصورة شوي شوي؟'],
+  revealNone: ['No', 'لا'],
+  revealZoom: ['Zoomed in', 'مقرّبة'],
+  revealBlur: ['Blurred', 'مغبّشة'],
+  focusHint: ['Tap the preview to choose where the zoom starts.', 'اضغط على المعاينة عشان تختار وين يبدأ التقريب.'],
+  pictureRights: ['Only use pictures you made or are allowed to use (public domain, CC0 or licensed). Not movie posters or stills.', 'استخدم بس صور سويتها أو مسموح لك تستخدمها (ملكية عامة أو CC0 أو مرخّصة). مو بوسترات أو لقطات أفلام.'],
+  sound: ['Sound', 'الصوت'],
+  chooseSound: ['Choose a sound file', 'اختار ملف صوت'],
+  replaceSound: ['Change sound', 'غيّر الصوت'],
+  soundLength: ['{s} seconds long.', 'مدته {s} ثانية.'],
+  soundRights: ['MP3 or M4A works best on every device. Only use sounds you recorded or are allowed to use. Famous copyrighted sounds belong in a clip question (official YouTube upload).', 'MP3 أو M4A أفضل لكل الأجهزة. استخدم بس أصوات سجلتها أو مسموح لك تستخدمها. الأصوات المشهورة المحمية حقوقها تكون سؤال مقطع (رفع رسمي على يوتيوب).'],
+  clip: ['YouTube clip', 'مقطع يوتيوب'],
+  clipUrl: ['Link or video ID', 'الرابط أو رقم المقطع'],
+  clipStart: ['Start (m:ss)', 'البداية (د:ث)'],
+  clipEnd: ['End (m:ss, optional)', 'النهاية (د:ث، اختياري)'],
+  clipRules: ['Use official uploads only (the studio’s, channel’s or artist’s own). The clip plays in YouTube’s player: we never download it or cover it. Needs internet.', 'استخدم بس الرفع الرسمي (حق الاستوديو أو القناة أو الفنان). المقطع يشتغل في مشغّل يوتيوب: ما ننزّله ولا نغطّيه. يحتاج إنترنت.'],
+  vLongClip: ['That’s over a minute: shorter clips work better.', 'أطول من دقيقة: المقاطع القصيرة أحسن.'],
+  questionText: ['Question', 'السؤال'],
+  answerText: ['Answer', 'الإجابة'],
+  alsoAcceptField: ['Also accept (optional)', 'إجابات مقبولة ثانية (اختياري)'],
+  hintField: ['Hint for the host (optional)', 'تلميح للمقدّم (اختياري)'],
+  noteField: ['Note shown with the answer (optional)', 'ملاحظة تظهر مع الإجابة (اختياري)'],
+  sourceField: ['Source and licence / how you checked it', 'المصدر والرخصة / كيف تأكدت'],
+  sourcePh: ['e.g. Wikipedia: Steelpan; sound recorded by me', 'مثلاً: ويكيبيديا؛ الصوت مسجّل مني'],
+  previewLabel: ['Preview', 'معاينة'],
+  previewOnTvBtn: ['Preview on the TV window', 'عاين على نافذة التلفزيون'],
+  stopTvPreview: ['Stop TV preview', 'وقّف معاينة التلفزيون'],
+  previewTvHint: ['Open a TV window (📺 in a game) to preview there too.', 'افتح نافذة التلفزيون (📺 في اللعبة) عشان تعاين عليها بعد.'],
+  videoTitle: ['Video title: “{title}”', 'عنوان المقطع: «{title}»'],
+  vPoints: ['Points must be 200, 400 or 600.', 'النقاط لازم تكون ٢٠٠ أو ٤٠٠ أو ٦٠٠.'],
+  vCat: ['Choose a category.', 'اختار فئة.'],
+  vQuestion: ['Write the question (in at least one language).', 'اكتب السؤال (بلغة وحدة على الأقل).'],
+  vAnswer: ['Write the answer (in at least one language).', 'اكتب الإجابة (بلغة وحدة على الأقل).'],
+  vNoPicture: ['Add a picture or an emoji puzzle.', 'أضف صورة أو لغز إيموجي.'],
+  vNoSound: ['Add a sound file.', 'أضف ملف صوت.'],
+  vBadUrl: ['That isn’t a YouTube link or video ID.', 'هذا مو رابط أو رقم مقطع يوتيوب.'],
+  vBadStart: ['The start time isn’t a time (use m:ss, like 1:05).', 'وقت البداية غلط (استخدم د:ث مثل 1:05).'],
+  vBadEnd: ['The end time must be a time after the start.', 'وقت النهاية لازم يكون بعد البداية.'],
+  vMediaMissing: ['The picture or sound file isn’t on this device any more. Choose it again.', 'ملف الصورة أو الصوت ما عاد موجود على هالجهاز. اختاره من جديد.'],
+  vNeedSource: ['Add where it’s from / how you checked it.', 'أضف المصدر أو كيف تأكدت.'],
+  vNotImage: ['That isn’t a picture file.', 'هذا مو ملف صورة.'],
+  vTooBig: ['That picture is too big (over 8 MB).', 'الصورة كبيرة مرة (أكثر من ٨ ميغا).'],
+  vNotAudio: ['That isn’t a sound file.', 'هذا مو ملف صوت.'],
+  vTooBigAudio: ['That sound is too big (over 5 MB). Trim it first.', 'الصوت كبير مرة (أكثر من ٥ ميغا). قصّه أول.'],
+  vUnsupported: ['This browser can’t open that file. Try MP3/M4A for sound or JPG/PNG for pictures.', 'هالمتصفح ما يقدر يفتح الملف. جرّب MP3/M4A للصوت أو JPG/PNG للصور.'],
+  vLongSound: ['Saved. It’s longer than 30 seconds, so a shorter clip may play better.', 'انحفظ. بس أطول من ٣٠ ثانية، ومقطع أقصر يكون أحسن.']
 };
 let LANG = 'en';
 const setLang = l => {
@@ -2142,7 +2244,9 @@ function Home({
   onNew,
   onContinue,
   onHow,
-  onSettings
+  onSettings,
+  onQuestions,
+  bank
 }) {
   const p = usePwa();
   const live = game && game.phase !== 'done' ? game : null;
@@ -2206,7 +2310,10 @@ function Home({
   })))), React.createElement("button", {
     className: "btn btn-gold",
     onClick: onNew
-  }, t('newGame')), React.createElement("div", {
+  }, t('newGame')), onQuestions && React.createElement("button", {
+    className: "btn",
+    onClick: onQuestions
+  }, "\u270F\uFE0F ", t('myQuestions')), React.createElement("div", {
     className: "row"
   }, React.createElement("button", {
     className: "btn grow",
@@ -2219,9 +2326,9 @@ function Home({
     onClick: () => p.prompt()
   }, "\uD83D\uDCF2 ", t('install'))), React.createElement("p", {
     className: "hint center"
-  }, t('bankNote', {
-    q: BANK.total,
-    c: BANK.cats.length
+  }, bank && t('bankNote', {
+    q: bank.total,
+    c: bank.cats.length
   })), past.length > 0 && React.createElement("section", {
     className: "stack-sm"
   }, React.createElement("span", {
@@ -5000,6 +5107,1389 @@ function MediaControls({
     onClick: onWrong
   }, "\u26A0 ", t('mediaBrokenReplace')));
 }
+const PACK_FORMAT = 1;
+const PACK_MAX_IMAGE = 8 * 1024 * 1024,
+  PACK_MAX_AUDIO = 5 * 1024 * 1024,
+  PACK_MAX_FILE = 60 * 1024 * 1024;
+const QTYPES = ['text', 'image', 'audio', 'video'];
+function packQuestion(p, q) {
+  return {
+    id: 'pk.' + p.id + '.' + q.id,
+    cat: q.cat,
+    tier: POINTS.indexOf(q.points) + 1,
+    points: q.points,
+    sub: q.sub || null,
+    q: q.q,
+    a: q.a,
+    alt: {
+      en: q.alt && q.alt.en || [],
+      ar: q.alt && q.alt.ar || []
+    },
+    hint: q.hint && (q.hint.en || q.hint.ar) ? q.hint : null,
+    note: q.note && (q.note.en || q.note.ar) ? q.note : null,
+    ref: q.ref || null,
+    verified: q.verified ? 'host:' + q.verified : null,
+    x: q.x ? 1 : 0,
+    facts: [],
+    tags: [],
+    reviewed: 0,
+    check: 0,
+    asOf: null,
+    type: q.type || 'text',
+    media: q.type && q.type !== 'text' ? q.media || null : null,
+    pack: p.id
+  };
+}
+function mergePacks(raw, packs) {
+  const on = (packs || []).filter(p => p && p.enabled !== false);
+  if (!on.length) return raw;
+  const groups = [...raw.groups];
+  const cats = raw.cats.map(c => ({
+    ...c
+  }));
+  const own = [];
+  on.forEach(p => (p.categories || []).forEach(c => own.push({
+    id: c.id,
+    group: 'custom',
+    emoji: c.emoji || '📦',
+    name: c.name,
+    subs: {},
+    count: [0, 0, 0],
+    popular: 0,
+    nicheTopic: 0,
+    pack: p.id
+  })));
+  if (own.length) {
+    groups.push({
+      id: 'custom',
+      emoji: '📦',
+      name: {
+        en: 'Your packs',
+        ar: 'حزمك'
+      }
+    });
+    cats.push(...own);
+  }
+  const ids = new Set(cats.map(c => c.id));
+  const questions = [...raw.questions];
+  on.forEach(p => (p.questions || []).forEach(q => {
+    if (ids.has(q.cat) && POINTS.includes(q.points) && (q.q.en || q.q.ar) && (q.a.en || q.a.ar)) questions.push(packQuestion(p, q));
+  }));
+  return {
+    ...raw,
+    groups,
+    cats,
+    questions
+  };
+}
+const clipLen = m => m && m.end != null ? m.end - (m.start || 0) : null;
+function questionProblems(q, opts = {}) {
+  const out = [];
+  if (!POINTS.includes(q.points)) out.push('vPoints');
+  if (!q.cat) out.push('vCat');
+  if (!(q.q.en || '').trim() && !(q.q.ar || '').trim()) out.push('vQuestion');
+  if (!(q.a.en || '').trim() && !(q.a.ar || '').trim()) out.push('vAnswer');
+  const m = q.media || {};
+  if (q.type === 'image' && !m.src && !m.emoji) out.push('vNoPicture');
+  if (q.type === 'audio' && !m.src) out.push('vNoSound');
+  if (q.type === 'video') {
+    if (!m.yt) out.push('vBadUrl');
+    if (m.start != null && (!(m.start >= 0) || isNaN(m.start))) out.push('vBadStart');
+    if (m.end != null && (isNaN(m.end) || !(m.end > (m.start || 0)))) out.push('vBadEnd');
+  }
+  if (opts.mediaMissing) out.push('vMediaMissing');
+  if (opts.verify && !(q.ref || '').trim()) out.push('vNeedSource');
+  return out;
+}
+const emptyQuestion = (type, cat) => ({
+  id: uid(),
+  type,
+  cat: cat || '',
+  sub: '',
+  points: 200,
+  q: {
+    en: '',
+    ar: ''
+  },
+  a: {
+    en: '',
+    ar: ''
+  },
+  alt: {
+    en: [],
+    ar: []
+  },
+  hint: {
+    en: '',
+    ar: ''
+  },
+  note: {
+    en: '',
+    ar: ''
+  },
+  ref: '',
+  verified: null,
+  media: type === 'video' ? {
+    type: 'video',
+    yt: '',
+    start: 0,
+    end: null
+  } : type === 'text' ? null : {
+    type,
+    src: null
+  }
+});
+const blobToDataUrl = blob => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result);
+  r.onerror = () => rej(r.error);
+  r.readAsDataURL(blob);
+});
+function dataUrlToBlob(d) {
+  const m = /^data:([^;,]+)(;base64)?,(.*)$/s.exec(d || '');
+  if (!m) return null;
+  const bin = m[2] ? atob(m[3]) : decodeURIComponent(m[3]);
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], {
+    type: m[1]
+  });
+}
+async function prepareImage(file) {
+  if (!/^image\//.test(file.type)) throw new Error('vNotImage');
+  if (file.size > PACK_MAX_IMAGE) throw new Error('vTooBig');
+  if (file.type === 'image/svg+xml' || file.type === 'image/gif' || file.size < 450 * 1024) return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('vUnsupported'));
+      i.src = url;
+    });
+    const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * scale);
+    c.height = Math.round(img.naturalHeight * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const out = await new Promise(res => c.toBlob(res, 'image/webp', 0.86));
+    if (out && out.type === 'image/webp' && out.size < file.size) return out;
+    const jpg = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.86));
+    return jpg && jpg.size < file.size ? jpg : file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+function checkAudio(blob) {
+  return new Promise((resolve, reject) => {
+    if (!/^audio\//.test(blob.type) && !/\.(mp3|m4a|aac|wav|ogg|oga|opus|webm)$/i.test(blob.name || '')) return reject(new Error('vNotAudio'));
+    if (blob.size > PACK_MAX_AUDIO) return reject(new Error('vTooBigAudio'));
+    const url = URL.createObjectURL(blob);
+    const a = new Audio();
+    let done = false;
+    const end = (fn, v) => {
+      if (done) return;
+      done = true;
+      URL.revokeObjectURL(url);
+      fn(v);
+    };
+    a.preload = 'metadata';
+    a.onloadedmetadata = () => end(resolve, a.duration);
+    a.onerror = () => end(reject, new Error('vUnsupported'));
+    setTimeout(() => end(reject, new Error('vUnsupported')), 8000);
+    a.src = url;
+  });
+}
+const packMediaIds = packs => {
+  const s = new Set();
+  (packs || []).forEach(p => (p.questions || []).forEach(q => {
+    const src = q.media && q.media.src;
+    if (isLocalMedia(src)) s.add(src.slice(4));
+  }));
+  return s;
+};
+async function cleanMedia(packs) {
+  const used = packMediaIds(packs);
+  const keys = await mediaStore.keys();
+  await Promise.all((keys || []).filter(k => !used.has(k)).map(k => mediaStore.del(k)));
+}
+async function exportPack(p) {
+  const media = {};
+  for (const q of p.questions || []) {
+    const src = q.media && q.media.src;
+    if (isLocalMedia(src)) {
+      const rec = await mediaStore.get(src.slice(4));
+      if (rec && rec.blob) media[src.slice(4)] = {
+        type: rec.blob.type,
+        name: rec.name || '',
+        data: await blobToDataUrl(rec.blob)
+      };
+    }
+  }
+  return {
+    app: 'khatfa',
+    kind: 'pack',
+    format: PACK_FORMAT,
+    exportedAt: new Date().toISOString(),
+    pack: p,
+    media
+  };
+}
+function validatePack(obj) {
+  if (!obj || obj.app !== 'khatfa' || obj.kind !== 'pack') return {
+    ok: false,
+    error: 'pkNotPack'
+  };
+  if (typeof obj.format !== 'number' || obj.format > PACK_FORMAT) return {
+    ok: false,
+    error: 'bkNewer'
+  };
+  const p = obj.pack;
+  if (!p || typeof p.name !== 'string' || !Array.isArray(p.questions) || !Array.isArray(p.categories)) return {
+    ok: false,
+    error: 'bkDamaged'
+  };
+  const media = obj.media && typeof obj.media === 'object' ? obj.media : {};
+  const catIds = new Set(p.categories.map(c => c && c.id));
+  if (p.categories.some(c => !c || typeof c.id !== 'string' || !c.name || typeof c.name !== 'object')) return {
+    ok: false,
+    error: 'bkDamaged'
+  };
+  let bad = 0;
+  for (const q of p.questions) {
+    if (!q || typeof q !== 'object' || !q.q || !q.a || !QTYPES.includes(q.type || 'text')) return {
+      ok: false,
+      error: 'bkDamaged'
+    };
+    if (!POINTS.includes(q.points)) return {
+      ok: false,
+      error: 'pkBadPoints'
+    };
+    if (questionProblems(q).length) bad++;
+    const src = q.media && q.media.src;
+    if (isLocalMedia(src) && !media[src.slice(4)]) bad++;
+    if (q.media && q.media.src && !isLocalMedia(q.media.src) && !/^media\//.test(q.media.src)) return {
+      ok: false,
+      error: 'bkDamaged'
+    };
+  }
+  for (const k of Object.keys(media)) {
+    const m = media[k];
+    if (!m || typeof m.data !== 'string' || !/^data:(image|audio)\//.test(m.data)) return {
+      ok: false,
+      error: 'bkDamaged'
+    };
+  }
+  return {
+    ok: true,
+    pack: p,
+    media,
+    summary: {
+      name: p.name,
+      questions: p.questions.length,
+      cats: p.categories.length,
+      media: Object.keys(media).length,
+      bad,
+      unknownCats: p.questions.filter(q => !catIds.has(q.cat)).length
+    }
+  };
+}
+async function importPack(v, packs) {
+  const p = v.pack;
+  const remap = {};
+  for (const [oldId, m] of Object.entries(v.media)) {
+    const blob = dataUrlToBlob(m.data);
+    if (blob) remap[oldId] = await mediaStore.put({
+      blob,
+      name: m.name || '',
+      size: blob.size,
+      at: Date.now()
+    });
+  }
+  const pid = uid();
+  const catMap = {};
+  const categories = p.categories.map(c => {
+    const id = 'pk-' + pid + '-' + uid().slice(0, 5);
+    catMap[c.id] = id;
+    return {
+      id,
+      emoji: c.emoji || '📦',
+      name: {
+        en: String(c.name.en || ''),
+        ar: String(c.name.ar || '')
+      }
+    };
+  });
+  const questions = p.questions.map(q => {
+    const media = q.media ? {
+      ...q.media
+    } : null;
+    if (media && isLocalMedia(media.src)) media.src = remap[media.src.slice(4)] ? 'idb:' + remap[media.src.slice(4)] : null;
+    return {
+      ...q,
+      id: uid(),
+      cat: catMap[q.cat] || q.cat,
+      media
+    };
+  });
+  let name = p.name || 'Pack';
+  const names = new Set((packs || []).map(x => x.name));
+  if (names.has(name)) {
+    let k = 2;
+    while (names.has(name + ' (' + k + ')')) k++;
+    name = name + ' (' + k + ')';
+  }
+  return {
+    id: pid,
+    name,
+    enabled: true,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    categories,
+    questions
+  };
+}
+function QuestionsScreen({
+  packs,
+  setPacks,
+  bank,
+  onBack,
+  tvOpen,
+  setPreview,
+  previewStatus
+}) {
+  const [openId, setOpenId] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [ask, setAsk] = useState(null);
+  const [persist, setPersist] = useState(true);
+  const fileRef = useRef(null);
+  useEffect(() => {
+    mediaStore.persistent.then(setPersist);
+  }, []);
+  useEffect(() => () => setPreview(null), []);
+  const pack = packs.find(p => p.id === openId);
+  const savePack = p => setPacks(packs.map(x => x.id === p.id ? {
+    ...p,
+    updatedAt: Date.now()
+  } : x));
+  const newPack = () => {
+    const p = {
+      id: uid(),
+      name: t('newPackName', {
+        n: packs.length + 1
+      }),
+      enabled: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      categories: [],
+      questions: []
+    };
+    setPacks([...packs, p]);
+    setOpenId(p.id);
+  };
+  const readFile = file => {
+    if (!file) return;
+    if (file.size > PACK_MAX_FILE) {
+      setMsg({
+        text: t('vTooBigPack')
+      });
+      return;
+    }
+    const r = new FileReader();
+    r.onerror = () => setMsg({
+      text: t('bkUnreadable')
+    });
+    r.onload = () => {
+      let obj;
+      try {
+        obj = JSON.parse(r.result);
+      } catch (e) {
+        setMsg({
+          text: t('bkUnreadable')
+        });
+        return;
+      }
+      const v = validatePack(obj);
+      if (!v.ok) {
+        setMsg({
+          text: t(v.error)
+        });
+        return;
+      }
+      setAsk({
+        kind: 'import',
+        v
+      });
+    };
+    r.readAsText(file);
+  };
+  if (pack) return React.createElement(PackScreen, {
+    pack: pack,
+    savePack: savePack,
+    bank: bank,
+    onBack: () => {
+      setOpenId(null);
+      setPreview(null);
+    },
+    tvOpen: tvOpen,
+    setPreview: setPreview,
+    previewStatus: previewStatus,
+    onDelete: () => setAsk({
+      kind: 'delete',
+      p: pack
+    }),
+    onExport: async () => {
+      const data = await exportPack(pack);
+      downloadBlob(new Blob([JSON.stringify(data)], {
+        type: 'application/json'
+      }), 'khatfa-pack-' + pack.name.replace(/[^\p{L}\p{N}]+/gu, '-').slice(0, 40) + '.json');
+    },
+    extra: ask && ask.kind === 'delete' && React.createElement(Confirm, {
+      title: t('deletePackQ'),
+      body: t('deletePackBody', {
+        n: ask.p.questions.length
+      }),
+      yes: t('deleteIt'),
+      danger: true,
+      onYes: () => {
+        const rest = packs.filter(x => x.id !== ask.p.id);
+        setPacks(rest);
+        setOpenId(null);
+        cleanMedia(rest);
+      },
+      onClose: () => setAsk(null)
+    })
+  });
+  return React.createElement("div", {
+    className: "app"
+  }, React.createElement(TopBar, {
+    onBack: onBack,
+    title: t('myQuestions')
+  }), React.createElement("p", {
+    className: "hint"
+  }, t('myQuestionsSub')), !persist && React.createElement("p", {
+    className: "warn"
+  }, t('mediaNoStore')), packs.map(p => React.createElement("div", {
+    key: p.id,
+    className: "card packrow"
+  }, React.createElement("button", {
+    className: "pr-main",
+    onClick: () => setOpenId(p.id)
+  }, React.createElement("b", {
+    className: "grow",
+    dir: "auto"
+  }, "\uD83D\uDCE6 ", p.name), React.createElement("span", {
+    className: "small muted"
+  }, t('questionsN', {
+    n: p.questions.length
+  }), " \xB7 ", p.categories.length ? t('packCatsN', {
+    n: p.categories.length
+  }) : t('packNoCats'))), React.createElement(Toggle, {
+    on: p.enabled !== false,
+    onChange: v => setPacks(packs.map(x => x.id === p.id ? {
+      ...x,
+      enabled: v
+    } : x)),
+    title: t('packInGames')
+  }))), !packs.length && React.createElement("p", {
+    className: "hint center"
+  }, t('noPacks')), React.createElement("button", {
+    className: "btn btn-gold",
+    onClick: newPack
+  }, "\uFF0B ", t('newPack')), React.createElement("button", {
+    className: "btn",
+    onClick: () => fileRef.current && fileRef.current.click()
+  }, "\u2B06 ", t('importPack')), React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "application/json,.json",
+    hidden: true,
+    onChange: e => {
+      readFile(e.target.files[0]);
+      e.target.value = '';
+    }
+  }), React.createElement("p", {
+    className: "hint"
+  }, t('packStorageNote')), ask && ask.kind === 'import' && React.createElement(Confirm, {
+    title: t('importPackQ', {
+      name: ask.v.summary.name
+    }),
+    body: t('importPackBody', ask.v.summary) + (ask.v.summary.bad ? ' ' + t('importPackBad', {
+      n: ask.v.summary.bad
+    }) : ''),
+    yes: t('importPack'),
+    onYes: async () => {
+      try {
+        const p = await importPack(ask.v, packs);
+        setPacks([...packs, p]);
+        setMsg({
+          text: t('packImported', {
+            name: p.name
+          }),
+          ok: true
+        });
+      } catch (e) {
+        setMsg({
+          text: t(/quota/i.test(e.message) ? 'storeFull' : 'storeFail')
+        });
+      }
+    },
+    onClose: () => setAsk(null)
+  }), msg && React.createElement(Toast, {
+    msg: msg.text,
+    ok: msg.ok,
+    onClose: () => setMsg(null)
+  }));
+}
+function PackScreen({
+  pack,
+  savePack,
+  bank,
+  onBack,
+  onDelete,
+  onExport,
+  extra,
+  tvOpen,
+  setPreview,
+  previewStatus
+}) {
+  const [edit, setEdit] = useState(null);
+  const [newType, setNewType] = useState(false);
+  const [catForm, setCatForm] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [delQ, setDelQ] = useState(null);
+  if (edit) return React.createElement(QuestionForm, {
+    initial: edit,
+    pack: pack,
+    bank: bank,
+    tvOpen: tvOpen,
+    setPreview: setPreview,
+    previewStatus: previewStatus,
+    onCancel: () => {
+      setEdit(null);
+      setPreview(null);
+    },
+    onSave: q => {
+      const exists = pack.questions.some(x => x.id === q.id);
+      const next = {
+        ...pack,
+        questions: exists ? pack.questions.map(x => x.id === q.id ? q : x) : [...pack.questions, q]
+      };
+      savePack(next);
+      setEdit(null);
+      setPreview(null);
+      cleanMedia([next]).catch(() => {});
+    }
+  });
+  const catName = id => {
+    const c = pack.categories.find(x => x.id === id) || bank.cats.find(x => x.id === id);
+    return c ? (c.emoji || '') + ' ' + pick(c.name) : '—';
+  };
+  const list = pack.questions.filter(q => filter === 'all' || (q.type || 'text') === filter);
+  return React.createElement("div", {
+    className: "app"
+  }, React.createElement(TopBar, {
+    onBack: onBack,
+    title: pack.name
+  }), React.createElement("div", {
+    className: "card stack-sm"
+  }, React.createElement("label", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('packName')), React.createElement("input", {
+    className: "input",
+    dir: "auto",
+    maxLength: 60,
+    value: pack.name,
+    onChange: e => savePack({
+      ...pack,
+      name: e.target.value
+    })
+  })), React.createElement("span", {
+    className: "label"
+  }, t('packCategories')), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('packCategoriesSub')), React.createElement("div", {
+    className: "chips"
+  }, pack.categories.map(c => React.createElement("button", {
+    key: c.id,
+    className: "chip",
+    onClick: () => setCatForm(c)
+  }, c.emoji, " ", React.createElement(Txt, {
+    v: c.name
+  }), " \xB7 ", pack.questions.filter(q => q.cat === c.id).length)), React.createElement("button", {
+    className: "chip",
+    onClick: () => setCatForm({
+      id: 'pk-' + pack.id + '-' + uid().slice(0, 5),
+      emoji: '📦',
+      name: {
+        en: '',
+        ar: ''
+      },
+      isNew: true
+    })
+  }, "\uFF0B ", t('addCategory')))), React.createElement("div", {
+    className: "row"
+  }, React.createElement("span", {
+    className: "label grow"
+  }, t('questionsN', {
+    n: pack.questions.length
+  }))), React.createElement("div", {
+    className: "fchips"
+  }, ['all', ...QTYPES].map(k => React.createElement("button", {
+    key: k,
+    className: 'fchip' + (filter === k ? ' on' : ''),
+    onClick: () => setFilter(k)
+  }, k === 'all' ? t('all') : (MEDIA_ICON[k] || '📝') + ' ' + t('type_' + k)))), list.map(q => {
+    const probs = questionProblems(q);
+    return React.createElement("div", {
+      key: q.id,
+      className: "card qrow"
+    }, React.createElement("button", {
+      className: "qr-main",
+      onClick: () => setEdit(JSON.parse(JSON.stringify(q)))
+    }, React.createElement("span", {
+      className: "qr-v num"
+    }, q.points), React.createElement("span", {
+      className: "grow"
+    }, React.createElement("span", {
+      className: "small muted"
+    }, MEDIA_ICON[q.type] || '📝', " ", catName(q.cat), q.verified ? ' · ✅ ' + t('verified') : '', probs.length ? ' · ⚠ ' + t('incomplete') : ''), React.createElement(Txt, {
+      v: q.q,
+      as: "span",
+      className: "qr-q"
+    }), React.createElement("span", {
+      className: "small muted"
+    }, "\u2192 ", React.createElement(Txt, {
+      v: q.a
+    })))), React.createElement("button", {
+      className: "iconbtn",
+      "aria-label": t('deleteQ'),
+      onClick: () => setDelQ(q)
+    }, "\uD83D\uDDD1"));
+  }), !pack.questions.length && React.createElement("p", {
+    className: "hint center"
+  }, t('noQuestionsYet')), newType ? React.createElement("div", {
+    className: "card stack-sm"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('chooseType')), React.createElement("div", {
+    className: "typegrid"
+  }, QTYPES.map(k => React.createElement("button", {
+    key: k,
+    className: "btn",
+    onClick: () => {
+      setNewType(false);
+      setEdit(emptyQuestion(k, pack.categories[0] ? pack.categories[0].id : ''));
+    }
+  }, MEDIA_ICON[k] || '📝', " ", t('type_' + k)))), React.createElement("button", {
+    className: "btn btn-ghost btn-sm",
+    onClick: () => setNewType(false)
+  }, t('cancel'))) : React.createElement("button", {
+    className: "btn btn-gold",
+    onClick: () => setNewType(true)
+  }, "\uFF0B ", t('addQuestion')), React.createElement("div", {
+    className: "row"
+  }, React.createElement("button", {
+    className: "btn grow",
+    onClick: onExport,
+    disabled: !pack.questions.length
+  }, "\u2B07 ", t('exportPack')), React.createElement("button", {
+    className: "btn btn-danger grow",
+    onClick: onDelete
+  }, t('deletePack'))), React.createElement("p", {
+    className: "hint"
+  }, t('packMinNote', {
+    n: 2
+  })), catForm && React.createElement(CategoryForm, {
+    c: catForm,
+    onClose: () => setCatForm(null),
+    inUse: pack.questions.filter(q => q.cat === catForm.id).length,
+    onSave: c => {
+      const {
+        isNew,
+        ...cc
+      } = c;
+      savePack({
+        ...pack,
+        categories: isNew ? [...pack.categories, cc] : pack.categories.map(x => x.id === cc.id ? cc : x)
+      });
+      setCatForm(null);
+    },
+    onDelete: () => {
+      savePack({
+        ...pack,
+        categories: pack.categories.filter(x => x.id !== catForm.id)
+      });
+      setCatForm(null);
+    }
+  }), delQ && React.createElement(Confirm, {
+    title: t('deleteQQ'),
+    body: pick(delQ.q),
+    yes: t('deleteIt'),
+    danger: true,
+    onYes: () => {
+      const next = {
+        ...pack,
+        questions: pack.questions.filter(x => x.id !== delQ.id)
+      };
+      savePack(next);
+      cleanMedia([next]).catch(() => {});
+    },
+    onClose: () => setDelQ(null)
+  }), extra);
+}
+function CategoryForm({
+  c,
+  onSave,
+  onDelete,
+  onClose,
+  inUse
+}) {
+  const [d, setD] = useState(c);
+  const okName = (d.name.en || '').trim() || (d.name.ar || '').trim();
+  return React.createElement(Sheet, {
+    onClose: onClose
+  }, React.createElement("div", {
+    className: "stack-sm"
+  }, React.createElement("h2", {
+    className: "display",
+    style: {
+      fontSize: 26
+    }
+  }, c.isNew ? t('addCategory') : t('editCategory')), React.createElement("label", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('emoji')), React.createElement("input", {
+    className: "input",
+    style: {
+      maxWidth: 90,
+      fontSize: 26
+    },
+    maxLength: 4,
+    value: d.emoji,
+    onChange: e => setD({
+      ...d,
+      emoji: e.target.value
+    })
+  })), React.createElement("label", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('nameEn')), React.createElement("input", {
+    className: "input",
+    dir: "ltr",
+    maxLength: 40,
+    value: d.name.en,
+    onChange: e => setD({
+      ...d,
+      name: {
+        ...d.name,
+        en: e.target.value
+      }
+    })
+  })), React.createElement("label", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('nameAr')), React.createElement("input", {
+    className: "input",
+    dir: "rtl",
+    maxLength: 40,
+    value: d.name.ar,
+    onChange: e => setD({
+      ...d,
+      name: {
+        ...d.name,
+        ar: e.target.value
+      }
+    })
+  })), React.createElement("button", {
+    className: "btn btn-gold",
+    disabled: !okName,
+    onClick: () => onSave(d)
+  }, t('save')), !c.isNew && React.createElement("button", {
+    className: "btn btn-danger",
+    disabled: inUse > 0,
+    onClick: onDelete
+  }, t('deleteCategory')), !c.isNew && inUse > 0 && React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('categoryInUse', {
+    n: inUse
+  })), React.createElement("button", {
+    className: "btn btn-ghost",
+    onClick: onClose
+  }, t('cancel'))));
+}
+function BiField({
+  label,
+  v,
+  onChange,
+  area,
+  max = 300
+}) {
+  const El = area ? 'textarea' : 'input';
+  return React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, label), React.createElement("div", {
+    className: "bifield"
+  }, React.createElement(El, {
+    className: "input",
+    dir: "ltr",
+    lang: "en",
+    maxLength: max,
+    placeholder: "English",
+    value: v.en || '',
+    onChange: e => onChange({
+      ...v,
+      en: e.target.value
+    }),
+    rows: area ? 2 : undefined
+  }), React.createElement(El, {
+    className: "input",
+    dir: "rtl",
+    lang: "ar",
+    maxLength: max,
+    placeholder: "\u0639\u0631\u0628\u064A",
+    value: v.ar || '',
+    onChange: e => onChange({
+      ...v,
+      ar: e.target.value
+    }),
+    rows: area ? 2 : undefined
+  })));
+}
+function QuestionForm({
+  initial,
+  pack,
+  bank,
+  onSave,
+  onCancel,
+  tvOpen,
+  setPreview,
+  previewStatus
+}) {
+  const [q, setQ] = useState(initial);
+  const [err, setErr] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [play, setPlay] = useState(freshPlay());
+  const [reveal, setReveal] = useState(0);
+  const [status, setStatus] = useState(null);
+  const [urlText, setUrlText] = useState(initial.media && initial.media.yt ? 'https://youtu.be/' + initial.media.yt : '');
+  const [startText, setStartText] = useState(initial.media && initial.media.start != null ? fmtTime(initial.media.start) : '0:00');
+  const [endText, setEndText] = useState(initial.media && initial.media.end != null ? fmtTime(initial.media.end) : '');
+  const [audioLen, setAudioLen] = useState(null);
+  const [mediaMissing, setMediaMissing] = useState(false);
+  const [tried, setTried] = useState(false);
+  const fileRef = useRef(null);
+  const set = patch => setQ({
+    ...q,
+    ...patch
+  });
+  const setM = patch => setQ({
+    ...q,
+    media: {
+      ...(q.media || {
+        type: q.type
+      }),
+      ...patch
+    }
+  });
+  useEffect(() => {
+    const s = q.media && q.media.src;
+    if (isLocalMedia(s)) mediaStore.get(s.slice(4)).then(r => setMediaMissing(!r));else setMediaMissing(false);
+  }, [q.media && q.media.src]);
+  useEffect(() => {
+    if (q.type !== 'video') return;
+    const y = parseYouTube(urlText);
+    const st = parseTime(startText);
+    const en = endText.trim() ? parseTime(endText) : null;
+    setQ(x => ({
+      ...x,
+      media: {
+        type: 'video',
+        yt: y ? y.id : '',
+        start: st == null ? NaN : st,
+        end: endText.trim() ? en == null ? NaN : en : null
+      }
+    }));
+  }, [urlText, startText, endText]);
+  useEffect(() => {
+    setStatus(null);
+    setPlay(freshPlay());
+  }, [q.media && (q.media.src || q.media.yt), q.media && q.media.start, q.media && q.media.end]);
+  const probs = questionProblems(q, {
+    mediaMissing
+  });
+  const verifyProbs = questionProblems(q, {
+    mediaMissing,
+    verify: true
+  });
+  const pickFile = async file => {
+    if (!file) return;
+    setErr(null);
+    setBusy(true);
+    try {
+      let blob = file;
+      let len = null;
+      if (q.type === 'image') blob = await prepareImage(file);else {
+        len = await checkAudio(file);
+        setAudioLen(len);
+      }
+      const id = await mediaStore.put({
+        blob,
+        name: '',
+        size: blob.size,
+        at: Date.now()
+      });
+      setM({
+        type: q.type,
+        src: 'idb:' + id
+      });
+      if (len && len > 30) setErr('vLongSound');
+    } catch (e) {
+      setErr(/quota/i.test(e.message) ? 'storeFull' : e.message && S[e.message] ? e.message : 'vUnsupported');
+    }
+    setBusy(false);
+  };
+  const cats = [...pack.categories.map(c => ({
+    ...c,
+    group: 'custom'
+  })), ...bank.cats.filter(c => !c.pack)];
+  const catObj = cats.find(c => c.id === q.cat);
+  const subs = catObj && catObj.subs ? Object.keys(catObj.subs) : [];
+  const previewQ = {
+    ...packQuestion(pack, {
+      ...q,
+      alt: q.alt
+    }),
+    q: q.q.en || q.q.ar ? q.q : {
+      en: '…',
+      ar: '…'
+    }
+  };
+  const cur = {
+    play,
+    reveal,
+    stage: 'answer'
+  };
+  const previewing = useRef(false);
+  const tvPreview = () => setPreview({
+    q: {
+      ...previewQ,
+      a: null,
+      alt: null,
+      hint: null,
+      note: null,
+      ref: null
+    },
+    cur
+  });
+  useEffect(() => {
+    if (tvOpen && previewing.current) tvPreview();
+  }, [play, reveal, q]);
+  const cmd = (c, v) => {
+    const g = mediaCmd({
+      current: {
+        play
+      }
+    }, c, v);
+    setPlay(g.current.play);
+  };
+  const shownStatus = tvOpen && previewing.current ? previewStatus : status;
+  const save = verifyNow => {
+    setTried(true);
+    if (probs.length) return;
+    if (verifyNow && verifyProbs.length) return;
+    const out = {
+      ...q,
+      verified: verifyNow ? todayStamp() : null,
+      alt: {
+        en: (q.alt.en || []).map(s => s.trim()).filter(Boolean),
+        ar: (q.alt.ar || []).map(s => s.trim()).filter(Boolean)
+      }
+    };
+    if (out.type === 'video') out.media = {
+      type: 'video',
+      yt: out.media.yt,
+      start: out.media.start || 0,
+      end: out.media.end
+    };
+    onSave(out);
+  };
+  const altText = lang => (q.alt[lang] || []).join(', ');
+  return React.createElement("div", {
+    className: "app qform"
+  }, React.createElement(TopBar, {
+    onBack: onCancel,
+    title: (MEDIA_ICON[q.type] || '📝') + ' ' + t('type_' + q.type)
+  }), React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('category')), React.createElement("select", {
+    className: "input",
+    value: q.cat,
+    onChange: e => set({
+      cat: e.target.value,
+      sub: ''
+    })
+  }, React.createElement("option", {
+    value: ""
+  }, t('chooseCategory')), pack.categories.length > 0 && React.createElement("optgroup", {
+    label: t('thisPack')
+  }, pack.categories.map(c => React.createElement("option", {
+    key: c.id,
+    value: c.id
+  }, c.emoji, " ", pick(c.name)))), bank.groups.filter(g => g.id !== 'custom').map(g => React.createElement("optgroup", {
+    key: g.id,
+    label: g.emoji + ' ' + pick(g.name)
+  }, bank.cats.filter(c => c.group === g.id).map(c => React.createElement("option", {
+    key: c.id,
+    value: c.id
+  }, c.emoji, " ", pick(c.name))))))), subs.length > 0 && React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('subcategory')), React.createElement("select", {
+    className: "input",
+    value: q.sub || '',
+    onChange: e => set({
+      sub: e.target.value
+    })
+  }, React.createElement("option", {
+    value: ""
+  }, "\u2014"), subs.map(k => React.createElement("option", {
+    key: k,
+    value: k
+  }, pick(catObj.subs[k]))))), React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('pointsLabel')), React.createElement(Seg, {
+    value: q.points,
+    options: POINTS.map((p, i) => [p, p + ' · ' + t(['tierEasy', 'tierHard', 'tierBrutal'][i])]),
+    onChange: v => set({
+      points: v
+    }),
+    label: t('pointsLabel')
+  })), q.type === 'image' && React.createElement("div", {
+    className: "card stack-sm"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('picture')), React.createElement("button", {
+    className: "btn",
+    disabled: busy,
+    onClick: () => fileRef.current.click()
+  }, "\uD83D\uDDBC\uFE0F ", q.media && q.media.src ? t('replacePicture') : t('choosePicture')), React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "image/*",
+    hidden: true,
+    onChange: e => {
+      pickFile(e.target.files[0]);
+      e.target.value = '';
+    }
+  }), React.createElement("label", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('orEmoji')), React.createElement("input", {
+    className: "input",
+    style: {
+      fontSize: 24
+    },
+    maxLength: 40,
+    value: q.media && q.media.emoji || '',
+    onChange: e => setM({
+      emoji: e.target.value,
+      src: e.target.value ? null : q.media.src
+    })
+  })), React.createElement(BiField, {
+    label: t('pictureDesc'),
+    v: mText(q.media && q.media.alt) || {
+      en: '',
+      ar: ''
+    },
+    onChange: v => setM({
+      alt: v
+    }),
+    max: 160
+  }), React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('revealMode')), React.createElement(Seg, {
+    value: q.media && q.media.reveal || '',
+    options: [['', t('revealNone')], ['zoom', t('revealZoom')], ['blur', t('revealBlur')]],
+    onChange: v => {
+      setM({
+        reveal: v || null
+      });
+      setReveal(0);
+    },
+    label: t('revealMode')
+  })), q.media && q.media.reveal === 'zoom' && React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('focusHint')), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('pictureRights'))), q.type === 'audio' && React.createElement("div", {
+    className: "card stack-sm"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('sound')), React.createElement("button", {
+    className: "btn",
+    disabled: busy,
+    onClick: () => fileRef.current.click()
+  }, "\uD83D\uDD0A ", q.media && q.media.src ? t('replaceSound') : t('chooseSound')), React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "audio/*,.mp3,.m4a,.wav,.ogg",
+    hidden: true,
+    onChange: e => {
+      pickFile(e.target.files[0]);
+      e.target.value = '';
+    }
+  }), audioLen != null && React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('soundLength', {
+    s: Math.round(audioLen)
+  })), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('soundRights'))), q.type === 'video' && React.createElement("div", {
+    className: "card stack-sm"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('clip')), React.createElement("label", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('clipUrl')), React.createElement("input", {
+    className: "input",
+    dir: "ltr",
+    inputMode: "url",
+    placeholder: "https://www.youtube.com/watch?v=\u2026",
+    value: urlText,
+    onChange: e => {
+      setUrlText(e.target.value);
+      const y = parseYouTube(e.target.value);
+      if (y && y.t != null && (!startText || startText === '0:00')) setStartText(fmtTime(y.t));
+    }
+  })), React.createElement("div", {
+    className: "row"
+  }, React.createElement("label", {
+    className: "field grow"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('clipStart')), React.createElement("input", {
+    className: "input",
+    dir: "ltr",
+    placeholder: "1:05",
+    value: startText,
+    onChange: e => setStartText(e.target.value)
+  })), React.createElement("label", {
+    className: "field grow"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('clipEnd')), React.createElement("input", {
+    className: "input",
+    dir: "ltr",
+    placeholder: "1:20",
+    value: endText,
+    onChange: e => setEndText(e.target.value)
+  }))), clipLen(q.media) > 60 && React.createElement("p", {
+    className: "warn"
+  }, t('vLongClip')), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('clipRules'))), React.createElement(BiField, {
+    label: t('questionText') + ' *',
+    v: q.q,
+    onChange: v => set({
+      q: v
+    }),
+    area: true
+  }), React.createElement(BiField, {
+    label: t('answerText') + ' *',
+    v: q.a,
+    onChange: v => set({
+      a: v
+    })
+  }), React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('alsoAcceptField')), React.createElement("div", {
+    className: "bifield"
+  }, React.createElement("input", {
+    className: "input",
+    dir: "ltr",
+    placeholder: "English, comma separated",
+    defaultValue: altText('en'),
+    onChange: e => set({
+      alt: {
+        ...q.alt,
+        en: e.target.value.split(',')
+      }
+    })
+  }), React.createElement("input", {
+    className: "input",
+    dir: "rtl",
+    placeholder: "\u0639\u0631\u0628\u064A\u060C \u0627\u0641\u0635\u0644 \u0628\u0641\u0627\u0635\u0644\u0629",
+    defaultValue: altText('ar'),
+    onChange: e => set({
+      alt: {
+        ...q.alt,
+        ar: e.target.value.split(/[,،]/)
+      }
+    })
+  }))), React.createElement(BiField, {
+    label: t('hintField'),
+    v: q.hint || {
+      en: '',
+      ar: ''
+    },
+    onChange: v => set({
+      hint: v
+    })
+  }), React.createElement(BiField, {
+    label: t('noteField'),
+    v: q.note || {
+      en: '',
+      ar: ''
+    },
+    onChange: v => set({
+      note: v
+    })
+  }), React.createElement("label", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('sourceField')), React.createElement("textarea", {
+    className: "input",
+    dir: "auto",
+    rows: 2,
+    maxLength: 500,
+    placeholder: t('sourcePh'),
+    value: q.ref || '',
+    onChange: e => set({
+      ref: e.target.value
+    })
+  })), q.type !== 'text' && React.createElement("div", {
+    className: "card stack-sm preview"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('previewLabel')), React.createElement("div", {
+    className: q.type === 'image' && q.media && q.media.reveal === 'zoom' ? 'focuspick' : undefined,
+    onClick: e => {
+      if (!(q.type === 'image' && q.media && q.media.reveal === 'zoom')) return;
+      const box = e.currentTarget.querySelector('.qimg');
+      if (!box) return;
+      const r = box.getBoundingClientRect();
+      setM({
+        focus: [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1)].map(x => Math.round(x * 100) / 100)
+      });
+      setReveal(0);
+    }
+  }, React.createElement(QuestionCard, {
+    cell: {
+      q: previewQ
+    },
+    cur: cur,
+    output: !(tvOpen && previewing.current),
+    onStatus: setStatus,
+    status: shownStatus,
+    host: true
+  })), (q.type === 'audio' || q.type === 'video') && React.createElement("div", {
+    className: "row mbtns"
+  }, React.createElement("button", {
+    className: "btn btn-sm btn-gold grow",
+    onClick: () => cmd(play.state === 'playing' ? 'pause' : 'play')
+  }, play.state === 'playing' ? '⏸ ' + t('mPause') : '▶ ' + t('mPlay')), React.createElement("button", {
+    className: "btn btn-sm",
+    onClick: () => cmd('replay')
+  }, "\u21BA ", t('mReplay'))), q.type === 'image' && q.media && q.media.reveal && React.createElement("button", {
+    className: "btn btn-sm",
+    onClick: () => setReveal(reveal >= REVEAL_STEPS ? 0 : reveal + 1)
+  }, "\uD83D\uDD0D ", t('revealMore'), " (", reveal, "/", REVEAL_STEPS, ")"), shownStatus && shownStatus.s && React.createElement("p", {
+    className: 'mstatus' + (shownStatus.s === 'error' ? ' bad' : '')
+  }, t(STATUS_TXT[shownStatus.s] || 'mReady'), shownStatus.msg ? ' ' + t(shownStatus.msg) : ''), q.type === 'video' && shownStatus && shownStatus.title && React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('videoTitle', {
+    title: shownStatus.title
+  })), q.type === 'video' && shownStatus && shownStatus.title && titleSpoils(shownStatus.title, q.a) && React.createElement("p", {
+    className: "warn"
+  }, "\u26A0 ", t('titleSpoils', {
+    title: shownStatus.title
+  })), tvOpen ? React.createElement("button", {
+    className: "btn btn-sm",
+    onClick: () => {
+      previewing.current = !previewing.current;
+      if (previewing.current) tvPreview();else setPreview(null);
+      setPlay(freshPlay());
+    }
+  }, "\uD83D\uDCFA ", previewing.current ? t('stopTvPreview') : t('previewOnTvBtn')) : React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('previewTvHint'))), (tried || q.verified) && probs.length > 0 && React.createElement("ul", {
+    className: "verrors"
+  }, probs.map(k => React.createElement("li", {
+    key: k
+  }, t(k)))), err && React.createElement("p", {
+    className: "warn"
+  }, t(err)), busy && React.createElement("p", {
+    className: "hint"
+  }, t('mLoading')), React.createElement("div", {
+    className: "row qf-actions"
+  }, React.createElement("button", {
+    className: "btn btn-gold grow",
+    disabled: busy,
+    onClick: () => save(false)
+  }, t('save')), React.createElement("button", {
+    className: "btn grow",
+    disabled: busy || verifyProbs.length > 0,
+    onClick: () => save(true),
+    title: verifyProbs.length ? verifyProbs.map(k => t(k)).join(' · ') : ''
+  }, "\u2705 ", t('saveVerified'))), verifyProbs.length > 0 && React.createElement("p", {
+    className: "hint"
+  }, t('verifyNeeds'), " ", verifyProbs.map(k => t(k)).join(' · ')), q.verified && React.createElement("p", {
+    className: "hint"
+  }, "\u2705 ", t('verifiedOn', {
+    d: q.verified
+  }), " ", t('editUnverifies')), React.createElement("button", {
+    className: "btn btn-ghost",
+    onClick: onCancel
+  }, t('cancel')));
+}
 function SettingsScreen({
   settings,
   setSettings,
@@ -5286,7 +6776,7 @@ function applyDocLang(lang) {
   el.setAttribute('lang', lang === 'en' ? 'en' : 'ar');
   el.setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
 }
-const BANK = indexBank();
+const BASE_BANK = typeof window !== 'undefined' ? window.KH_BANK : null;
 function App() {
   const [ready, setReady] = useState(false);
   const [settings, setSettingsRaw] = useState(DEFAULT_SETTINGS);
@@ -5307,6 +6797,14 @@ function App() {
   const [toast, setToast] = useState(null);
   const [wrongCell, setWrongCell] = useState(null);
   const [playedList, setPlayedList] = useState(false);
+  const [packs, setPacksRaw] = useState([]);
+  const setPacks = l => {
+    setPacksRaw(l);
+    store.set(K.packs, l);
+  };
+  const BANK = useMemo(() => indexBank(mergePacks(BASE_BANK, packs)), [packs]);
+  const bankRef = useRef(BANK);
+  bankRef.current = BANK;
   const [issues, setIssuesRaw] = useState([]);
   const issuesRef = useRef(issues);
   issuesRef.current = issues;
@@ -5335,6 +6833,8 @@ function App() {
         histRef.current = h;
         setQhistRaw(h);
       }
+      const pk = store.get(K.packs, []);
+      if (Array.isArray(pk)) setPacksRaw(pk);
       const iss = store.get(K.issues, []);
       if (Array.isArray(iss)) {
         issuesRef.current = iss;
@@ -5381,7 +6881,7 @@ function App() {
   const act = fn => setGame(g => g ? fn(g) : g);
   const reportedIds = () => latestSettings.current.skipReported !== false ? issuesRef.current.map(x => x.qid) : [];
   const ctx = () => ({
-    bank: BANK,
+    bank: bankRef.current,
     recent: histRef.current.seen,
     rand: Math.random,
     exclude: reportedIds()
@@ -5448,7 +6948,7 @@ function App() {
     setGame(d.current || null);
     setPast(d.past || []);
     store.set(K.past, d.past || []);
-    store.set(K.packs, d.packs || []);
+    setPacks(Array.isArray(d.packs) ? d.packs : []);
     setIssues(Array.isArray(d.issues) ? d.issues : []);
     if (d.history) setQhist(d.history);
   };
@@ -5458,6 +6958,8 @@ function App() {
     setLang(DEFAULT_SETTINGS.lang);
     setGameRaw(null);
     setPast([]);
+    setPacksRaw([]);
+    cleanMedia([]).catch(() => {});
     issuesRef.current = [];
     setIssuesRaw([]);
     histRef.current = emptyHistory();
@@ -5475,14 +6977,22 @@ function App() {
     });
   };
   let view;
-  if (screen === 'settings') view = React.createElement(SettingsScreen, {
+  if (screen === 'questions') view = React.createElement(QuestionsScreen, {
+    packs: packs,
+    setPacks: setPacks,
+    bank: BANK,
+    onBack: () => setScreen('home'),
+    tvOpen: tvLink.tv.open,
+    setPreview: setPreview,
+    previewStatus: tvLink.status
+  });else if (screen === 'settings') view = React.createElement(SettingsScreen, {
     settings: settings,
     setSettings: setSettings,
     state: {
       settings,
       game,
       past,
-      packs: store.get(K.packs, []),
+      packs,
       history: qhist,
       issues
     },
@@ -5553,7 +7063,9 @@ function App() {
     onNew: () => setScreen('setup'),
     onContinue: () => setScreen('game'),
     onHow: () => setSheet('how'),
-    onSettings: () => setScreen('settings')
+    onSettings: () => setScreen('settings'),
+    onQuestions: () => setScreen('questions'),
+    bank: BANK
   });
   return React.createElement(QLangCtx.Provider, {
     value: settings.qLang
@@ -5598,7 +7110,7 @@ function App() {
 if (window.__KH_TEST__) window.__KH = {
   store,
   K,
-  BANK,
+  BANK: indexBank(BASE_BANK),
   indexBank,
   selectBoard,
   selectQuestions,
@@ -5643,6 +7155,13 @@ if (window.__KH_TEST__) window.__KH = {
   openCells,
   isBoardDone,
   tvGame,
+  mergePacks,
+  packQuestion,
+  questionProblems,
+  validatePack,
+  exportPack,
+  importPack,
+  emptyQuestion,
   mediaCmd,
   revealMore,
   quietMedia,

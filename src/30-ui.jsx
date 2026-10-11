@@ -175,7 +175,7 @@ function LogoMark({ size = 64 }) {
 /* ============================================================
    HOME
    ============================================================ */
-function Home({ game, past, settings, setSettings, onNew, onContinue, onHow, onSettings }) {
+function Home({ game, past, settings, setSettings, onNew, onContinue, onHow, onSettings, onQuestions, bank }) {
   const p = usePwa();
   const live = game && game.phase !== 'done' ? game : null;
   const left = live ? openCells(live).length : 0;
@@ -204,13 +204,14 @@ function Home({ game, past, settings, setSettings, onNew, onContinue, onHow, onS
           </button>
         )}
         <button className="btn btn-gold" onClick={onNew}>{t('newGame')}</button>
+        {onQuestions && <button className="btn" onClick={onQuestions}>✏️ {t('myQuestions')}</button>}
         <div className="row">
           <button className="btn grow" onClick={onHow}>{t('howToPlay')}</button>
           <button className="btn grow" onClick={onSettings}>{t('settings')}</button>
         </div>
         {p.canPrompt && <button className="btn btn-ghost" onClick={() => p.prompt()}>📲 {t('install')}</button>}
       </div>
-      <p className="hint center">{t('bankNote', { q: BANK.total, c: BANK.cats.length })}</p>
+      <p className="hint center">{bank && t('bankNote', { q: bank.total, c: bank.cats.length })}</p>
       {past.length > 0 && (
         <section className="stack-sm">
           <span className="eyebrow">{t('pastGames')}</span>

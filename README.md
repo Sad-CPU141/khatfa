@@ -19,6 +19,23 @@ A sibling of [Draft Night](https://sad-cpu141.github.io/draft-night/), from the 
 - **Difficulty settings:** curve (Standard / Steep / Brutal), minimum and maximum difficulty, Niche mode, Niche only, Strict no-repeats, and Progressive difficulty. All optional ones are OFF by default.
 - **No repeats:** the same question or fact never appears twice in a game. Recently seen questions are avoided across games on this device. With Strict no-repeats, a category that runs out shows an empty tile and explains why rather than repeating. You can reset the question history in Settings.
 - **Categories:** search; filters for Popular, Niche and each topic group; real question counts per value; switch categories or whole groups on and off; subcategories. Also Random categories, and a balanced Mixed category drawn from several topics.
+- **Picture, sound and clip questions** across the topics:
+  - 52 pictures: flags, country outlines and countries highlighted on a map, some with a zoomed-in reveal.
+  - 29 emoji puzzles.
+  - 21 sounds: instruments, animals, everyday sounds and science tones.
+  - All of these are built in and work offline. Media questions also use 200 / 400 / 600.
+  - The host has Play, Pause, Replay and volume. Nothing plays until the host presses Play.
+  - Sound and clips play on the TV window when one is open.
+- **Clip questions** (YouTube): add your own in the editor, using official uploads only.
+  - The clip plays in YouTube's own player, between a start and end time you choose. The player is never covered, and the video is never downloaded.
+  - The host is warned if the video's title may give the answer away, or if the video can't be embedded.
+  - Clips need internet. There are no built-in clips, because they couldn't be checked from where the game was built.
+- **“This is wrong”** button on every question. It removes a broken or wrong question and reverses only the points that question caused, and nothing is reversed twice. It replaces the question with an unused one of the same value from the same category, or lets the host choose a fallback. Played questions can be flagged from the menu. Flagged questions go to a reported list in Settings, which you can export.
+- **My questions:** an editor for your own packs.
+  - Supports text, picture, sound and clip questions, in built-in categories or your own.
+  - Each question checks for missing information before saving. A question can only be saved as verified once a source is given.
+  - Previews work on the TV window.
+  - Export and import packs: one file per pack, with its pictures and sounds included.
 - Arabic (right-to-left) and English. The app opens in the device's language: Arabic on an Arabic device, English otherwise. One tap switches.
 - Two teams with their own names, colours and emoji. They take turns picking categories (with undo or a random pick), then play the board.
 - House rules: questions per value, categories per team, answer time, steal time, and steals on or off. Optional modifier: wrong answers lose points (OFF by default).
@@ -28,7 +45,7 @@ A sibling of [Draft Night](https://sad-cpu141.github.io/draft-night/), from the 
 - TV mode works on this device or in a second window. The TV never shows an answer before the host marks it.
 - Saves on every change. Continue after closing, view recent games, export and import a backup, and install to the home screen. It works offline.
 
-**Not built yet:** the question editor and pack import, picture, sound and clip questions, lifelines, online rooms with phone buzzers, and multiple-choice questions.
+**Not built yet:** lifelines, online rooms with phone buzzers (so no multiplayer sync yet), and multiple-choice questions.
 
 ## Install on a phone
 - **iPhone:** open the site in Safari → Share → **Add to Home Screen**.
@@ -40,9 +57,12 @@ npm install       # Babel (build), jsdom + fake-indexeddb (tests)
 npm run build     # compiles src/ into app.js, bank.js, styles.css, index.html, sw.js
 npm test          # rules, 300 random games, click-through, backup, TV window
 npm run shots     # Playwright screenshots at 360px and 1920px, Arabic + English
-npm run audit     # question bank report: counts, gaps, duplicates, balance (--json for data)
+npm run audit     # question bank report: counts, gaps, duplicates, balance, media files (--json for data)
+npm run media-test  # pictures, sounds, clips (stand-in YouTube player), TV window, in Chromium
+node tests/editor.js  # the question editor and packs, in Chromium
+node tools/media.js <cc0-folder>  # rebuild the built-in pictures and sounds (see media/CREDITS.md)
 ```
 Edit files in `src/`, then build. Don't edit `app.js` directly. See `CLAUDE.md` for the layout of the code.
 
 ## Credits
-Fonts: Anton, Barlow, Barlow Semi Condensed and Cairo, all under the SIL Open Font License (licences in `fonts/`). React is included under its MIT licence in `vendor/`. Questions are written for this game. Facts were checked against public references (usually the Wikipedia article named in each question's source field). Please report anything wrong.
+Fonts: Anton, Barlow, Barlow Semi Condensed and Cairo, all under the SIL Open Font License (licences in `fonts/`). React is included under its MIT licence in `vendor/`. Built-in pictures and sounds: see [media/CREDITS.md](media/CREDITS.md). Flags come from flag-icons (MIT). Maps come from Natural Earth (public domain) via world-atlas (ISC). Recorded sounds are CC0, by Kenney and Ben Burnes / Abstraction. Other tones are generated. Questions are written for this game. Facts were checked against public references (usually the Wikipedia article named in each question's source field). Please report anything wrong.

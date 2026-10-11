@@ -467,3 +467,20 @@ html[lang="ar"] .qh-val,html[lang="ar"] .ck-n,html[lang="ar"] .stat .v,html[lang
   .tv-q:has(.qcard.hasmedia) .clock.big .ck-n{font-size:64px}
   .tv-q:has(.qcard.hasmedia) .qcard.big{padding-block:20px}
 }
+
+/* question editor */
+.packrow{display:flex;flex-direction:column;gap:8px;padding:12px}
+.pr-main,.qr-main{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:none;border:0;text-align:start;width:100%;padding:0}
+.qrow{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.qr-main{flex-direction:row;align-items:center;gap:10px;flex:1;min-width:0}
+.qr-v{min-width:44px;font-family:var(--display);font-size:22px;color:var(--gold)}
+.qr-q{display:block;font-weight:600;overflow-wrap:anywhere}
+.typegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bifield{display:grid;grid-template-columns:1fr;gap:6px}
+@media (min-width:640px){.bifield{grid-template-columns:1fr 1fr}}
+textarea.input{resize:vertical;min-height:50px;font-family:inherit}
+select.input{appearance:auto}
+.verrors{margin:0;padding-inline-start:20px;color:var(--danger);font-weight:600;font-size:14px}
+.qf-actions .btn{min-height:52px}
+.focuspick .qimg{cursor:crosshair}
+.preview .qcard{margin:0}

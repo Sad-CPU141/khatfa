@@ -133,6 +133,7 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
   }
   await require('./bank-rules.js')({ ok, boot });
   await require('./wrong-rules.js')({ ok, boot });
+  await require('./pack-rules.js')({ ok, boot });
 
   /* ---------------- language ---------------- */
   console.log('Language');

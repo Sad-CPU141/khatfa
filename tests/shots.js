@@ -66,6 +66,10 @@ async function run(browser, base, { lang, w, h, tag }) {
   await click('.tile.open');
   await page.waitForSelector('.qcard');
   await shot('5-question');
+  await click('.wrongbtn');
+  await page.waitForSelector('.wrongsheet');
+  await shot('5b-this-is-wrong');
+  await click('.wrongsheet .btn-ghost');
   await click('.btn-wrong'); // → steal
   await page.waitForSelector('.stage.s-steal');
   await page.waitForTimeout(300);

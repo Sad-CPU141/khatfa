@@ -8,7 +8,7 @@ function applyDocLang(lang) {
   el.setAttribute('lang', lang === 'en' ? 'en' : 'ar');
   el.setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
 }
-const BANK = indexBank();
+const BASE_BANK = typeof window !== 'undefined' ? window.KH_BANK : null;
 
 function App() {
   const [ready, setReady] = useState(false);
@@ -25,6 +25,11 @@ function App() {
   const [toast, setToast] = useState(null);
   const [wrongCell, setWrongCell] = useState(null);
   const [playedList, setPlayedList] = useState(false);
+  const [packs, setPacksRaw] = useState([]);
+  const setPacks = (l) => { setPacksRaw(l); store.set(K.packs, l); };
+  // The bank the game uses: built-in questions plus switched-on packs.
+  const BANK = useMemo(() => indexBank(mergePacks(BASE_BANK, packs)), [packs]);
+  const bankRef = useRef(BANK); bankRef.current = BANK;
   const [issues, setIssuesRaw] = useState([]);
   const issuesRef = useRef(issues); issuesRef.current = issues;
   const setIssues = (l) => { issuesRef.current = l; setIssuesRaw(l); store.set(K.issues, l); };
@@ -39,6 +44,7 @@ function App() {
       if (cur && Array.isArray(cur.teams)) setGameRaw(quietMedia(cur));
       setPast(store.get(K.past, []));
       const h = store.get(K.history, null); if (h && h.seen) { histRef.current = h; setQhistRaw(h); }
+      const pk = store.get(K.packs, []); if (Array.isArray(pk)) setPacksRaw(pk);
       const iss = store.get(K.issues, []); if (Array.isArray(iss)) { issuesRef.current = iss; setIssuesRaw(iss); }
       setReady(true);
     });
@@ -70,7 +76,7 @@ function App() {
   const act = (fn) => setGame((g) => (g ? fn(g) : g));
   // What the engine needs to build a board: the bank and this device's question history.
   const reportedIds = () => (latestSettings.current.skipReported !== false ? issuesRef.current.map((x) => x.qid) : []);
-  const ctx = () => ({ bank: BANK, recent: histRef.current.seen, rand: Math.random, exclude: reportedIds() });
+  const ctx = () => ({ bank: bankRef.current, recent: histRef.current.seen, rand: Math.random, exclude: reportedIds() });
   const begin = (g) => { if (g.rules.randomCats) { const b = autoPick(g, ctx()); if (histRef.current.n < b.gameNo && b.phase === 'board') setQhist({ ...histRef.current, n: b.gameNo }); return b; } return g; };
   const [preview, setPreview] = useState(null); // the question editor's "Preview on TV"
   const tvLink = useTvSender(game, settings, preview);
@@ -95,12 +101,12 @@ function App() {
   const playAgain = () => { setGame(begin(rematch(game, BANK, Date.now(), { gameNo: startGameNo(histRef.current) }))); setScreen('game'); };
   const restore = (d) => {
     const s = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
-    setSettings(s); setGame(d.current || null); setPast(d.past || []); store.set(K.past, d.past || []); store.set(K.packs, d.packs || []); setIssues(Array.isArray(d.issues) ? d.issues : []);
+    setSettings(s); setGame(d.current || null); setPast(d.past || []); store.set(K.past, d.past || []); setPacks(Array.isArray(d.packs) ? d.packs : []); setIssues(Array.isArray(d.issues) ? d.issues : []);
     if (d.history) setQhist(d.history);
   };
   const clearAll = () => {
     Object.values(K).forEach((k) => store.del(k));
-    setSettingsRaw(DEFAULT_SETTINGS); setLang(DEFAULT_SETTINGS.lang); setGameRaw(null); setPast([]); issuesRef.current = []; setIssuesRaw([]); histRef.current = emptyHistory(); setQhistRaw(emptyHistory()); setScreen('home');
+    setSettingsRaw(DEFAULT_SETTINGS); setLang(DEFAULT_SETTINGS.lang); setGameRaw(null); setPast([]); setPacksRaw([]); cleanMedia([]).catch(() => {}); issuesRef.current = []; setIssuesRaw([]); histRef.current = emptyHistory(); setQhistRaw(emptyHistory()); setScreen('home');
   };
 
   // After "This is wrong": log it on this device, tell the host and the TV.
@@ -110,7 +116,8 @@ function App() {
     sendTv({ kind: 'invalid' });
   };
   let view;
-  if (screen === 'settings') view = <SettingsScreen settings={settings} setSettings={setSettings} state={{ settings, game, past, packs: store.get(K.packs, []), history: qhist, issues }} issues={issues} onClearIssues={() => setIssues([])} onRestore={restore} onClearAll={clearAll} bank={BANK} qhist={qhist} onResetHistory={() => setQhist({ n: histRef.current.n, seen: {} })} onBack={() => setScreen('home')} />;
+  if (screen === 'questions') view = <QuestionsScreen packs={packs} setPacks={setPacks} bank={BANK} onBack={() => setScreen('home')} tvOpen={tvLink.tv.open} setPreview={setPreview} previewStatus={tvLink.status} />;
+  else if (screen === 'settings') view = <SettingsScreen settings={settings} setSettings={setSettings} state={{ settings, game, past, packs, history: qhist, issues }} issues={issues} onClearIssues={() => setIssues([])} onRestore={restore} onClearAll={clearAll} bank={BANK} qhist={qhist} onResetHistory={() => setQhist({ n: histRef.current.n, seen: {} })} onBack={() => setScreen('home')} />;
   else if (screen === 'setup') view = <Setup bank={BANK} initial={{ teams: settings.lastTeams, rules: settings.rules }} onBack={() => setScreen('home')} onStart={startNew} />;
   else if (screen === 'game' && game) {
     const common = { g: game, act, ctx, bank: BANK, onMenu: () => setSheet('menu'), onTv: () => setSheet('tv'), onWrong: (id) => setWrongCell(id) };
@@ -121,7 +128,7 @@ function App() {
       where: outputHere ? t('playsHere') : t('playsOnTv'),
       swap: tvLink.tv.open ? { label: playHere ? t('playOnTvInstead') : t('playHereInstead'), fn: () => { setPlayHere(!playHere); act((x) => mediaCmd(x, 'pause')); } } : null }} />;
     else view = <Results g={game} act={act} onHome={goHome} onAgain={playAgain} onFlagPlayed={() => setPlayedList(true)} />;
-  } else view = <Home game={game} past={past} settings={settings} setSettings={setSettings} onNew={() => setScreen('setup')} onContinue={() => setScreen('game')} onHow={() => setSheet('how')} onSettings={() => setScreen('settings')} />;
+  } else view = <Home game={game} past={past} settings={settings} setSettings={setSettings} onNew={() => setScreen('setup')} onContinue={() => setScreen('game')} onHow={() => setSheet('how')} onSettings={() => setScreen('settings')} onQuestions={() => setScreen('questions')} bank={BANK} />;
 
   return (
     <QLangCtx.Provider value={settings.qLang}>
@@ -139,5 +146,5 @@ function App() {
   );
 }
 
-if (window.__KH_TEST__) window.__KH = { store, K, BANK, indexBank, selectBoard, selectQuestions, rowTiers, tiersNeeded, categoryShortfall, gamePool, autoPick, isLocked, markSeen, trimHistory, emptyHistory, startGameNo, tierCounts, POINTS, MIX_ID, DEFAULT_RULES, cleanRules, createGame, pickCategory, randomPick, buildBoard, openCell, markCorrect, markWrong, skipQuestion, putBack, finishQuestion, endGame, adjustScore, undo, undoLabel, winners, gameStats, rematch, pastEntry, timeLeft, pauseTimer, resumeTimer, turnTeam, pickingTeam, openCells, isBoardDone, tvGame, mediaCmd, revealMore, quietMedia, freshPlay, parseYouTube, parseTime, titleSpoils, mediaStore, invalidateQuestion, invalidRefunds, findReplacement, replacementOptions, isInvalidated, addIssue, issueEntry, gameUsed, makeBackup, validateBackup, t, setLang, pick, S };
+if (window.__KH_TEST__) window.__KH = { store, K, BANK: indexBank(BASE_BANK), indexBank, selectBoard, selectQuestions, rowTiers, tiersNeeded, categoryShortfall, gamePool, autoPick, isLocked, markSeen, trimHistory, emptyHistory, startGameNo, tierCounts, POINTS, MIX_ID, DEFAULT_RULES, cleanRules, createGame, pickCategory, randomPick, buildBoard, openCell, markCorrect, markWrong, skipQuestion, putBack, finishQuestion, endGame, adjustScore, undo, undoLabel, winners, gameStats, rematch, pastEntry, timeLeft, pauseTimer, resumeTimer, turnTeam, pickingTeam, openCells, isBoardDone, tvGame, mergePacks, packQuestion, questionProblems, validatePack, exportPack, importPack, emptyQuestion, mediaCmd, revealMore, quietMedia, freshPlay, parseYouTube, parseTime, titleSpoils, mediaStore, invalidateQuestion, invalidRefunds, findReplacement, replacementOptions, isInvalidated, addIssue, issueEntry, gameUsed, makeBackup, validateBackup, t, setLang, pick, S };
 ReactDOM.createRoot(document.getElementById('root')).render(<Boundary><App /></Boundary>);
