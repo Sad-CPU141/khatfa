@@ -1,4 +1,4 @@
-/* Khatfa question bank af99dfcdf4 — built from src/bank/ by build.js. Edit src/bank/, not this file. */
+/* Khatfa question bank ab18c4c789 — built from src/bank/ by build.js. Edit src/bank/, not this file. */
 /* ---- bank/00-runtime.js ---- */
 /* ============================================================
    QUESTION BANK — runtime for the data files in src/bank/.
@@ -140,6 +140,29 @@ KH_BANK.media = {
  "flag-sz": "media/i/21f51b1bef06.svg",
  "flag-vn": "media/i/096016dcd9ae.svg",
  "flag-za": "media/i/13bdb8604a36.svg",
+ "gs-busy": "media/a/ff2d195fc422.mp3",
+ "gs-cards": "media/a/f643d7c04ad6.mp3",
+ "gs-chips": "media/a/9013de8c38d2.mp3",
+ "gs-coins": "media/a/0161846b310e.mp3",
+ "gs-door": "media/a/8ad4f5903073.mp3",
+ "gs-doorbell": "media/a/573e0fee0518.mp3",
+ "gs-glass": "media/a/dc7b5b5c6a70.mp3",
+ "gs-horn": "media/a/75a4ebde6351.mp3",
+ "gs-knife": "media/a/e49386e9cd89.mp3",
+ "gs-pages": "media/a/d8f67ed7d60d.mp3",
+ "gs-papercut": "media/a/e0656698e17e.mp3",
+ "gs-pencil": "media/a/0f9bc0568502.mp3",
+ "gs-pills": "media/a/06184e1e5717.mp3",
+ "gs-pot": "media/a/31d05a68a029.mp3",
+ "gs-ratchet": "media/a/2b1e2ae89f63.mp3",
+ "gs-reverse": "media/a/550d3582aa78.mp3",
+ "gs-scissors": "media/a/4477ce11fbd2.mp3",
+ "gs-siren": "media/a/7a319aa5f37d.mp3",
+ "gs-smoke": "media/a/a096c5c580de.mp3",
+ "gs-snow": "media/a/3710cba6ee88.mp3",
+ "gs-tap": "media/a/44fe29cd3151.mp3",
+ "gs-waves": "media/a/f2dc0e0c3b66.mp3",
+ "gs-whistle": "media/a/3b42ef6d0915.mp3",
  "hl-bf": "media/i/d313a9bd65da.svg",
  "hl-ca": "media/i/c15abf93f35d.svg",
  "hl-es": "media/i/1a87dbc7ae3e.svg",
@@ -2358,43 +2381,6 @@ KH_BANK.cat('english-words', { g: 'lang', niche: 1, e: '🔤', en: 'English Word
   ]);
 })();
 
-/* ---------------- music-video clips (official YouTube uploads) ----------------
-   Checked on 2026-10-11 through YouTube's public video info (oEmbed): each video exists,
-   is on the artist's or label's official channel, allows embedding, and its title does NOT
-   contain the answer. The start/end times are educated guesses (no one has watched them yet),
-   so each is marked unchecked: the host sees a reminder until a person checks it.
-   The questions ask things the title can't give away (year, country, album, film). */
-(function () {
-  var M = KH_BANK.more;
-  var clip = function (yt, start, end) { return { type: 'video', yt: yt, start: start, end: end, unchecked: 1, checked: 'oembed:2026-10-11' }; };
-  var YQ = ['In which year was this song released?', 'في أي سنة صدرت هالأغنية؟'];
-  var CQ = ['Which country is this artist from?', 'من أي دولة هالفنان؟'];
-  M('pop-rock', [
-    ['c01', 400, YQ[0], YQ[1], '1987', '١٩٨٧', { s: 'singers', r: 'Never Gonna Give You Up', m: clip('dQw4w9WgXcQ', 43, 58) }],
-    ['c02', 400, YQ[0], YQ[1], '1975', '١٩٧٥', { s: 'bands', r: 'Bohemian Rhapsody', m: clip('fJ9rUzIMcZQ', 0, 15) }],
-    ['c03', 200, 'This song is on which best-selling album?', 'هالأغنية في أي ألبوم من الأكثر مبيعاً؟', 'Thriller', 'ثريلر (Thriller)', { s: 'singers', f: 'thriller', r: 'Billie Jean', m: clip('Zi_XLOBDo_Y', 30, 45) }],
-    ['c04', 600, 'In which Washington town was this band formed?', 'في أي بلدة بولاية واشنطن تأسست هالفرقة؟', 'Aberdeen', 'أبردين', { s: 'bands', x: 1, r: 'Nirvana (band)', m: clip('hTWKbfoikeg', 60, 75) }],
-    ['c05', 600, YQ[0], YQ[1], '1982', '١٩٨٢', { s: 'bands', r: 'Africa (Toto song)', n: 'From the album Toto IV (1982).', nAr: 'من ألبوم Toto IV (١٩٨٢).', m: clip('FTQbiNvZqaY', 40, 55) }],
-    ['c06', 400, 'This band is from which country?', 'هالفرقة من أي دولة؟', 'Norway', 'النرويج', { s: 'bands', r: 'A-ha', m: clip('djV11Xbc914', 30, 45) }],
-    ['c07', 400, YQ[0], YQ[1], '2015', '٢٠١٥', { s: 'singers', r: 'Hello (Adele song)', m: clip('YQHsXMglC9A', 60, 75) }],
-    ['c08', 200, CQ[0], CQ[1], 'England (the UK)', 'إنجلترا (بريطانيا)', { s: 'singers', alt: ['UK', 'United Kingdom', 'Britain'], altAr: ['بريطانيا', 'المملكة المتحدة'], r: 'Ed Sheeran', m: clip('JGwWNGJdvx8', 40, 55) }],
-    ['c09', 400, YQ[0], YQ[1], '2014', '٢٠١٤', { s: 'singers', r: 'Shake It Off', m: clip('nfWlot6h_JM', 30, 45) }],
-    ['c10', 200, CQ[0], CQ[1], 'Canada', 'كندا', { s: 'singers', r: 'Carly Rae Jepsen', m: clip('fWNaR-rxAic', 30, 45) }],
-    ['c11', 600, 'The featured singer in this video is from which country?', 'المغنية المشاركة في هالفيديو من أي دولة؟', 'New Zealand', 'نيوزيلندا', { s: 'singers', x: 1, r: 'Kimbra', n: 'Kimbra, from Hamilton, New Zealand.', nAr: 'كيمبرا، من هاملتون في نيوزيلندا.', m: clip('8UVNT4wvIGY', 150, 165) }],
-  ]);
-  M('global-pop', [
-    ['c01', 200, YQ[0], YQ[1], '2012', '٢٠١٢', { s: 'kpop', f: 'gangnam', r: 'Gangnam Style', m: clip('9bZkp7q19f0', 60, 75) }],
-    ['c02', 400, 'The singer of this song is from where?', 'مغني هالأغنية من وين؟', 'Puerto Rico', 'بورتوريكو', { s: 'latin', r: 'Luis Fonsi', m: clip('kJQP7kiw5Fk', 45, 60) }],
-    ['c03', 200, CQ[0], CQ[1], 'Colombia', 'كولومبيا', { s: 'latin', r: 'Shakira', m: clip('pRpeEdMmmQ0', 30, 45) }],
-    ['c04', 400, YQ[0], YQ[1], '2020', '٢٠٢٠', { s: 'kpop', f: 'bts', r: 'Dynamite (BTS song)', m: clip('gdZLi9oWNZg', 30, 45) }],
-    ['c05', 200, 'This group is from which country?', 'هالفرقة من أي دولة؟', 'South Korea', 'كوريا الجنوبية', { s: 'kpop', f: 'blackpink', alt: ['Korea'], altAr: ['كوريا'], r: 'Blackpink', m: clip('IHNzOHi8sJs', 30, 45) }],
-  ]);
-  M('rnb-electronic', [
-    ['c01', 400, YQ[0], YQ[1], '2014', '٢٠١٤', { s: 'rnb', r: 'Uptown Funk', m: clip('OPf0YbXqDm0', 40, 55) }],
-    ['c02', 200, 'This DJ was from which country?', 'هالدي جي كان من أي دولة؟', 'Sweden', 'السويد', { s: 'electronic', f: 'avicii', r: 'Avicii', m: clip('IcrbM1l_BoI', 60, 75) }],
-    ['c03', 400, 'This song was written for which animated film?', 'هالأغنية انكتبت لأي فيلم رسوم متحركة؟', 'Despicable Me 2', 'أنا الحقير ٢ (Despicable Me 2)', { s: 'rnb', r: 'Happy (Pharrell Williams song)', m: clip('ZbZSe6N_BXs', 30, 45) }],
-  ]);
-})();
 
 /* ---------------- logos (Simple Icons, symbol only) ----------------
    Brand symbols from Simple Icons (a CC0 collection; the logos are trademarks of their
@@ -2463,6 +2449,43 @@ KH_BANK.cat('english-words', { g: 'lang', niche: 1, e: '🔤', en: 'English Word
     row('x03', 600, 'steam', 'Steam', 'ستيم', { s: 'apps' }),
     row('x04', 600, 'paypal', 'PayPal', 'باي بال', { s: 'apps', zoom: [0.55, 0.4] }),
     row('x05', 600, 'pinterest', 'Pinterest', 'بنترست', { s: 'apps', zoom: [0.5, 0.5] }),
+  ]);
+})();
+
+
+/* ---------------- Guess the Sound ----------------
+   Every sound plays from this website (nothing from YouTube), so no title can give it away.
+   Recordings: Kenney (CC0) and Ben Burnes / Abstraction (CC0). The others are generated for Khatfa. */
+(function () {
+  var KEN = 'Kenney, kenney.nl (CC0)', BB = 'Ben Burnes / Abstraction (CC0)', GEN = 'Generated for Khatfa';
+  var snd = function (key, credit) { return { type: 'audio', src: '@' + key, credit: credit }; };
+  var Q = function (en, ar) { return [en, ar]; };
+  var r = function (id, pts, q, en, ar, key, credit, o) { o = o || {}; o.m = snd(key, credit); if (pts > 200 && !o.r) o.r = o.ref || en; delete o.ref; return [id, pts, q[0], q[1], en, ar, o]; };
+  KH_BANK.cat('guess-sound', { g: 'brands', e: '👂', en: 'Guess the Sound', ar: 'خمّن الصوت', pop: 1,
+    subs: { home: ['Around the house', 'في البيت'], street: ['Out and about', 'في الشارع'], games: ['Games & tools', 'ألعاب وأدوات'] } }, [
+    r('e01', 200, Q('What is being shuffled?', 'وش اللي ينخلط؟'), 'A deck of playing cards', 'ورق لعب (كوتشينة)', 'gs-cards', KEN, { s: 'games', alt: ['Cards', 'Playing cards'], altAr: ['ورق', 'بلوت'] }),
+    r('e02', 200, Q('What is opening?', 'وش اللي ينفتح؟'), 'A creaky door', 'باب يزيّق', 'gs-door', KEN, { s: 'home', alt: ['Door'], altAr: ['باب'] }),
+    r('e03', 200, Q('What is being jingled in someone’s hand?', 'وش اللي يخشخش في يد أحد؟'), 'Coins', 'عملات معدنية (فكّة)', 'gs-coins', KEN, { s: 'home', alt: ['Money', 'Change'], altAr: ['فلوس', 'فكة'] }),
+    r('e04', 200, Q('What is being turned?', 'وش اللي يتقلّب؟'), 'Pages of a book', 'صفحات كتاب', 'gs-pages', BB, { s: 'home', alt: ['Pages', 'Book', 'Paper'], altAr: ['صفحات', 'كتاب'] }),
+    r('e05', 200, Q('What has been left running?', 'وش اللي مفتوح ويشتغل؟'), 'A tap (faucet)', 'حنفية (صنبور)', 'gs-tap', BB, { s: 'home', alt: ['Tap', 'Faucet', 'Sink', 'Running water'], altAr: ['حنفية', 'ماء'] }),
+    r('e06', 200, Q('Which vehicle makes this warning beep?', 'أي مركبة تطلّع صوت التنبيه هذا؟'), 'A truck reversing', 'شاحنة ترجع لورا', 'gs-reverse', GEN, { s: 'street', alt: ['Truck', 'Lorry', 'Reversing'], altAr: ['شاحنة', 'تريلة'] }),
+    r('e07', 200, Q('What is being blown?', 'وش اللي ينصفّر فيه؟'), 'A referee’s whistle', 'صافرة حكم', 'gs-whistle', GEN, { s: 'games', alt: ['Whistle'], altAr: ['صافرة', 'صفارة'] }),
+    r('e08', 200, Q('Someone is at the door. What just rang?', 'أحد عند الباب. وش اللي رنّ؟'), 'A doorbell', 'جرس الباب', 'gs-doorbell', GEN, { s: 'home', alt: ['Bell'], altAr: ['جرس'] }),
+    r('e09', 200, Q('What kind of vehicle has a siren like this?', 'أي نوع مركبة لها سرينة زي كذا؟'), 'An emergency vehicle (police car, ambulance or fire engine)', 'مركبة طوارئ (شرطة أو إسعاف أو مطافي)', 'gs-siren', GEN, { s: 'street', alt: ['Police car', 'Ambulance', 'Fire engine', 'Fire truck', 'Police'], altAr: ['شرطة', 'إسعاف', 'مطافي'] }),
+    r('e10', 200, Q('What is making this noise?', 'وش اللي يطلّع هالصوت؟'), 'A car horn', 'بوري سيارة (هرن)', 'gs-horn', GEN, { s: 'street', alt: ['Horn', 'Car'], altAr: ['هرن', 'بوري', 'زمّور'] }),
+    r('h01', 400, Q('What is someone doing?', 'وش قاعد يسوي الشخص؟'), 'Writing with a pencil', 'يكتب بقلم رصاص', 'gs-pencil', BB, { s: 'home', alt: ['Writing', 'Drawing', 'Pencil'], altAr: ['يكتب', 'يرسم'], ref: 'Mechanical pencil' }),
+    r('h02', 400, Q('Which tool is cutting?', 'أي أداة قاعدة تقص؟'), 'Scissors', 'مقص', 'gs-scissors', BB, { s: 'games', alt: ['A pair of scissors'], ref: 'Scissors' }),
+    r('h03', 400, Q('What is being used in the kitchen here?', 'وش اللي ينستخدم في المطبخ هنا؟'), 'A knife (slicing)', 'سكين (تقطيع)', 'gs-knife', KEN, { s: 'home', alt: ['Knife', 'Slicing', 'Chopping'], altAr: ['سكين'], ref: 'Knife' }),
+    r('h04', 400, Q('What kitchen item is being banged?', 'أي غرض مطبخ قاعد ينطق؟'), 'A metal pot or pan', 'قدر أو مقلاة معدنية', 'gs-pot', KEN, { s: 'home', alt: ['Pot', 'Pan', 'Saucepan'], altAr: ['قدر', 'طاوة', 'مقلاة'], ref: 'Cookware and bakeware' }),
+    r('h05', 400, Q('What material is being hit?', 'وش المادة اللي تنضرب؟'), 'Glass', 'زجاج', 'gs-glass', KEN, { s: 'home', alt: ['A glass', 'Window'], altAr: ['قزاز'], ref: 'Glass' }),
+    r('h06', 400, Q('What is this person walking on?', 'على وش يمشي هالشخص؟'), 'Snow', 'ثلج', 'gs-snow', KEN, { s: 'street', ref: 'Snow' }),
+    r('h07', 400, Q('Which device in your home is making this pattern of beeps?', 'أي جهاز في البيت يطلّع هالنمط من الصفير؟'), 'A smoke alarm', 'كاشف الدخان', 'gs-smoke', GEN, { s: 'home', alt: ['Smoke detector', 'Fire alarm'], altAr: ['جهاز إنذار الحريق'], n: 'Three beeps then a pause: the standard fire-alarm pattern.', nAr: 'ثلاث صفرات وبعدها وقفة: نمط إنذار الحريق المعروف.', ref: 'Smoke detector' }),
+    r('h08', 400, Q('What natural sound is this (an imitation)?', 'وش هالصوت الطبيعي (صوت مقلّد)؟'), 'Ocean waves', 'أمواج البحر', 'gs-waves', GEN, { s: 'street', alt: ['Waves', 'The sea', 'The beach'], altAr: ['موج', 'بحر'], ref: 'Wind wave' }),
+    r('h09', 400, Q('Which office tool is cutting through paper?', 'أي أداة مكتبية تقص الورق؟'), 'A paper cutter (guillotine)', 'قطّاعة ورق (مقصلة ورق)', 'gs-papercut', BB, { s: 'games', alt: ['Paper cutter', 'Guillotine', 'Paper trimmer'], ref: 'Paper cutter' }),
+    r('x01', 600, Q('Which tool makes this clicking as it turns?', 'أي أداة تطلّع هالطقطقة وهي تلف؟'), 'A ratchet (wrench)', 'مفتاح سقاطة (ريتشت)', 'gs-ratchet', BB, { s: 'games', x: 1, alt: ['Ratchet', 'Socket wrench', 'Ratchet spanner'], ref: 'Ratchet (device)' }),
+    r('x02', 600, Q('What is being stacked on the table?', 'وش اللي ينرصّ على الطاولة؟'), 'Poker chips', 'فيشات بوكر', 'gs-chips', KEN, { s: 'games', alt: ['Casino chips', 'Chips', 'Tokens'], ref: 'Casino token' }),
+    r('x03', 600, Q('On a North American phone, what does this sound mean?', 'على هاتف في أمريكا الشمالية، وش يعني هالصوت؟'), 'The line is busy (busy signal)', 'الخط مشغول', 'gs-busy', GEN, { s: 'home', alt: ['Busy', 'Engaged', 'Busy signal'], altAr: ['مشغول'], n: '480 Hz and 620 Hz, half a second on, half off.', nAr: '٤٨٠ و٦٢٠ هيرتز، نص ثانية تشغيل ونص وقفة.', ref: 'Busy signal' }),
+    r('x04', 600, Q('What is being shaken?', 'وش اللي ينهز؟'), 'A bottle of pills', 'علبة حبوب (دواء)', 'gs-pills', BB, { s: 'home', x: 1, ok: 1, alt: ['Pills', 'Pill bottle', 'Tablets', 'Vitamins'], altAr: ['حبوب', 'دواء'], ref: 'Pill (pharmacy)' }),
   ]);
 })();
 

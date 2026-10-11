@@ -188,6 +188,27 @@ function synth() {
     [0.2, 3.4].forEach((t0) => { ping(t0, 1); ping(t0 + 1.1, 0.25); });
     fromSamples('snd-sonar', s);
   }
+  // --- "Guess the Sound" (generated) ---
+  const env = (i, n, a = 300, r = 600) => Math.min(1, i / a, (n - i) / r);
+  // Truck reversing alarm: 1 kHz, half a second on, half off.
+  { const s = secs(6); for (let i = 0; i < s.length; i++) { const t = i / RATE; const on = (t % 1) < 0.5; s[i] = on ? sine(1000, t) * env(i % RATE, RATE / 2) : 0; } fromSamples('gs-reverse', s); }
+  // Smoke alarm: about 3.1 kHz in the standard "temporal-three" pattern (beep beep beep, pause).
+  { const s = secs(8); for (let i = 0; i < s.length; i++) { const t = i / RATE; const c = t % 4; const k = Math.floor(c); const on = c < 2.5 && (c - k) < 0.5; s[i] = on ? (sine(3100, t) + 0.3 * sine(6200, t)) * env(Math.floor((c - k) * RATE), RATE / 2, 80, 200) : 0; } fromSamples('gs-smoke', s); }
+  // Referee whistle: a pea whistle's fast warble around 3.5 kHz, three blasts.
+  { const s = secs(4.5); let ph = 0; for (let i = 0; i < s.length; i++) { const t = i / RATE; const blast = [[0.2, 0.6], [1.2, 0.35], [1.9, 1.6]].find(([a, d]) => t >= a && t < a + d); if (!blast) continue; const f = 3500 + 180 * Math.sin(2 * Math.PI * 28 * t); ph += 2 * Math.PI * f / RATE; const am = 0.6 + 0.4 * Math.sin(2 * Math.PI * 28 * t); s[i] = Math.sin(ph) * am * env(Math.floor((t - blast[0]) * RATE), blast[1] * RATE, 200, 900); } fromSamples('gs-whistle', s); }
+  // Doorbell: "ding-dong", two bell tones with overtones, twice.
+  { const s = secs(5); const bell = (t0, f) => { for (let i = 0; i < 2 * RATE; i++) { const k = Math.round(t0 * RATE) + i; if (k >= s.length) break; const t = i / RATE; s[k] += Math.exp(-t / 0.7) * Math.min(1, i / 100) * (sine(f, t) + 0.5 * sine(f * 2.76, t) * Math.exp(-t / 0.2) + 0.25 * sine(f * 5.4, t) * Math.exp(-t / 0.1)); } };
+    bell(0.2, 659); bell(0.9, 523); bell(2.6, 659); bell(3.3, 523); fromSamples('gs-doorbell', s); }
+  // North American busy signal: 480 + 620 Hz, half a second on, half off.
+  { const s = secs(5); for (let i = 0; i < s.length; i++) { const t = i / RATE; const on = (t % 1) < 0.5; s[i] = on ? (sine(480, t) + sine(620, t)) * env(i % RATE, RATE / 2, 200, 400) : 0; } fromSamples('gs-busy', s); }
+  // Ocean waves: filtered noise that swells and breaks every few seconds.
+  { const s = secs(9); let seed = 11; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff * 2 - 1; }; let lp = 0, lp2 = 0;
+    for (let i = 0; i < s.length; i++) { const t = i / RATE; const ph = (t % 4.5) / 4.5; const swell = ph < 0.55 ? Math.pow(ph / 0.55, 2) : Math.exp(-(ph - 0.55) * 5); const a = 0.04 + 0.5 * swell * (0.3 + 0.7 * swell); lp += (rnd() - lp) * (0.05 + 0.25 * swell); lp2 += (lp - lp2) * 0.5; s[i] = lp2 * a * env(i, s.length, 4000, 8000); }
+    fromSamples('gs-waves', s); }
+  // Emergency siren: a slow "wail" rising and falling between about 650 and 1500 Hz.
+  { const s = secs(7); let ph = 0; for (let i = 0; i < s.length; i++) { const t = i / RATE; const f = 650 + 850 * (0.5 - 0.5 * Math.cos(2 * Math.PI * t / 3.4)); ph += 2 * Math.PI * f / RATE; s[i] = (Math.sin(ph) + 0.35 * Math.sin(2 * ph) + 0.15 * Math.sin(3 * ph)) * env(i, s.length, 2000, 6000); } fromSamples('gs-siren', s); }
+  // Car horn: two brassy tones together (about 420 and 500 Hz), two short beeps and a long one.
+  { const s = secs(4); let p1 = 0, p2 = 0; for (let i = 0; i < s.length; i++) { const t = i / RATE; const seg = [[0.2, 0.25], [0.6, 0.25], [1.1, 1.4]].find(([a, d]) => t >= a && t < a + d); if (!seg) continue; p1 += 2 * Math.PI * 420 / RATE; p2 += 2 * Math.PI * 500 / RATE; const sq = (p) => Math.tanh(4 * Math.sin(p)); s[i] = (sq(p1) + sq(p2)) * 0.5 * env(Math.floor((t - seg[0]) * RATE), seg[1] * RATE, 150, 400); } fromSamples('gs-horn', s); }
   // Shepard tone: octave-spaced tones under a fixed bell-shaped loudness curve, sliding up forever.
   {
     const s = secs(9); const ph = new Array(9).fill(0); const fmin = 27.5, oct = 9;
@@ -212,11 +233,31 @@ function cc0() {
   joinFiles('snd-slidewhistle', ['Fast Rise Fall.wav', 'Fast Rise.wav', 'Fast Drop.wav'].map((f) => P('bb - Slide Whistle (Aug 2021)', f)), 0.4);
   clip('snd-vinyl', P('Micro Pack - Record Fuzzies', 'Classic Record Fuzz.wav'), 2, 6);
   joinFiles('snd-rubik', ['Big Cube - Twist 1.wav', 'Big Cube - Twist 2.wav', 'Big Cube - Twist 3.wav', 'Big Cube - Twist 4.wav', 'Big Cube - Twist 5.wav', 'Big Cube - Twist 6.wav'].map((f) => P("bb - Rubik's Cube (Feb 2021)", f)), 0.15);
+  // "Guess the Sound" topic
+  const K = (pack, f) => P(pack, 'Audio', f);
+  const rep = (f, n) => Array.from({ length: n }, () => f);
+  clip('gs-cards', K('kenney_casinoaudio', 'cardShuffle.ogg'), 0, 3);
+  joinFiles('gs-door', [K('kenney_rpgaudio', 'doorOpen_1.ogg'), K('kenney_rpgaudio', 'doorOpen_2.ogg')], 0.8);
+  joinFiles('gs-coins', [K('kenney_rpgaudio', 'handleCoins.ogg'), K('kenney_rpgaudio', 'handleCoins2.ogg'), K('kenney_rpgaudio', 'handleCoins.ogg')], 0.3);
+  joinFiles('gs-pages', ['Page Turn 1.wav', 'Page Turn 2.wav', 'Page Turn 3.wav'].map((f) => P('bb - Books, Paper, Writing (Jan 2021)', f)), 0.3);
+  clip('gs-tap', P('bb - Fans and Drones (Jul 2021)', 'Sink and Faucet.wav'), 10, 6);
+  clip('gs-pencil', P('bb - Books, Paper, Writing (Jan 2021)', 'Mech Pencil Writing 1.wav'), 0.5, 6);
+  joinFiles('gs-scissors', ['Jagged Scissors 1.wav', 'Jagged Scissors 2.wav', 'Jagged Scissors 3.wav'].map((f) => P('bb - Smol Mechanisms (May 2021)', f)), 0.35);
+  joinFiles('gs-knife', [K('kenney_rpgaudio', 'knifeSlice.ogg'), K('kenney_rpgaudio', 'knifeSlice2.ogg'), K('kenney_rpgaudio', 'knifeSlice.ogg'), K('kenney_rpgaudio', 'knifeSlice2.ogg')], 0.35);
+  joinFiles('gs-pot', [K('kenney_rpgaudio', 'metalPot1.ogg'), K('kenney_rpgaudio', 'metalPot2.ogg'), K('kenney_rpgaudio', 'metalPot3.ogg')], 0.3);
+  joinFiles('gs-glass', [0, 1, 2, 3].map((i) => K('kenney_impactsounds', 'impactGlass_heavy_00' + i + '.ogg')), 0.5);
+  joinFiles('gs-snow', [0, 1, 2, 3, 4, 0, 1, 2].map((i) => K('kenney_impactsounds', 'footstep_snow_00' + i + '.ogg')), 0.25);
+  joinFiles('gs-ratchet', ['Ratchet Harsh 1.wav', 'Ratchet Harsh 2.wav', 'Ratchet Harsh 3.wav'].map((f) => P('bb - Smol Mechanisms (May 2021)', f)), 0.3);
+  joinFiles('gs-chips', [1, 2, 3, 4, 5, 6].map((i) => K('kenney_casinoaudio', 'chipsStack' + i + '.ogg')), 0.3);
+  joinFiles('gs-pills', rep(P('bb - Pill Bottles (Jun 2021)', 'Vitamin D - Shake 1.wav'), 3).concat([P('bb - Pill Bottles (Jun 2021)', 'Vitamin D - Shake 2.wav')]), 0.25);
+  joinFiles('gs-papercut', ['Cut Paper 1.wav', 'Cut Paper 2.wav'].map((f) => P('Micro Pack - Paper Cutter', f)), 0.4);
   // keep each pack's own licence notice
   const lic = path.join(out, 'licenses'); fs.mkdirSync(lic, { recursive: true });
   fs.copyFileSync(P('kenney_musicjingles/License.txt'), path.join(lic, 'kenney-music-jingles.txt'));
   fs.copyFileSync(P('kenney_casinoaudio/License.txt'), path.join(lic, 'kenney-casino-audio.txt'));
   fs.copyFileSync(P('Micro Pack - Cat Meows/_README.txt'), path.join(lic, 'ben-burnes-cc0-packs.txt'));
+  fs.copyFileSync(P('kenney_rpgaudio/License.txt'), path.join(lic, 'kenney-rpg-audio.txt'));
+  fs.copyFileSync(P('kenney_impactsounds/License.txt'), path.join(lic, 'kenney-impact-sounds.txt'));
   return true;
 }
 
