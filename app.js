@@ -1,7 +1,7 @@
-/* Khatfa 73133d3247 — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa b073f1541a — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "73133d3247";
+const APP_VERSION = "b073f1541a";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -776,7 +776,8 @@ const S = {
   vNotAudio: ['That isn’t a sound file.', 'هذا مو ملف صوت.'],
   vTooBigAudio: ['That sound is too big (over 5 MB). Trim it first.', 'الصوت كبير مرة (أكثر من ٥ ميغا). قصّه أول.'],
   vUnsupported: ['This browser can’t open that file. Try MP3/M4A for sound or JPG/PNG for pictures.', 'هالمتصفح ما يقدر يفتح الملف. جرّب MP3/M4A للصوت أو JPG/PNG للصور.'],
-  vLongSound: ['Saved. It’s longer than 30 seconds, so a shorter clip may play better.', 'انحفظ. بس أطول من ٣٠ ثانية، ومقطع أقصر يكون أحسن.']
+  vLongSound: ['Saved. It’s longer than 30 seconds, so a shorter clip may play better.', 'انحفظ. بس أطول من ٣٠ ثانية، ومقطع أقصر يكون أحسن.'],
+  clipUnchecked: ['Clip timing not checked yet: play it once before the game and fix the start/end in a pack if needed (or use “This is wrong”).', 'توقيت المقطع ما تأكدنا منه: شغّله مرة قبل اللعبة، وإذا يحتاج صلّح البداية والنهاية (أو استخدم «السؤال غلط»).']
 };
 let LANG = 'en';
 const setLang = l => {
@@ -5095,7 +5096,12 @@ function MediaControls({
   }, "\uD83C\uDF10 ", t('clipOnline'), " ", m.end ? t('clipRange', {
     a: fmtTime(m.start || 0),
     b: fmtTime(m.end)
-  }) : '', " ", t('clipEndNote')), m.type === 'video' && s.title && titleSpoils(s.title, answer) && React.createElement("p", {
+  }) : '', " ", t('clipEndNote')), m.type === 'video' && m.unchecked ? React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, "\u26A0 ", t('clipUnchecked')) : null, m.type === 'video' && s.title && titleSpoils(s.title, answer) && React.createElement("p", {
     className: "warn"
   }, "\u26A0 ", t('titleSpoils', {
     title: s.title

@@ -268,6 +268,7 @@ function MediaControls({ g, act, status, where, onWrong, answer, swap }) {
         {s.msg ? ' ' + t(s.msg) : ''}
       </p>
       {m.type === 'video' && <p className="hint" style={{ margin: 0 }}>🌐 {t('clipOnline')} {m.end ? t('clipRange', { a: fmtTime(m.start || 0), b: fmtTime(m.end) }) : ''} {t('clipEndNote')}</p>}
+      {m.type === 'video' && m.unchecked ? <p className="hint" style={{ margin: 0 }}>⚠ {t('clipUnchecked')}</p> : null}
       {m.type === 'video' && s.title && titleSpoils(s.title, answer) && <p className="warn">⚠ {t('titleSpoils', { title: s.title })}</p>}
       {swap && <button className="btn btn-sm btn-ghost" onClick={swap.fn}>{swap.label}</button>}
       {(s.s === 'error') && onWrong && <button className="btn btn-sm btn-flag" onClick={onWrong}>⚠ {t('mediaBrokenReplace')}</button>}

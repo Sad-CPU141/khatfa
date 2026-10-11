@@ -1,4 +1,4 @@
-/* Khatfa question bank 73133d3247 — built from src/bank/ by build.js. Edit src/bank/, not this file. */
+/* Khatfa question bank b073f1541a — built from src/bank/ by build.js. Edit src/bank/, not this file. */
 /* ---- bank/00-runtime.js ---- */
 /* ============================================================
    QUESTION BANK — runtime for the data files in src/bank/.
@@ -750,7 +750,7 @@ KH_BANK.cat('pop-rock', { g: 'music', pop: 1, e: '🎸', en: 'Pop & Rock', ar: '
   ['e04', 200, 'Freddie Mercury was the lead singer of which British band?', 'فريدي ميركوري كان المغني الرئيسي لأي فرقة بريطانية؟', 'Queen', 'كوين', { s: 'bands', r: 'Queen (band)' }],
   ['e05', 200, 'Which British singer-songwriter had a huge hit with "Shape of You"?', 'أي مغنٍّ بريطاني حقق نجاحاً ضخماً بأغنية «Shape of You»؟', 'Ed Sheeran', 'إد شيران', { s: 'singers', r: 'Shape of You' }],
   ['e06', 200, 'Which K-pop group includes RM, Jin, Suga, J-Hope, Jimin, V and Jungkook?', 'أي فرقة كيبوب تضم RM وجين وشوغا وجي-هوب وجيمين وفي وجونغكوك؟', 'BTS', 'بي تي إس', { s: 'bands', r: 'BTS' }],
-  ['h01', 400, 'Which Michael Jackson album is the best-selling album of all time?', 'أي ألبوم لمايكل جاكسون هو الأكثر مبيعاً في التاريخ؟', 'Thriller', 'ثريلر', { s: 'history', c: 1, asOf: '2026-06', r: 'Thriller (album)' }],
+  ['h01', 400, 'Which Michael Jackson album is the best-selling album of all time?', 'أي ألبوم لمايكل جاكسون هو الأكثر مبيعاً في التاريخ؟', 'Thriller', 'ثريلر', { f: 'thriller', s: 'history', c: 1, asOf: '2026-06', r: 'Thriller (album)' }],
   ['h02', 400, 'Which band released The Dark Side of the Moon in 1973?', 'أي فرقة أصدرت ألبوم «The Dark Side of the Moon» عام ١٩٧٣؟', 'Pink Floyd', 'بينك فلويد', { s: 'bands', r: 'The Dark Side of the Moon' }],
   ['h03', 400, 'Which Canadian singer was discovered through YouTube videos in 2008?', 'أي مغنٍّ كندي اكتُشف من خلال فيديوهات يوتيوب عام ٢٠٠٨؟', 'Justin Bieber', 'جاستن بيبر', { s: 'singers', alt: ['Bieber'], r: 'Justin Bieber' }],
   ['h04', 400, 'Kurt Cobain was the frontman of which band?', 'كورت كوبين كان المغني الرئيسي لأي فرقة؟', 'Nirvana', 'نيرفانا', { s: 'bands', r: 'Nirvana (band)' }],
@@ -2128,6 +2128,44 @@ KH_BANK.cat('english-words', { g: 'lang', niche: 1, e: '🔤', en: 'English Word
   ]);
   M('ocean', [
     ['s01', 200, 'Ships and submarines use this ping to find things underwater. What is it called?', 'السفن والغواصات تستخدم هالصوت عشان تلقى الأشياء تحت الماء. وش اسمه؟', 'Sonar', 'السونار', { s: 'reefs', m: snd('snd-sonar', GEN) }],
+  ]);
+})();
+
+/* ---------------- music-video clips (official YouTube uploads) ----------------
+   Checked on 2026-10-11 through YouTube's public video info (oEmbed): each video exists,
+   is on the artist's or label's official channel, allows embedding, and its title does NOT
+   contain the answer. The start/end times are educated guesses (no one has watched them yet),
+   so each is marked unchecked: the host sees a reminder until a person checks it.
+   The questions ask things the title can't give away (year, country, album, film). */
+(function () {
+  var M = KH_BANK.more;
+  var clip = function (yt, start, end) { return { type: 'video', yt: yt, start: start, end: end, unchecked: 1, checked: 'oembed:2026-10-11' }; };
+  var YQ = ['In which year was this song released?', 'في أي سنة صدرت هالأغنية؟'];
+  var CQ = ['Which country is this artist from?', 'من أي دولة هالفنان؟'];
+  M('pop-rock', [
+    ['c01', 400, YQ[0], YQ[1], '1987', '١٩٨٧', { s: 'singers', r: 'Never Gonna Give You Up', m: clip('dQw4w9WgXcQ', 43, 58) }],
+    ['c02', 400, YQ[0], YQ[1], '1975', '١٩٧٥', { s: 'bands', r: 'Bohemian Rhapsody', m: clip('fJ9rUzIMcZQ', 0, 15) }],
+    ['c03', 200, 'This song is on which best-selling album?', 'هالأغنية في أي ألبوم من الأكثر مبيعاً؟', 'Thriller', 'ثريلر (Thriller)', { s: 'singers', f: 'thriller', r: 'Billie Jean', m: clip('Zi_XLOBDo_Y', 30, 45) }],
+    ['c04', 600, 'In which Washington town was this band formed?', 'في أي بلدة بولاية واشنطن تأسست هالفرقة؟', 'Aberdeen', 'أبردين', { s: 'bands', x: 1, r: 'Nirvana (band)', m: clip('hTWKbfoikeg', 60, 75) }],
+    ['c05', 600, YQ[0], YQ[1], '1982', '١٩٨٢', { s: 'bands', r: 'Africa (Toto song)', n: 'From the album Toto IV (1982).', nAr: 'من ألبوم Toto IV (١٩٨٢).', m: clip('FTQbiNvZqaY', 40, 55) }],
+    ['c06', 400, 'This band is from which country?', 'هالفرقة من أي دولة؟', 'Norway', 'النرويج', { s: 'bands', r: 'A-ha', m: clip('djV11Xbc914', 30, 45) }],
+    ['c07', 400, YQ[0], YQ[1], '2015', '٢٠١٥', { s: 'singers', r: 'Hello (Adele song)', m: clip('YQHsXMglC9A', 60, 75) }],
+    ['c08', 200, CQ[0], CQ[1], 'England (the UK)', 'إنجلترا (بريطانيا)', { s: 'singers', alt: ['UK', 'United Kingdom', 'Britain'], altAr: ['بريطانيا', 'المملكة المتحدة'], r: 'Ed Sheeran', m: clip('JGwWNGJdvx8', 40, 55) }],
+    ['c09', 400, YQ[0], YQ[1], '2014', '٢٠١٤', { s: 'singers', r: 'Shake It Off', m: clip('nfWlot6h_JM', 30, 45) }],
+    ['c10', 200, CQ[0], CQ[1], 'Canada', 'كندا', { s: 'singers', r: 'Carly Rae Jepsen', m: clip('fWNaR-rxAic', 30, 45) }],
+    ['c11', 600, 'The featured singer in this video is from which country?', 'المغنية المشاركة في هالفيديو من أي دولة؟', 'New Zealand', 'نيوزيلندا', { s: 'singers', x: 1, r: 'Kimbra', n: 'Kimbra, from Hamilton, New Zealand.', nAr: 'كيمبرا، من هاملتون في نيوزيلندا.', m: clip('8UVNT4wvIGY', 150, 165) }],
+  ]);
+  M('global-pop', [
+    ['c01', 200, YQ[0], YQ[1], '2012', '٢٠١٢', { s: 'kpop', f: 'gangnam', r: 'Gangnam Style', m: clip('9bZkp7q19f0', 60, 75) }],
+    ['c02', 400, 'The singer of this song is from where?', 'مغني هالأغنية من وين؟', 'Puerto Rico', 'بورتوريكو', { s: 'latin', r: 'Luis Fonsi', m: clip('kJQP7kiw5Fk', 45, 60) }],
+    ['c03', 200, CQ[0], CQ[1], 'Colombia', 'كولومبيا', { s: 'latin', r: 'Shakira', m: clip('pRpeEdMmmQ0', 30, 45) }],
+    ['c04', 400, YQ[0], YQ[1], '2020', '٢٠٢٠', { s: 'kpop', f: 'bts', r: 'Dynamite (BTS song)', m: clip('gdZLi9oWNZg', 30, 45) }],
+    ['c05', 200, 'This group is from which country?', 'هالفرقة من أي دولة؟', 'South Korea', 'كوريا الجنوبية', { s: 'kpop', f: 'blackpink', alt: ['Korea'], altAr: ['كوريا'], r: 'Blackpink', m: clip('IHNzOHi8sJs', 30, 45) }],
+  ]);
+  M('rnb-electronic', [
+    ['c01', 400, YQ[0], YQ[1], '2014', '٢٠١٤', { s: 'rnb', r: 'Uptown Funk', m: clip('OPf0YbXqDm0', 40, 55) }],
+    ['c02', 200, 'This DJ was from which country?', 'هالدي جي كان من أي دولة؟', 'Sweden', 'السويد', { s: 'electronic', f: 'avicii', r: 'Avicii', m: clip('IcrbM1l_BoI', 60, 75) }],
+    ['c03', 400, 'This song was written for which animated film?', 'هالأغنية انكتبت لأي فيلم رسوم متحركة؟', 'Despicable Me 2', 'أنا الحقير ٢ (Despicable Me 2)', { s: 'rnb', r: 'Happy (Pharrell Williams song)', m: clip('ZbZSe6N_BXs', 30, 45) }],
   ]);
 })();
 

@@ -1,7 +1,7 @@
 /* Khatfa service worker (same approach as Draft Night).
    App files: network first, so new versions always win when online; cached copy when offline.
    Libraries, icons, fonts: cache first. */
-const VERSION = '73133d3247';
+const VERSION = 'b073f1541a';
 const CACHE = 'khatfa-' + VERSION;
 const FONTS = ['anton-latin-400', 'barlow-latin-400', 'barlow-latin-500', 'barlow-latin-600', 'barlow-latin-700',
   'barlow-semi-condensed-latin-500', 'barlow-semi-condensed-latin-600', 'barlow-semi-condensed-latin-700', 'barlow-semi-condensed-latin-800',

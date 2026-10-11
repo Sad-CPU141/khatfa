@@ -96,7 +96,7 @@ KH_BANK.cat('pop-rock', { g: 'music', pop: 1, e: '🎸', en: 'Pop & Rock', ar: '
   ['e04', 200, 'Freddie Mercury was the lead singer of which British band?', 'فريدي ميركوري كان المغني الرئيسي لأي فرقة بريطانية؟', 'Queen', 'كوين', { s: 'bands', r: 'Queen (band)' }],
   ['e05', 200, 'Which British singer-songwriter had a huge hit with "Shape of You"?', 'أي مغنٍّ بريطاني حقق نجاحاً ضخماً بأغنية «Shape of You»؟', 'Ed Sheeran', 'إد شيران', { s: 'singers', r: 'Shape of You' }],
   ['e06', 200, 'Which K-pop group includes RM, Jin, Suga, J-Hope, Jimin, V and Jungkook?', 'أي فرقة كيبوب تضم RM وجين وشوغا وجي-هوب وجيمين وفي وجونغكوك؟', 'BTS', 'بي تي إس', { s: 'bands', r: 'BTS' }],
-  ['h01', 400, 'Which Michael Jackson album is the best-selling album of all time?', 'أي ألبوم لمايكل جاكسون هو الأكثر مبيعاً في التاريخ؟', 'Thriller', 'ثريلر', { s: 'history', c: 1, asOf: '2026-06', r: 'Thriller (album)' }],
+  ['h01', 400, 'Which Michael Jackson album is the best-selling album of all time?', 'أي ألبوم لمايكل جاكسون هو الأكثر مبيعاً في التاريخ؟', 'Thriller', 'ثريلر', { f: 'thriller', s: 'history', c: 1, asOf: '2026-06', r: 'Thriller (album)' }],
   ['h02', 400, 'Which band released The Dark Side of the Moon in 1973?', 'أي فرقة أصدرت ألبوم «The Dark Side of the Moon» عام ١٩٧٣؟', 'Pink Floyd', 'بينك فلويد', { s: 'bands', r: 'The Dark Side of the Moon' }],
   ['h03', 400, 'Which Canadian singer was discovered through YouTube videos in 2008?', 'أي مغنٍّ كندي اكتُشف من خلال فيديوهات يوتيوب عام ٢٠٠٨؟', 'Justin Bieber', 'جاستن بيبر', { s: 'singers', alt: ['Bieber'], r: 'Justin Bieber' }],
   ['h04', 400, 'Kurt Cobain was the frontman of which band?', 'كورت كوبين كان المغني الرئيسي لأي فرقة؟', 'Nirvana', 'نيرفانا', { s: 'bands', r: 'Nirvana (band)' }],

@@ -463,6 +463,7 @@ const S = {
   vTooBigAudio: ['That sound is too big (over 5 MB). Trim it first.', 'الصوت كبير مرة (أكثر من ٥ ميغا). قصّه أول.'],
   vUnsupported: ['This browser can’t open that file. Try MP3/M4A for sound or JPG/PNG for pictures.', 'هالمتصفح ما يقدر يفتح الملف. جرّب MP3/M4A للصوت أو JPG/PNG للصور.'],
   vLongSound: ['Saved. It’s longer than 30 seconds, so a shorter clip may play better.', 'انحفظ. بس أطول من ٣٠ ثانية، ومقطع أقصر يكون أحسن.'],
+  clipUnchecked: ['Clip timing not checked yet: play it once before the game and fix the start/end in a pack if needed (or use “This is wrong”).', 'توقيت المقطع ما تأكدنا منه: شغّله مرة قبل اللعبة، وإذا يحتاج صلّح البداية والنهاية (أو استخدم «السؤال غلط»).'],
 };
 
 let LANG = 'en';
