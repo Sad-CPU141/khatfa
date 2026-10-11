@@ -131,6 +131,31 @@ function buildBoard(g, ctx) {
 }
 
 /* ---------- a question ---------- */
+/* Media playback is part of the game state, so the host's buttons drive whichever screen
+   is playing (this device, the TV view, or a TV window). Nothing plays until the host
+   presses play. seq goes up on every Replay. These aren't undo steps. */
+const freshPlay = () => ({ state: 'idle', seq: 0, vol: 0.9 });
+const REVEAL_STEPS = 3; // progressive picture reveal: 0 = most hidden … 3 = whole picture
+function mediaCmd(g, cmd, v) {
+  const cur = g.current; if (!cur) return g;
+  const p = { ...freshPlay(), ...(cur.play || {}) };
+  if (cmd === 'play') p.state = 'playing';
+  else if (cmd === 'pause') p.state = 'paused';
+  else if (cmd === 'replay') { p.state = 'playing'; p.seq = (p.seq || 0) + 1; }
+  else if (cmd === 'stop') p.state = 'idle';
+  else if (cmd === 'vol') p.vol = clamp(+v || 0, 0, 1);
+  else return g;
+  return { ...g, current: { ...cur, play: p } };
+}
+function revealMore(g) {
+  const cur = g.current; if (!cur) return g;
+  return { ...g, current: { ...cur, reveal: Math.min(REVEAL_STEPS, (cur.reveal || 0) + 1) } };
+}
+// After a reload nothing should start playing by itself.
+function quietMedia(g) {
+  if (!g || !g.current || !g.current.play || g.current.play.state !== 'playing') return g;
+  return { ...g, current: { ...g.current, play: { ...g.current.play, state: 'paused' } } };
+}
 // Progressive Difficulty: a tile is locked while easier tiles in its category are still open.
 function isLocked(g, c) {
   if (!g.rules.progressive || c.status !== 'open') return false;
@@ -140,7 +165,7 @@ function openCell(g, cellId, now = Date.now()) {
   const c = cellById(g, cellId);
   if (g.phase !== 'board' || !c || c.status !== 'open' || isLocked(g, c)) return g;
   const n = withHistory(g, 'open');
-  return { ...n, phase: 'question', current: { cell: c.id, stage: 'answer', team: turnTeam(g).id, opener: turnTeam(g).id, endsAt: now + ms(g.rules.answerTime * 1000), pausedLeft: null, result: null } };
+  return { ...n, phase: 'question', current: { cell: c.id, stage: 'answer', team: turnTeam(g).id, opener: turnTeam(g).id, endsAt: now + ms(g.rules.answerTime * 1000), pausedLeft: null, result: null, play: freshPlay(), reveal: 0 } };
 }
 const curCell = (g) => (g.current ? cellById(g, g.current.cell) : null);
 const timeLeft = (g, now = Date.now()) => {
@@ -361,7 +386,7 @@ function invalidateQuestion(g, cellId, opts) {
   n = { ...n, cells, log, invalid: [...(n.invalid || []), record] };
   if (isCur) {
     // The team that opened it gets the replacement straight away (fresh clock); with no replacement they pick again.
-    if (rep) n = { ...n, phase: 'question', current: { cell: cellId, stage: 'answer', team: opener, opener, endsAt: now + ms(n.rules.answerTime * 1000), pausedLeft: null, result: null } };
+    if (rep) n = { ...n, phase: 'question', current: { cell: cellId, stage: 'answer', team: opener, opener, endsAt: now + ms(n.rules.answerTime * 1000), pausedLeft: null, result: null, play: freshPlay(), reveal: 0 } };
     else n = { ...n, phase: 'board', current: null };
   }
   if (n.phase === 'done' && !n.endedEarly && openCells(n).length) n = { ...n, phase: 'board', endedAt: undefined };

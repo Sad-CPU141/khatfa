@@ -138,10 +138,11 @@ function Clock({ g, big }) {
   );
 }
 const altList = (q) => (q.alt ? [...(q.alt[LANG] || []), ...(q.alt[LANG === 'ar' ? 'en' : 'ar'] || [])] : []);
-function QuestionCard({ cell, big, showAnswer, host }) {
+function QuestionCard({ cell, big, showAnswer, host, cur, output, onStatus, status }) {
   const q = cell.q;
   return (
-    <div className={'qcard' + (big ? ' big' : '')}>
+    <div className={'qcard' + (big ? ' big' : '') + (q.media ? ' hasmedia m-' + q.media.type : '')}>
+      {q.media && <MediaView q={q} cur={cur} big={big} output={output} onStatus={onStatus} status={status} full={showAnswer && !host} />}
       <Txt v={q.q} as="p" className="qtext" />
       {showAnswer && (
         <div className="qans">
@@ -160,7 +161,7 @@ function QHead({ g, cell }) {
   const cat = catById(g, cell.cat);
   return (
     <div className="qhead">
-      <span className="qh-cat">{cat.emoji} <Txt v={cat.name} /></span>
+      <span className="qh-cat">{cat.emoji} <Txt v={cat.name} />{cell.q && cell.q.media && <span className="qh-type">{MEDIA_ICON[cell.q.media.type]} {t('type_' + cell.q.media.type)}</span>}</span>
       <span className="qh-val num">{t('points', { n: cell.value })}</span>
     </div>
   );
@@ -188,7 +189,7 @@ function ResultBanner({ g }) {
     </div>
   );
 }
-function QuestionScreen({ g, act, flash, onMenu, onTv, onWrong }) {
+function QuestionScreen({ g, act, flash, onMenu, onTv, onWrong, media }) {
   const cur = g.current; const cell = curCell(g);
   const [peek, setPeek] = useState(false);
   useEffect(() => { setPeek(false); }, [cell && cell.id]);
@@ -210,8 +211,9 @@ function QuestionScreen({ g, act, flash, onMenu, onTv, onWrong }) {
       <QHead g={g} cell={cell} />
       <StageBanner g={g} />
       <Clock g={g} />
-      <QuestionCard cell={cell} showAnswer={reveal || peek} host />
-      {cell.q.check && <p className="checkbadge">{t('needsCheck')}</p>}
+      <QuestionCard cell={cell} showAnswer={reveal || peek} host cur={cur} output={media ? media.output : true} onStatus={media && media.onStatus} status={media && media.status} />
+      {cell.q.media && <MediaControls g={g} act={act} status={media && media.status} where={media && media.where} swap={media && media.swap} answer={cell.q.a} onWrong={onWrong ? () => onWrong(cell.id) : null} />}
+      {!!cell.q.check && <p className="checkbadge">{t('needsCheck')}</p>}
       {reveal && <ResultBanner g={g} />}
       {onWrong && <button className="btn btn-sm btn-flag wrongbtn" onClick={() => onWrong(cell.id)}>⚠ {t('thisIsWrong')}</button>}
       {!reveal && <button className="btn btn-ghost btn-sm peek" aria-pressed={peek} onClick={() => setPeek(!peek)}>👁 {peek ? t('hideAnswer') : t('showAnswer')}</button>}

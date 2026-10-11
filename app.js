@@ -1,7 +1,7 @@
-/* Khatfa 0d66f796ba — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa f68f06ad8e — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "0d66f796ba";
+const APP_VERSION = "f68f06ad8e";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -634,7 +634,47 @@ const S = {
   exportIssues: ['Export list', 'صدّر القائمة'],
   clearIssues: ['Clear list', 'امسح القائمة'],
   clearIssuesQ: ['Clear the reported list?', 'تمسح قائمة البلاغات؟'],
-  clearIssuesBody: ['Reported questions can appear in games again.', 'الأسئلة المبلّغ عنها ممكن ترجع تطلع في الألعاب.']
+  clearIssuesBody: ['Reported questions can appear in games again.', 'الأسئلة المبلّغ عنها ممكن ترجع تطلع في الألعاب.'],
+  type_image: ['Picture', 'صورة'],
+  type_audio: ['Sound', 'صوت'],
+  type_video: ['Clip', 'مقطع'],
+  pictureAlt: ['Picture for this question', 'صورة السؤال'],
+  mediaFailedShort: ['The picture didn’t load', 'الصورة ما اشتغلت'],
+  mediaMissing: ['This file isn’t on this device (it may have been deleted).', 'الملف مو موجود على هالجهاز (يمكن انحذف).'],
+  mediaFailed: ['It couldn’t be played.', 'ما قدرنا نشغّله.'],
+  ytBadId: ['That isn’t a valid YouTube video.', 'هذا مو رابط يوتيوب صحيح.'],
+  ytPlayer: ['YouTube’s player had a problem.', 'مشغّل يوتيوب واجه مشكلة.'],
+  ytGone: ['The video was removed or is private.', 'المقطع انحذف أو صار خاص.'],
+  ytNoEmbed: ['The owner doesn’t allow this video to play inside other sites.', 'صاحب المقطع ما يسمح بتشغيله داخل مواقع ثانية.'],
+  ytOffline: ['YouTube can’t be reached. Clips need internet.', 'ما قدرنا نوصل ليوتيوب. المقاطع تحتاج إنترنت.'],
+  mIdle: ['Ready. Nothing plays until you press Play.', 'جاهز. ما يشتغل شي إلا لما تضغط تشغيل.'],
+  mLoading: ['Loading…', 'جاري التحميل…'],
+  mReady: ['Ready', 'جاهز'],
+  mPlaying: ['Playing', 'يشتغل'],
+  mPaused: ['Paused', 'متوقف مؤقتاً'],
+  mEnded: ['Finished', 'خلص'],
+  mBlocked: ['The browser blocked sound. Click once on the TV window, or play it here.', 'المتصفح منع الصوت. اضغط مرة على نافذة التلفزيون، أو شغّله هنا.'],
+  mError: ['Problem:', 'مشكلة:'],
+  mPlay: ['Play', 'تشغيل'],
+  mPause: ['Pause', 'إيقاف مؤقت'],
+  mResume: ['Resume', 'كمّل'],
+  mReplay: ['Replay', 'إعادة'],
+  mVolume: ['Volume', 'الصوت'],
+  playsHere: ['Plays on this device', 'يشتغل على هالجهاز'],
+  playsOnTv: ['Plays on the TV window', 'يشتغل على نافذة التلفزيون'],
+  playHereInstead: ['Play on this device instead', 'شغّله على هالجهاز بدلاً'],
+  playOnTvInstead: ['Play on the TV window instead', 'شغّله على نافذة التلفزيون بدلاً'],
+  revealMore: ['Show more of the picture', 'وضّح الصورة أكثر'],
+  revealMoreSub: ['A hint for the teams: the value stays the same.', 'تلميح للفرق: والنقاط ما تتغيّر.'],
+  clipOnline: ['Needs internet.', 'يحتاج إنترنت.'],
+  clipRange: ['Plays {a}–{b}.', 'يشتغل من {a} إلى {b}.'],
+  clipEndNote: ['We pause it at the end time, but YouTube may run a moment over.', 'نوقفه عند وقت النهاية، بس ممكن يوتيوب يزيد لحظة.'],
+  titleSpoils: ['The video title “{title}” may give the answer away (YouTube shows it on the player).', 'عنوان المقطع «{title}» ممكن يكشف الإجابة (يوتيوب يعرضه على المشغّل).'],
+  mediaBrokenReplace: ['Broken? Replace this question', 'خربان؟ بدّل السؤال'],
+  previewOnTv: ['Preview', 'معاينة'],
+  tvAllowSound: ['Click here once to allow sound on this screen', 'اضغط هنا مرة عشان تسمح بالصوت على هالشاشة'],
+  credits: ['Credits', 'الشكر والمصادر'],
+  creditsBody: ['Flags: flag-icons (MIT). Maps: Natural Earth (public domain) via world-atlas (ISC). Recorded sounds: Kenney and Ben Burnes / Abstraction (CC0). Other tones are generated for Khatfa. Fonts: SIL Open Font License. React: MIT. Clips play in YouTube’s own player and are never downloaded.', 'الأعلام: flag-icons (MIT). الخرائط: Natural Earth (ملكية عامة) عبر world-atlas (ISC). الأصوات المسجّلة: Kenney وBen Burnes / Abstraction (CC0). باقي الأصوات مصنّعة لخطفة. الخطوط: رخصة SIL المفتوحة. React: MIT. المقاطع تشتغل في مشغّل يوتيوب نفسه وما تنحمّل أبداً.']
 };
 let LANG = 'en';
 const setLang = l => {
@@ -1085,6 +1125,55 @@ function buildBoard(g, ctx) {
     pool: g.pool
   };
 }
+const freshPlay = () => ({
+  state: 'idle',
+  seq: 0,
+  vol: 0.9
+});
+const REVEAL_STEPS = 3;
+function mediaCmd(g, cmd, v) {
+  const cur = g.current;
+  if (!cur) return g;
+  const p = {
+    ...freshPlay(),
+    ...(cur.play || {})
+  };
+  if (cmd === 'play') p.state = 'playing';else if (cmd === 'pause') p.state = 'paused';else if (cmd === 'replay') {
+    p.state = 'playing';
+    p.seq = (p.seq || 0) + 1;
+  } else if (cmd === 'stop') p.state = 'idle';else if (cmd === 'vol') p.vol = clamp(+v || 0, 0, 1);else return g;
+  return {
+    ...g,
+    current: {
+      ...cur,
+      play: p
+    }
+  };
+}
+function revealMore(g) {
+  const cur = g.current;
+  if (!cur) return g;
+  return {
+    ...g,
+    current: {
+      ...cur,
+      reveal: Math.min(REVEAL_STEPS, (cur.reveal || 0) + 1)
+    }
+  };
+}
+function quietMedia(g) {
+  if (!g || !g.current || !g.current.play || g.current.play.state !== 'playing') return g;
+  return {
+    ...g,
+    current: {
+      ...g.current,
+      play: {
+        ...g.current.play,
+        state: 'paused'
+      }
+    }
+  };
+}
 function isLocked(g, c) {
   if (!g.rules.progressive || c.status !== 'open') return false;
   return g.cells.some(x => x.cat === c.cat && x.status === 'open' && x.tier < c.tier);
@@ -1103,7 +1192,9 @@ function openCell(g, cellId, now = Date.now()) {
       opener: turnTeam(g).id,
       endsAt: now + ms(g.rules.answerTime * 1000),
       pausedLeft: null,
-      result: null
+      result: null,
+      play: freshPlay(),
+      reveal: 0
     }
   };
 }
@@ -1618,7 +1709,9 @@ function invalidateQuestion(g, cellId, opts) {
         opener,
         endsAt: now + ms(n.rules.answerTime * 1000),
         pausedLeft: null,
-        result: null
+        result: null,
+        play: freshPlay(),
+        reveal: 0
       }
     };else n = {
       ...n,
@@ -2792,12 +2885,24 @@ function QuestionCard({
   cell,
   big,
   showAnswer,
-  host
+  host,
+  cur,
+  output,
+  onStatus,
+  status
 }) {
   const q = cell.q;
   return React.createElement("div", {
-    className: 'qcard' + (big ? ' big' : '')
-  }, React.createElement(Txt, {
+    className: 'qcard' + (big ? ' big' : '') + (q.media ? ' hasmedia m-' + q.media.type : '')
+  }, q.media && React.createElement(MediaView, {
+    q: q,
+    cur: cur,
+    big: big,
+    output: output,
+    onStatus: onStatus,
+    status: status,
+    full: showAnswer && !host
+  }), React.createElement(Txt, {
     v: q.q,
     as: "p",
     className: "qtext"
@@ -2839,7 +2944,9 @@ function QHead({
     className: "qh-cat"
   }, cat.emoji, " ", React.createElement(Txt, {
     v: cat.name
-  })), React.createElement("span", {
+  }), cell.q && cell.q.media && React.createElement("span", {
+    className: "qh-type"
+  }, MEDIA_ICON[cell.q.media.type], " ", t('type_' + cell.q.media.type))), React.createElement("span", {
     className: "qh-val num"
   }, t('points', {
     n: cell.value
@@ -2897,7 +3004,8 @@ function QuestionScreen({
   flash,
   onMenu,
   onTv,
-  onWrong
+  onWrong,
+  media
 }) {
   const cur = g.current;
   const cell = curCell(g);
@@ -2961,8 +3069,20 @@ function QuestionScreen({
   }), React.createElement(QuestionCard, {
     cell: cell,
     showAnswer: reveal || peek,
-    host: true
-  }), cell.q.check && React.createElement("p", {
+    host: true,
+    cur: cur,
+    output: media ? media.output : true,
+    onStatus: media && media.onStatus,
+    status: media && media.status
+  }), cell.q.media && React.createElement(MediaControls, {
+    g: g,
+    act: act,
+    status: media && media.status,
+    where: media && media.where,
+    swap: media && media.swap,
+    answer: cell.q.a,
+    onWrong: onWrong ? () => onWrong(cell.id) : null
+  }), !!cell.q.check && React.createElement("p", {
     className: "checkbadge"
   }, t('needsCheck')), reveal && React.createElement(ResultBanner, {
     g: g
@@ -3915,7 +4035,10 @@ function TvExit({
 function TvView({
   g,
   flash,
-  onFlashDone
+  onFlashDone,
+  onStatus,
+  status,
+  preview
 }) {
   let body;
   if (!g) body = React.createElement("div", {
@@ -3984,7 +4107,11 @@ function TvView({
     }), React.createElement(QuestionCard, {
       cell: cell,
       big: true,
-      showAnswer: reveal
+      showAnswer: reveal,
+      cur: g.current,
+      output: true,
+      onStatus: onStatus,
+      status: status
     }), reveal && React.createElement(ResultBanner, {
       g: g
     })));
@@ -4003,6 +4130,20 @@ function TvView({
       g: g
     }));
   }
+  if (preview) body = React.createElement("div", {
+    className: "tv-q"
+  }, React.createElement("span", {
+    className: "eyebrow"
+  }, t('previewOnTv')), React.createElement(QuestionCard, {
+    cell: {
+      q: preview.q
+    },
+    big: true,
+    cur: preview.cur,
+    output: true,
+    onStatus: onStatus,
+    status: status
+  }));
   return React.createElement("div", {
     className: "tvmode"
   }, React.createElement("div", {
@@ -4013,38 +4154,77 @@ function TvView({
     onDone: onFlashDone
   }));
 }
+const TV_ID = uid();
+const soundAllowed = () => {
+  try {
+    return !navigator.userActivation || navigator.userActivation.hasBeenActive;
+  } catch (e) {
+    return true;
+  }
+};
 function LocalTv() {
   const [g, setG] = useState(null);
   const [flash, setFlash] = useState(null);
   const [, setL] = useState(0);
+  const [preview, setPreview] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [unlocked, setUnlocked] = useState(soundAllowed());
+  const chRef = useRef(null);
   useEffect(() => {
     if (!canChannel()) return undefined;
     const ch = new BroadcastChannel(TV_CHANNEL);
+    chRef.current = ch;
     ch.onmessage = e => {
       const m = e.data || {};
-      if (m.type === 'game') setG(m.game);else if (m.type === 'flash') setFlash(m.info);else if (m.type === 'lang') {
+      if (m.type === 'game') setG(m.game);else if (m.type === 'flash') setFlash(m.info);else if (m.type === 'preview') setPreview(m.preview || null);else if (m.type === 'host-hello') ch.postMessage({
+        type: 'hello',
+        tv: TV_ID,
+        sound: soundAllowed()
+      });else if (m.type === 'lang') {
         setLang(m.lang);
         applyDocLang(m.lang);
         setL(x => x + 1);
       }
     };
     ch.postMessage({
-      type: 'hello'
+      type: 'hello',
+      tv: TV_ID
     });
+    const ping = setInterval(() => {
+      try {
+        ch.postMessage({
+          type: 'ping',
+          tv: TV_ID,
+          sound: soundAllowed()
+        });
+      } catch (e) {}
+    }, 2500);
     const bye = () => {
       try {
         ch.postMessage({
-          type: 'bye'
+          type: 'bye',
+          tv: TV_ID
         });
       } catch (e) {}
     };
     window.addEventListener('beforeunload', bye);
     return () => {
+      clearInterval(ping);
       bye();
       window.removeEventListener('beforeunload', bye);
       ch.close();
     };
   }, []);
+  const onStatus = s => {
+    setStatus(s);
+    try {
+      chRef.current && chRef.current.postMessage({
+        type: 'media-status',
+        tv: TV_ID,
+        status: s
+      });
+    } catch (e) {}
+  };
   if (!canChannel()) return React.createElement("div", {
     className: "app"
   }, React.createElement("div", {
@@ -4055,28 +4235,57 @@ function LocalTv() {
       margin: 0
     }
   }, t('tvNoChannel'))));
+  const needsClick = !unlocked || status && status.s === 'blocked';
   return React.createElement(React.Fragment, null, React.createElement(TvView, {
     g: g,
     flash: flash,
-    onFlashDone: () => setFlash(null)
-  }), React.createElement(TvExit, null));
+    onFlashDone: () => setFlash(null),
+    onStatus: onStatus,
+    status: status,
+    preview: preview
+  }), needsClick && React.createElement("button", {
+    className: "soundunlock",
+    onClick: () => {
+      setUnlocked(true);
+      if (status && status.s === 'blocked') setStatus(null);
+      try {
+        chRef.current.postMessage({
+          type: 'ping',
+          tv: TV_ID,
+          sound: true
+        });
+        chRef.current.postMessage({
+          type: 'media-status',
+          tv: TV_ID,
+          status: {
+            s: 'ready'
+          }
+        });
+      } catch (e) {}
+    }
+  }, "\uD83D\uDD0A ", t('tvAllowSound')), React.createElement(TvExit, null));
 }
-function useTvSender(game, settings) {
+function useTvSender(game, settings, preview) {
   const ch = useRef(null);
   const latest = useRef({
     game,
-    settings
+    settings,
+    preview
   });
   latest.current = {
     game,
-    settings
+    settings,
+    preview
   };
+  const [tvs, setTvs] = useState({});
+  const [status, setStatus] = useState(null);
   useEffect(() => {
     if (!canChannel()) return undefined;
     const c = new BroadcastChannel(TV_CHANNEL);
     ch.current = c;
     c.onmessage = e => {
-      if ((e.data || {}).type === 'hello') {
+      const m = e.data || {};
+      if (m.type === 'hello') {
         c.postMessage({
           type: 'lang',
           lang: latest.current.settings.lang
@@ -4085,9 +4294,41 @@ function useTvSender(game, settings) {
           type: 'game',
           game: tvGame(latest.current.game)
         });
+        if (latest.current.preview) c.postMessage({
+          type: 'preview',
+          preview: latest.current.preview
+        });
       }
+      if ((m.type === 'hello' || m.type === 'ping') && m.tv) setTvs(x => ({
+        ...x,
+        [m.tv]: {
+          seen: Date.now(),
+          sound: m.sound !== false
+        }
+      }));
+      if (m.type === 'bye' && m.tv) setTvs(x => {
+        const n = {
+          ...x
+        };
+        delete n[m.tv];
+        return n;
+      });
+      if (m.type === 'media-status') setStatus(m.status || null);
     };
+    c.postMessage({
+      type: 'host-hello'
+    });
+    const sweep = setInterval(() => setTvs(x => {
+      const now = Date.now();
+      const n = {};
+      let ch2 = false;
+      Object.keys(x).forEach(k => {
+        if (now - x[k].seen < 8000) n[k] = x[k];else ch2 = true;
+      });
+      return ch2 ? n : x;
+    }), 3000);
     return () => {
+      clearInterval(sweep);
       c.close();
       ch.current = null;
     };
@@ -4104,12 +4345,660 @@ function useTvSender(game, settings) {
       lang: settings.lang
     });
   }, [settings.lang]);
-  return info => {
+  useEffect(() => {
     if (ch.current) ch.current.postMessage({
-      type: 'flash',
-      info
+      type: 'preview',
+      preview: preview || null
     });
+  }, [preview]);
+  const list = Object.values(tvs);
+  return {
+    send: info => {
+      if (ch.current) ch.current.postMessage({
+        type: 'flash',
+        info
+      });
+    },
+    tv: {
+      open: list.length > 0,
+      sound: list.some(x => x.sound)
+    },
+    status,
+    setStatus
   };
+}
+const mediaStore = (() => {
+  let dbp = null;
+  const mem = new Map();
+  const open = () => {
+    if (dbp) return dbp;
+    dbp = new Promise(resolve => {
+      try {
+        if (!('indexedDB' in window)) return resolve(null);
+        const req = indexedDB.open('khatfa-media', 1);
+        req.onupgradeneeded = () => {
+          if (!req.result.objectStoreNames.contains('files')) req.result.createObjectStore('files');
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+        req.onblocked = () => resolve(null);
+        setTimeout(() => resolve(null), 5000);
+      } catch (e) {
+        resolve(null);
+      }
+    });
+    return dbp;
+  };
+  const tx = (mode, fn) => open().then(db => new Promise((resolve, reject) => {
+    if (!db) return resolve(undefined);
+    const t = db.transaction('files', mode);
+    const st = t.objectStore('files');
+    const r = fn(st);
+    t.oncomplete = () => resolve(r && r.result);
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error || new Error('aborted'));
+  }));
+  return {
+    async put(rec) {
+      const id = 'm' + uid();
+      try {
+        const db = await open();
+        if (db) {
+          await tx('readwrite', st => st.put(rec, id));
+          return id;
+        }
+      } catch (e) {
+        if (e && /quota/i.test(e.name + e.message)) throw new Error('quota');
+        throw e;
+      }
+      mem.set(id, rec);
+      return id;
+    },
+    async get(id) {
+      if (mem.has(id)) return mem.get(id);
+      try {
+        return await tx('readonly', st => st.get(id));
+      } catch (e) {
+        return undefined;
+      }
+    },
+    async del(id) {
+      mem.delete(id);
+      try {
+        await tx('readwrite', st => st.delete(id));
+      } catch (e) {}
+    },
+    async keys() {
+      try {
+        return (await tx('readonly', st => st.getAllKeys())) || [...mem.keys()];
+      } catch (e) {
+        return [...mem.keys()];
+      }
+    },
+    get persistent() {
+      return open().then(db => !!db);
+    }
+  };
+})();
+const isLocalMedia = src => typeof src === 'string' && src.startsWith('idb:');
+function useMediaUrl(src) {
+  const [state, setState] = useState({
+    url: isLocalMedia(src) ? null : src || null,
+    missing: false
+  });
+  useEffect(() => {
+    if (!isLocalMedia(src)) {
+      setState({
+        url: src || null,
+        missing: !src
+      });
+      return undefined;
+    }
+    let url = null;
+    let live = true;
+    mediaStore.get(src.slice(4)).then(rec => {
+      if (!live) return;
+      if (rec && rec.blob) {
+        url = URL.createObjectURL(rec.blob);
+        setState({
+          url,
+          missing: false
+        });
+      } else setState({
+        url: null,
+        missing: true
+      });
+    });
+    return () => {
+      live = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [src]);
+  return state;
+}
+const mText = v => !v ? null : Array.isArray(v) ? {
+  en: v[0] || '',
+  ar: v[1] || v[0] || ''
+} : typeof v === 'string' ? {
+  en: v,
+  ar: v
+} : v;
+const MEDIA_ICON = {
+  image: '🖼️',
+  audio: '🔊',
+  video: '🎬'
+};
+function parseYouTube(input) {
+  const s = String(input || '').trim();
+  if (/^[\w-]{11}$/.test(s)) return {
+    id: s
+  };
+  let u;
+  try {
+    u = new URL(s);
+  } catch (e) {
+    return null;
+  }
+  const host = u.hostname.replace(/^www\.|^m\./, '');
+  let id = null;
+  let t = null;
+  if (host === 'youtu.be') id = u.pathname.slice(1, 12);else if (/(^|\.)youtube(-nocookie)?\.com$/.test(host)) {
+    if (u.pathname === '/watch') id = u.searchParams.get('v');else {
+      const m = u.pathname.match(/^\/(embed|shorts|live|v)\/([\w-]{11})/);
+      if (m) id = m[2];
+    }
+  }
+  const tt = u.searchParams.get('t') || u.searchParams.get('start');
+  if (tt) {
+    const m = String(tt).match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
+    if (m) t = (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0);
+  }
+  return id && /^[\w-]{11}$/.test(id) ? {
+    id,
+    t
+  } : null;
+}
+function parseTime(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return v >= 0 ? v : null;
+  const s = String(v).trim();
+  if (!/^\d+(:\d{1,2}){0,2}(\.\d+)?$/.test(s)) return null;
+  return s.split(':').reduce((a, p) => a * 60 + parseFloat(p), 0);
+}
+const fmtTime = sec => {
+  if (sec == null) return '';
+  const s = Math.round(sec);
+  const m = Math.floor(s / 60);
+  return m + ':' + String(s % 60).padStart(2, '0');
+};
+function titleSpoils(title, answer) {
+  if (!title || !answer) return false;
+  const norm = x => normSearch(x).replace(/[^\p{L}\p{N}\s]/gu, ' ');
+  const T = ' ' + norm(title) + ' ';
+  const words = [answer.en, answer.ar].filter(Boolean).flatMap(a => norm(a).split(/\s+/)).filter(w => w.length >= 4 && !['the', 'and', 'with'].includes(w));
+  return words.some(w => T.includes(' ' + w + ' ') || T.includes(w));
+}
+let ytApi = null;
+function loadYouTubeApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+  if (ytApi) return ytApi;
+  ytApi = new Promise((resolve, reject) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (prev) try {
+        prev();
+      } catch (e) {}
+      resolve(window.YT);
+    };
+    const s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.async = true;
+    s.onerror = () => {
+      ytApi = null;
+      reject(new Error('offline'));
+    };
+    document.head.appendChild(s);
+    setTimeout(() => {
+      if (!(window.YT && window.YT.Player)) {
+        ytApi = null;
+        reject(new Error('timeout'));
+      }
+    }, 15000);
+  });
+  return ytApi;
+}
+const YT_ERRORS = {
+  2: 'ytBadId',
+  5: 'ytPlayer',
+  100: 'ytGone',
+  101: 'ytNoEmbed',
+  150: 'ytNoEmbed',
+  153: 'ytNoEmbed'
+};
+function AudioPlayer({
+  media,
+  play,
+  output,
+  onStatus
+}) {
+  const ref = useRef(null);
+  const {
+    url,
+    missing
+  } = useMediaUrl(media.src);
+  const st = s => onStatus && onStatus(s);
+  useEffect(() => {
+    if (missing) st({
+      s: 'error',
+      msg: 'mediaMissing'
+    });
+  }, [missing]);
+  useEffect(() => {
+    const a = ref.current;
+    if (a) a.volume = play ? play.vol : 0.9;
+  }, [play && play.vol, url]);
+  const lastSeq = useRef(play ? play.seq : 0);
+  useEffect(() => {
+    const a = ref.current;
+    if (!a || !output || !play) return;
+    if (play.seq !== lastSeq.current) {
+      lastSeq.current = play.seq;
+      try {
+        a.currentTime = 0;
+      } catch (e) {}
+    }
+    if (play.state === 'playing') {
+      const p = a.play();
+      if (p && p.catch) p.catch(e => st(e && e.name === 'NotAllowedError' ? {
+        s: 'blocked'
+      } : {
+        s: 'error',
+        msg: 'mediaFailed'
+      }));
+    } else if (play.state === 'paused' || play.state === 'idle') {
+      a.pause();
+      if (play.state === 'idle') try {
+        a.currentTime = 0;
+      } catch (e) {}
+    }
+  }, [play && play.state, play && play.seq, output, url]);
+  if (!output) return null;
+  return url ? React.createElement("audio", {
+    ref: ref,
+    src: url,
+    preload: "auto",
+    onPlaying: () => st({
+      s: 'playing'
+    }),
+    onPause: () => st({
+      s: 'paused'
+    }),
+    onEnded: () => st({
+      s: 'ended'
+    }),
+    onCanPlay: () => st({
+      s: 'ready'
+    }),
+    onError: () => st({
+      s: 'error',
+      msg: 'mediaFailed'
+    })
+  }) : null;
+}
+function SoundBadge({
+  play,
+  status,
+  big
+}) {
+  const playing = status && status.s === 'playing';
+  return React.createElement("div", {
+    className: 'soundbadge' + (playing ? ' on' : '') + (big ? ' big' : ''),
+    "aria-hidden": "true"
+  }, React.createElement("span", {
+    className: "sb-ic"
+  }, "\uD83D\uDD0A"), React.createElement("span", {
+    className: "eq"
+  }, [0, 1, 2, 3, 4].map(i => React.createElement("i", {
+    key: i,
+    style: {
+      animationDelay: i * 0.12 + 's'
+    }
+  }))));
+}
+function VideoPlayer({
+  media,
+  play,
+  output,
+  onStatus,
+  big
+}) {
+  const box = useRef(null);
+  const player = useRef(null);
+  const ready = useRef(false);
+  const timer = useRef(null);
+  const [rdy, setRdy] = useState(0);
+  const title = useRef('');
+  const st = s => onStatus && onStatus({
+    ...s,
+    title: s.title || title.current
+  });
+  const start = media.start || 0;
+  const end = media.end || null;
+  useEffect(() => {
+    if (!output) return undefined;
+    let dead = false;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      st({
+        s: 'error',
+        msg: 'ytOffline'
+      });
+      return undefined;
+    }
+    st({
+      s: 'loading'
+    });
+    loadYouTubeApi().then(YT => {
+      if (dead || !box.current) return;
+      const el = document.createElement('div');
+      box.current.innerHTML = '';
+      box.current.appendChild(el);
+      player.current = new YT.Player(el, {
+        host: 'https://www.youtube-nocookie.com',
+        videoId: media.yt,
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          start: Math.floor(start),
+          ...(end ? {
+            end: Math.ceil(end)
+          } : {}),
+          controls: 1,
+          rel: 0,
+          playsinline: 1,
+          modestbranding: 1,
+          origin: location.origin
+        },
+        events: {
+          onReady: () => {
+            ready.current = true;
+            setRdy(x => x + 1);
+            try {
+              title.current = (player.current.getVideoData() || {}).title || '';
+            } catch (e) {}
+            st({
+              s: 'ready'
+            });
+            try {
+              player.current.setVolume(Math.round((play ? play.vol : 0.9) * 100));
+            } catch (e) {}
+          },
+          onStateChange: e => {
+            if (e.data === 1) st({
+              s: 'playing'
+            });else if (e.data === 2) st({
+              s: 'paused'
+            });else if (e.data === 0) st({
+              s: 'ended'
+            });
+          },
+          onError: e => st({
+            s: 'error',
+            msg: YT_ERRORS[e.data] || 'ytPlayer',
+            code: e.data
+          })
+        }
+      });
+    }).catch(() => st({
+      s: 'error',
+      msg: 'ytOffline'
+    }));
+    return () => {
+      dead = true;
+      clearInterval(timer.current);
+      try {
+        player.current && player.current.destroy();
+      } catch (e) {}
+      player.current = null;
+      ready.current = false;
+    };
+  }, [media.yt, start, end, output]);
+  const lastSeq = useRef(play ? play.seq : 0);
+  useEffect(() => {
+    const p = player.current;
+    if (!output || !play || !p || !ready.current) return;
+    try {
+      if (play.seq !== lastSeq.current) {
+        lastSeq.current = play.seq;
+        p.seekTo(start, true);
+      }
+      if (play.state === 'playing') {
+        if (p.getCurrentTime && end && p.getCurrentTime() >= end - 0.25) p.seekTo(start, true);
+        p.playVideo();
+      } else if (play.state === 'paused') p.pauseVideo();else if (play.state === 'idle' && p.getPlayerState && p.getPlayerState() === 1) {
+        p.pauseVideo();
+        p.seekTo(start, true);
+      }
+    } catch (e) {}
+  }, [play && play.state, play && play.seq, output, rdy]);
+  useEffect(() => {
+    try {
+      if (player.current && ready.current) player.current.setVolume(Math.round(play.vol * 100));
+    } catch (e) {}
+  }, [play && play.vol]);
+  useEffect(() => {
+    clearInterval(timer.current);
+    if (!output || !end) return undefined;
+    timer.current = setInterval(() => {
+      const p = player.current;
+      if (!p || !ready.current || !p.getCurrentTime) return;
+      try {
+        if (p.getPlayerState && p.getPlayerState() === 1 && p.getCurrentTime() >= end) {
+          p.pauseVideo();
+          st({
+            s: 'ended'
+          });
+        }
+      } catch (e) {}
+    }, 250);
+    return () => clearInterval(timer.current);
+  }, [output, end, media.yt]);
+  if (!output) return React.createElement("div", {
+    className: 'qvideo off' + (big ? ' big' : '')
+  }, React.createElement("span", null, "\uD83C\uDFAC"));
+  return React.createElement("div", {
+    className: 'qvideo' + (big ? ' big' : '')
+  }, React.createElement("div", {
+    ref: box,
+    className: "yt"
+  }));
+}
+function ImageView({
+  media,
+  reveal,
+  full,
+  big,
+  onStatus
+}) {
+  const {
+    url,
+    missing
+  } = useMediaUrl(media.src);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    setFailed(false);
+  }, [url]);
+  const alt = mText(media.alt);
+  const altText = alt ? pick(alt) : t('pictureAlt');
+  if (media.emoji) return React.createElement("div", {
+    className: 'qemoji' + (big ? ' big' : ''),
+    role: "img",
+    "aria-label": altText
+  }, media.emoji);
+  if (missing || failed) return React.createElement("div", {
+    className: 'qimg broken' + (big ? ' big' : ''),
+    role: "img",
+    "aria-label": altText
+  }, React.createElement("span", null, "\uD83D\uDDBC\uFE0F"), React.createElement("b", null, t('mediaFailedShort')), alt && React.createElement("small", {
+    dir: "auto"
+  }, altText));
+  const steps = [3.2, 2.2, 1.5, 1];
+  const level = full || !media.reveal ? 3 : clamp(reveal || 0, 0, 3);
+  const f = media.focus || [0.5, 0.5];
+  const style = media.reveal === 'zoom' ? {
+    transform: 'scale(' + steps[level] + ')',
+    transformOrigin: f[0] * 100 + '% ' + f[1] * 100 + '%'
+  } : media.reveal === 'blur' ? {
+    filter: 'blur(' + [18, 10, 4, 0][level] + 'px)'
+  } : undefined;
+  return React.createElement("div", {
+    className: 'qimg' + (big ? ' big' : '') + (media.reveal ? ' rv' : '') + (media.frame === 'light' ? ' light' : '')
+  }, url && React.createElement("img", {
+    src: url,
+    alt: altText,
+    style: style,
+    draggable: false,
+    onError: () => {
+      setFailed(true);
+      onStatus && onStatus({
+        s: 'error',
+        msg: 'mediaFailed'
+      });
+    }
+  }));
+}
+function MediaView({
+  q,
+  cur,
+  big,
+  output,
+  onStatus,
+  status,
+  full
+}) {
+  const m = q && q.media;
+  if (!m) return null;
+  const play = cur && cur.play || freshPlay();
+  if (m.type === 'image') return React.createElement(ImageView, {
+    media: m,
+    reveal: cur ? cur.reveal : 3,
+    full: full,
+    big: big,
+    onStatus: onStatus
+  });
+  if (m.type === 'audio') return React.createElement(React.Fragment, null, React.createElement(SoundBadge, {
+    play: play,
+    status: status,
+    big: big
+  }), React.createElement(AudioPlayer, {
+    media: m,
+    play: play,
+    output: output,
+    onStatus: onStatus
+  }));
+  if (m.type === 'video') return React.createElement(VideoPlayer, {
+    media: m,
+    play: play,
+    output: output,
+    onStatus: onStatus,
+    big: big
+  });
+  return null;
+}
+const STATUS_TXT = {
+  loading: 'mLoading',
+  ready: 'mReady',
+  playing: 'mPlaying',
+  paused: 'mPaused',
+  ended: 'mEnded',
+  blocked: 'mBlocked',
+  error: 'mError'
+};
+function MediaControls({
+  g,
+  act,
+  status,
+  where,
+  onWrong,
+  answer,
+  swap
+}) {
+  const cur = g.current;
+  const cell = curCell(g);
+  const m = cell && cell.q && cell.q.media;
+  if (!m || m.type !== 'audio' && m.type !== 'video' && !(m.type === 'image' && m.reveal)) return null;
+  if (m.type === 'image') {
+    const r = cur.reveal || 0;
+    const done = r >= REVEAL_STEPS || cur.stage === 'reveal';
+    return React.createElement("div", {
+      className: "mctl"
+    }, React.createElement("button", {
+      className: "btn btn-sm",
+      disabled: done,
+      onClick: () => act(revealMore)
+    }, "\uD83D\uDD0D ", t('revealMore'), " ", React.createElement("span", {
+      className: "num muted"
+    }, "(", Math.min(r, REVEAL_STEPS), "/", REVEAL_STEPS, ")")), React.createElement("p", {
+      className: "hint",
+      style: {
+        margin: 0
+      }
+    }, t('revealMoreSub')));
+  }
+  const play = cur.play || freshPlay();
+  const s = status || {};
+  const playing = play.state === 'playing' && s.s !== 'ended' && s.s !== 'error';
+  return React.createElement("div", {
+    className: "mctl"
+  }, React.createElement("div", {
+    className: "row mbtns"
+  }, playing ? React.createElement("button", {
+    className: "btn btn-sm grow",
+    onClick: () => act(x => mediaCmd(x, 'pause'))
+  }, "\u23F8 ", t('mPause')) : React.createElement("button", {
+    className: "btn btn-sm btn-gold grow",
+    onClick: () => act(x => mediaCmd(x, s.s === 'ended' ? 'replay' : 'play'))
+  }, "\u25B6 ", play.state === 'idle' ? t('mPlay') : s.s === 'ended' ? t('mReplay') : t('mResume')), React.createElement("button", {
+    className: "btn btn-sm",
+    onClick: () => act(x => mediaCmd(x, 'replay')),
+    "aria-label": t('mReplay')
+  }, "\u21BA ", t('mReplay'))), React.createElement("label", {
+    className: "vol"
+  }, React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\uD83D\uDD08"), React.createElement("input", {
+    type: "range",
+    min: "0",
+    max: "1",
+    step: "0.05",
+    value: play.vol,
+    "aria-label": t('mVolume'),
+    onChange: e => act(x => mediaCmd(x, 'vol', +e.target.value))
+  }), React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\uD83D\uDD0A")), React.createElement("p", {
+    className: 'mstatus' + (s.s === 'error' || s.s === 'blocked' ? ' bad' : ''),
+    role: "status"
+  }, where && React.createElement("span", {
+    className: "muted"
+  }, where, " \xB7 "), play.state === 'idle' && (!s.s || s.s === 'ready' || s.s === 'loading') ? (s.s === 'loading' ? t('mLoading') + ' ' : '') + t('mIdle') : s.s ? t(STATUS_TXT[s.s] || 'mReady') : '', s.msg ? ' ' + t(s.msg) : ''), m.type === 'video' && React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, "\uD83C\uDF10 ", t('clipOnline'), " ", m.end ? t('clipRange', {
+    a: fmtTime(m.start || 0),
+    b: fmtTime(m.end)
+  }) : '', " ", t('clipEndNote')), m.type === 'video' && s.title && titleSpoils(s.title, answer) && React.createElement("p", {
+    className: "warn"
+  }, "\u26A0 ", t('titleSpoils', {
+    title: s.title
+  })), swap && React.createElement("button", {
+    className: "btn btn-sm btn-ghost",
+    onClick: swap.fn
+  }, swap.label), s.s === 'error' && onWrong && React.createElement("button", {
+    className: "btn btn-sm btn-flag",
+    onClick: onWrong
+  }, "\u26A0 ", t('mediaBrokenReplace')));
 }
 function SettingsScreen({
   settings,
@@ -4325,7 +5214,13 @@ function SettingsScreen({
     onClick: () => setAsk({
       kind: 'clear'
     })
-  }, t('clearAll'))), React.createElement("p", {
+  }, t('clearAll'))), React.createElement("details", {
+    className: "card"
+  }, React.createElement("summary", {
+    className: "label"
+  }, t('credits')), React.createElement("p", {
+    className: "hint"
+  }, t('creditsBody'))), React.createElement("p", {
     className: "exportfoot"
   }, t('version', {
     v: APP_VERSION
@@ -4433,7 +5328,7 @@ function App() {
       setLang(s.lang);
       setSettingsRaw(s);
       const cur = store.get(K.current, null);
-      if (cur && Array.isArray(cur.teams)) setGameRaw(cur);
+      if (cur && Array.isArray(cur.teams)) setGameRaw(quietMedia(cur));
       setPast(store.get(K.past, []));
       const h = store.get(K.history, null);
       if (h && h.seen) {
@@ -4502,7 +5397,17 @@ function App() {
     }
     return g;
   };
-  const sendTv = useTvSender(game, settings);
+  const [preview, setPreview] = useState(null);
+  const tvLink = useTvSender(game, settings, preview);
+  const sendTv = tvLink.send;
+  const [playHere, setPlayHere] = useState(false);
+  const [localStatus, setLocalStatus] = useState(null);
+  const curKey = game && game.current ? game.current.cell + '|' + ((cellById(game, game.current.cell) || {}).q || {}).id : '';
+  useEffect(() => {
+    setLocalStatus(null);
+    tvLink.setStatus(null);
+  }, [curKey]);
+  const outputHere = !tvLink.tv.open || playHere;
   const doFlash = info => {
     setFlash(info);
     sendTv(info);
@@ -4613,11 +5518,26 @@ function App() {
     if (tvHere) view = React.createElement(React.Fragment, null, React.createElement(TvView, {
       g: game,
       flash: flash,
-      onFlashDone: () => setFlash(null)
+      onFlashDone: () => setFlash(null),
+      onStatus: setLocalStatus,
+      status: localStatus
     }), React.createElement(TvExit, {
       onExit: () => setTvHere(false)
     }));else if (game.phase === 'pick') view = React.createElement(CategoryPick, common);else if (game.phase === 'board') view = React.createElement(Board, common);else if (game.phase === 'question') view = React.createElement(QuestionScreen, _extends({}, common, {
-      flash: doFlash
+      flash: doFlash,
+      media: {
+        output: outputHere,
+        onStatus: setLocalStatus,
+        status: outputHere ? localStatus : tvLink.status,
+        where: outputHere ? t('playsHere') : t('playsOnTv'),
+        swap: tvLink.tv.open ? {
+          label: playHere ? t('playOnTvInstead') : t('playHereInstead'),
+          fn: () => {
+            setPlayHere(!playHere);
+            act(x => mediaCmd(x, 'pause'));
+          }
+        } : null
+      }
     }));else view = React.createElement(Results, {
       g: game,
       act: act,
@@ -4723,6 +5643,14 @@ if (window.__KH_TEST__) window.__KH = {
   openCells,
   isBoardDone,
   tvGame,
+  mediaCmd,
+  revealMore,
+  quietMedia,
+  freshPlay,
+  parseYouTube,
+  parseTime,
+  titleSpoils,
+  mediaStore,
   invalidateQuestion,
   invalidRefunds,
   findReplacement,

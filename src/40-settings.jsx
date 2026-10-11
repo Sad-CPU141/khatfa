@@ -76,6 +76,7 @@ function SettingsScreen({ settings, setSettings, state, onRestore, onClearAll, o
         {isIOS() && <p className="hint">{t('installIos')}</p>}
         <button className="btn btn-danger" onClick={() => setAsk({ kind: 'clear' })}>{t('clearAll')}</button>
       </section>
+      <details className="card"><summary className="label">{t('credits')}</summary><p className="hint">{t('creditsBody')}</p></details>
       <p className="exportfoot">{t('version', { v: APP_VERSION })}</p>
       {ask && ask.kind === 'import' && (
         <Confirm title={t('importQ')} body={t('importBody', { past: ask.v.summary.past, cur: ask.v.summary.current ? t('importCur') : '', date: (ask.v.summary.exportedAt || '').slice(0, 10) })} yes={t('importBackup')}

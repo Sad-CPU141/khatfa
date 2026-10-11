@@ -9,13 +9,17 @@ const FONTS = ['anton-latin-400', 'barlow-latin-400', 'barlow-latin-500', 'barlo
 const CORE = ['./', './index.html', './app.js?v=' + VERSION, './bank.js?v=' + VERSION, './styles.css?v=' + VERSION, './manifest.webmanifest',
   './vendor/react.production.min.js', './vendor/react-dom.production.min.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', ...FONTS];
+// Built-in pictures and sounds (file names are content hashes, so a cached copy never goes stale).
+const MEDIA = __MEDIA__;
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).catch(() => {}));
+  // Core first; media is added separately so one missing file can't stop the app installing.
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE).then(() => Promise.all(MEDIA.map((u) => c.add(u).catch(() => {}))))).catch(() => {}));
 });
 self.addEventListener('message', (e) => { if (e.data === 'skipWaiting') self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('khatfa-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  // (old caches go; media is re-added from the new install, mostly from the HTTP cache)
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request;
@@ -26,6 +30,20 @@ self.addEventListener('fetch', (e) => {
   if (isShell) {
     e.respondWith(fetch(req).then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; })
       .catch(() => caches.match(req, { ignoreSearch: req.mode === 'navigate' }).then((r) => r || caches.match('./index.html'))));
+    return;
+  }
+  // Audio: Safari asks for byte ranges; answer them from the cached file (offline too).
+  const range = req.headers.get('range');
+  if (range && url.pathname.includes('/media/')) {
+    e.respondWith(caches.match(req.url, { ignoreSearch: true }).then((hit) => {
+      if (!hit) return fetch(req);
+      return hit.arrayBuffer().then((buf) => {
+        const m = /bytes=(\d*)-(\d*)/.exec(range) || [];
+        const size = buf.byteLength; const start = m[1] ? +m[1] : 0; const end = m[2] ? Math.min(+m[2], size - 1) : size - 1;
+        return new Response(buf.slice(start, end + 1), { status: 206, statusText: 'Partial Content', headers: {
+          'Content-Type': hit.headers.get('Content-Type') || 'audio/mpeg', 'Content-Range': 'bytes ' + start + '-' + end + '/' + size, 'Content-Length': String(end - start + 1), 'Accept-Ranges': 'bytes' } });
+      });
+    }));
     return;
   }
   e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {

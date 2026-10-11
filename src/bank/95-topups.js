@@ -184,7 +184,7 @@ M('modern-history', [
 M('inventions', [
   ['e21', 200, 'Samuel Morse’s famous code was made for sending messages by what?', 'شفرة صموئيل مورس الشهيرة صُممت لإرسال الرسائل عبر ماذا؟', 'The (electric) telegraph', 'التلغراف', { s: 'comms', r: 'Morse code' }],
   ['h21', 400, 'Which American engineer invented modern air conditioning in 1902?', 'أي مهندس أمريكي اخترع التكييف الحديث عام ١٩٠٢؟', 'Willis Carrier', 'ويليس كارير', { s: 'machines', x: 1, r: 'Willis Carrier' }],
-  ['x21', 600, 'Which Hungarian architecture professor invented his famous cube puzzle in 1974?', 'أي أستاذ عمارة مجري اخترع لغز المكعب الشهير عام ١٩٧٤؟', 'Ernő Rubik', 'إرنو روبيك', { s: 'machines', alt: ['Rubik'], r: 'Ernő Rubik' }],
+  ['x21', 600, 'Which Hungarian architecture professor invented his famous cube puzzle in 1974?', 'أي أستاذ عمارة مجري اخترع لغز المكعب الشهير عام ١٩٧٤؟', 'Ernő Rubik', 'إرنو روبيك', { f: 'rubik', s: 'machines', alt: ['Rubik'], r: 'Ernő Rubik' }],
 ]);
 M('rulers', [
   ['e21', 200, 'Which French queen was executed by guillotine in 1793?', 'أي ملكة فرنسية أُعدمت بالمقصلة عام ١٧٩٣؟', 'Marie Antoinette', 'ماري أنطوانيت', { s: 'modern', r: 'Marie Antoinette' }],

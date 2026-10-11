@@ -22,6 +22,12 @@
      c:   1 = time-sensitive; must also have asOf
      asOf:'YYYY-MM' the date the answer was true
      ok:  1 = a person reviewed this question's audit warnings (same answer as an easier one, etc.)
+     m:   media (picture / sound / clip questions), e.g.
+            { type: 'image', src: 'media/i/xxxx.svg', alt: ['English description', 'وصف عربي'], reveal: 'zoom', focus: [0.3, 0.6], credit: '…' }
+            { type: 'image', emoji: '🦁👑' }
+            { type: 'audio', src: 'media/a/xxxx.mp3', credit: '…', license: 'CC0' }
+            { type: 'video', yt: 'VIDEO_ID', start: 30, end: 42 }   (official uploads only; not used in the built-in bank)
+          File names are neutral (hashes) so they never give the answer away.
    Question ids are permanent: never reuse or renumber them.
    ============================================================ */
 (function () {
@@ -36,6 +42,12 @@
     B.cats.push(c);
     addRows(c, rows);
   };
+  // Add a subcategory to a category defined elsewhere.
+  B.sub = function (id, key, en, ar) {
+    var c = B.cats.filter(function (x) { return x.id === id; })[0];
+    if (!c) { B.errors.push('sub(): unknown category "' + id + '"'); return; }
+    c.subs[key] = { en: en, ar: ar };
+  };
   // More questions for a category defined elsewhere (used by the top-up files).
   B.more = function (id, rows) {
     var c = B.cats.filter(function (x) { return x.id === id; })[0];
@@ -47,6 +59,15 @@
     rows.forEach(function (row, i) {
       var o = row[6] || {};
       var tier = VALUES[row[1]];
+      var media = null;
+      if (o.m) {
+        media = {}; Object.keys(o.m).forEach(function (k) { media[k] = o.m[k]; });
+        if (typeof media.src === 'string' && media.src.charAt(0) === '@') {
+          var key = media.src.slice(1);
+          media.src = (B.media || {})[key] || null;
+          if (!media.src) B.errors.push(id + '.' + row[0] + ': unknown media file "' + key + '"');
+        }
+      }
       var q = {
         id: id + '.' + row[0], cat: id, tier: tier || 0, points: row[1], sub: o.s || null,
         q: { en: row[2], ar: row[3] }, a: { en: row[4], ar: row[5] },
@@ -54,10 +75,13 @@
         hint: o.h || o.hAr ? { en: o.h || '', ar: o.hAr || '' } : null,
         note: o.n || o.nAr ? { en: o.n || '', ar: o.nAr || '' } : null,
         ref: o.r || null, verified: o.v || null, x: o.x ? 1 : 0,
-        facts: arr(o.f), tags: arr(o.t), reviewed: o.ok ? 1 : 0, check: o.c ? 1 : 0, asOf: o.asOf || null, type: 'text',
+        facts: arr(o.f), tags: arr(o.t), reviewed: o.ok ? 1 : 0, check: o.c ? 1 : 0, asOf: o.asOf || null, type: media ? media.type : 'text', media: media,
       };
       if (!tier) B.errors.push(q.id + ': points must be 200, 400 or 600 (got ' + row[1] + ')');
       if (q.sub && !subs[q.sub]) B.errors.push(q.id + ': unknown subcategory "' + q.sub + '"');
+      if (o.m && ['image', 'audio', 'video'].indexOf(o.m.type) < 0) B.errors.push(q.id + ': unknown media type');
+      if (o.m && o.m.type === 'image' && !o.m.src && !o.m.emoji) B.errors.push(q.id + ': picture question without a picture');
+      if (o.m && o.m.type === 'audio' && !o.m.src) B.errors.push(q.id + ': sound question without a sound file');
       if (tier) c.count[tier - 1]++;
       B.questions.push(q);
     });

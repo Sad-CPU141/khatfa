@@ -59,7 +59,7 @@ function TvExit({ onExit }) {
 }
 
 // The big-screen view. Read-only: no buttons that change the game.
-function TvView({ g, flash, onFlashDone }) {
+function TvView({ g, flash, onFlashDone, onStatus, status, preview }) {
   let body;
   if (!g) body = <div className="tv-wait"><LogoMark size={120} /><h2 className="display">{t('appName')}</h2><p className="muted">{t('tvWaiting')}</p></div>;
   else if (g.phase === 'pick') {
@@ -83,7 +83,7 @@ function TvView({ g, flash, onFlashDone }) {
         <QHead g={g} cell={cell} />
         <StageBanner g={g} />
         <Clock g={g} big />
-        <QuestionCard cell={cell} big showAnswer={reveal} />
+        <QuestionCard cell={cell} big showAnswer={reveal} cur={g.current} output onStatus={onStatus} status={status} />
         {reveal && <ResultBanner g={g} />}
       </div>
     </>;
@@ -95,6 +95,7 @@ function TvView({ g, flash, onFlashDone }) {
       <Moments g={g} />
     </>;
   }
+  if (preview) body = <div className="tv-q"><span className="eyebrow">{t('previewOnTv')}</span><QuestionCard cell={{ q: preview.q }} big cur={preview.cur} output onStatus={onStatus} status={status} /></div>;
   return (
     <div className="tvmode">
       <div className="tvwrap">{body}</div>
@@ -104,43 +105,69 @@ function TvView({ g, flash, onFlashDone }) {
 }
 
 // The second window: listens to the host window in this browser.
+const TV_ID = uid();
+const soundAllowed = () => { try { return !navigator.userActivation || navigator.userActivation.hasBeenActive; } catch (e) { return true; } };
 function LocalTv() {
   const [g, setG] = useState(null); const [flash, setFlash] = useState(null); const [, setL] = useState(0);
+  const [preview, setPreview] = useState(null); const [status, setStatus] = useState(null);
+  const [unlocked, setUnlocked] = useState(soundAllowed());
+  const chRef = useRef(null);
   useEffect(() => {
     if (!canChannel()) return undefined;
-    const ch = new BroadcastChannel(TV_CHANNEL);
+    const ch = new BroadcastChannel(TV_CHANNEL); chRef.current = ch;
     ch.onmessage = (e) => {
       const m = e.data || {};
       if (m.type === 'game') setG(m.game);
       else if (m.type === 'flash') setFlash(m.info);
+      else if (m.type === 'preview') setPreview(m.preview || null);
+      else if (m.type === 'host-hello') ch.postMessage({ type: 'hello', tv: TV_ID, sound: soundAllowed() });
       else if (m.type === 'lang') { setLang(m.lang); applyDocLang(m.lang); setL((x) => x + 1); }
     };
-    ch.postMessage({ type: 'hello' });
-    const bye = () => { try { ch.postMessage({ type: 'bye' }); } catch (e) {} };
+    ch.postMessage({ type: 'hello', tv: TV_ID });
+    const ping = setInterval(() => { try { ch.postMessage({ type: 'ping', tv: TV_ID, sound: soundAllowed() }); } catch (e) {} }, 2500);
+    const bye = () => { try { ch.postMessage({ type: 'bye', tv: TV_ID }); } catch (e) {} };
     window.addEventListener('beforeunload', bye);
-    return () => { bye(); window.removeEventListener('beforeunload', bye); ch.close(); };
+    return () => { clearInterval(ping); bye(); window.removeEventListener('beforeunload', bye); ch.close(); };
   }, []);
+  const onStatus = (s) => { setStatus(s); try { chRef.current && chRef.current.postMessage({ type: 'media-status', tv: TV_ID, status: s }); } catch (e) {} };
   if (!canChannel()) return <div className="app"><div className="card stack"><p className="hint" style={{ margin: 0 }}>{t('tvNoChannel')}</p></div></div>;
-  return <><TvView g={g} flash={flash} onFlashDone={() => setFlash(null)} /><TvExit /></>;
+  const needsClick = !unlocked || (status && status.s === 'blocked');
+  return <>
+    <TvView g={g} flash={flash} onFlashDone={() => setFlash(null)} onStatus={onStatus} status={status} preview={preview} />
+    {needsClick && <button className="soundunlock" onClick={() => { setUnlocked(true); if (status && status.s === 'blocked') setStatus(null); try { chRef.current.postMessage({ type: 'ping', tv: TV_ID, sound: true }); chRef.current.postMessage({ type: 'media-status', tv: TV_ID, status: { s: 'ready' } }); } catch (e) {} }}>🔊 {t('tvAllowSound')}</button>}
+    <TvExit />
+  </>;
 }
 
-// Host side: keeps any TV windows in sync. Returns a function to send flashes.
-function useTvSender(game, settings) {
+// Host side: keeps any TV windows in sync, and knows whether one is open (so sound
+// and clips play there instead of here). Returns { send(flash), sendPreview, tv: { open, sound }, status }.
+function useTvSender(game, settings, preview) {
   const ch = useRef(null);
-  const latest = useRef({ game, settings });
-  latest.current = { game, settings };
+  const latest = useRef({ game, settings, preview });
+  latest.current = { game, settings, preview };
+  const [tvs, setTvs] = useState({}); // id → { seen, sound }
+  const [status, setStatus] = useState(null);
   useEffect(() => {
     if (!canChannel()) return undefined;
     const c = new BroadcastChannel(TV_CHANNEL); ch.current = c;
     c.onmessage = (e) => {
-      if ((e.data || {}).type === 'hello') {
+      const m = e.data || {};
+      if (m.type === 'hello') {
         c.postMessage({ type: 'lang', lang: latest.current.settings.lang });
         c.postMessage({ type: 'game', game: tvGame(latest.current.game) });
+        if (latest.current.preview) c.postMessage({ type: 'preview', preview: latest.current.preview });
       }
+      if ((m.type === 'hello' || m.type === 'ping') && m.tv) setTvs((x) => ({ ...x, [m.tv]: { seen: Date.now(), sound: m.sound !== false } }));
+      if (m.type === 'bye' && m.tv) setTvs((x) => { const n = { ...x }; delete n[m.tv]; return n; });
+      if (m.type === 'media-status') setStatus(m.status || null);
     };
-    return () => { c.close(); ch.current = null; };
+    c.postMessage({ type: 'host-hello' }); // any TV window already open answers with "hello"
+    const sweep = setInterval(() => setTvs((x) => { const now = Date.now(); const n = {}; let ch2 = false; Object.keys(x).forEach((k) => { if (now - x[k].seen < 8000) n[k] = x[k]; else ch2 = true; }); return ch2 ? n : x; }), 3000);
+    return () => { clearInterval(sweep); c.close(); ch.current = null; };
   }, []);
   useEffect(() => { if (ch.current) ch.current.postMessage({ type: 'game', game: tvGame(game) }); }, [game]);
   useEffect(() => { if (ch.current) ch.current.postMessage({ type: 'lang', lang: settings.lang }); }, [settings.lang]);
-  return (info) => { if (ch.current) ch.current.postMessage({ type: 'flash', info }); };
+  useEffect(() => { if (ch.current) ch.current.postMessage({ type: 'preview', preview: preview || null }); }, [preview]);
+  const list = Object.values(tvs);
+  return { send: (info) => { if (ch.current) ch.current.postMessage({ type: 'flash', info }); }, tv: { open: list.length > 0, sound: list.some((x) => x.sound) }, status, setStatus };
 }

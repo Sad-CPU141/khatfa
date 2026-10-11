@@ -46,15 +46,28 @@ qs.forEach((q) => {
 
 // Exact and near duplicates (across the whole bank), skipping pairs that share a declared fact key on purpose.
 const ex = new Map();
-qs.forEach((q) => { const k = norm(q.q.en); if (ex.has(k)) errors.push('exact duplicate question: ' + ex.get(k) + ' / ' + q.id); else ex.set(k, q.id); });
+// A picture/sound question is identified by its text plus its media (the same "Which flag is this?" with different flags is fine).
+const mediaKey = (q) => (q.media ? ' #' + (q.media.src || q.media.emoji || q.media.yt || '') : '');
+qs.forEach((q) => { const k = norm(q.q.en) + mediaKey(q); if (ex.has(k)) errors.push('exact duplicate question: ' + ex.get(k) + ' / ' + q.id); else ex.set(k, q.id); });
 const T = qs.map((q) => ({ q, t: toks(q.q.en), a: norm(q.a.en) }));
 for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++) {
   const A = T[i], C = T[j];
   if (A.q.facts.some((k) => C.q.facts.includes(k))) continue;
   if (A.q.reviewed || C.q.reviewed) continue; // a person checked this pair
+  if (A.q.media && C.q.media) { if (mediaKey(A.q) === mediaKey(C.q)) warns.push('same media used twice: ' + A.q.id + ' / ' + C.q.id); continue; }
   const s = jacc(A.t, C.t);
   if (s >= 0.72 || (s >= 0.45 && A.a && A.a === C.a)) warns.push('possible near-duplicate (' + s.toFixed(2) + '): ' + A.q.id + ' / ' + C.q.id);
 }
+
+// Media: the file must exist, pictures need a description, sound/clip settings must make sense.
+qs.filter((q) => q.media).forEach((q) => {
+  const m = q.media;
+  if (m.src && !/^(https?:|idb:)/.test(m.src) && !fs.existsSync(path.join(root, m.src))) errors.push(q.id + ': media file missing: ' + m.src);
+  if (m.type === 'image' && !m.alt) warns.push(q.id + ': picture has no description (alt text)');
+  if (m.src && m.src.startsWith('media/') && !/^[0-9a-f]{12}$/.test(path.basename(m.src).replace(/\.[a-z0-9]+$/, ''))) warns.push(q.id + ': media file name is not neutral (could give the answer away): ' + m.src);
+  if (m.type === 'video') { if (!/^[\w-]{11}$/.test(m.yt || '')) errors.push(q.id + ': clip needs a YouTube id'); if (m.end != null && !(m.end > (m.start || 0))) errors.push(q.id + ': clip end must be after start'); }
+  if ((m.type === 'audio' || m.type === 'image') && !m.emoji && !m.credit) warns.push(q.id + ': media has no credit/licence');
+});
 
 // Difficulty sanity checks (heuristics for a person to review).
 B.cats.forEach((c) => {
@@ -90,6 +103,7 @@ const summary = {
   arabShare: { all: arabAll, pctAll: Math.round((arabAll / qs.length) * 1000) / 10, of600: arab600, pct600: Math.round((arab600 / Math.max(1, qs.filter((q) => q.points === 600).length)) * 1000) / 10 },
   byGroup: Object.fromEntries(B.groups.map((g) => [g.id, { categories: B.cats.filter((c) => c.group === g.id).length, questions: qs.filter((q) => (B.cats.find((c) => c.id === q.cat) || {}).group === g.id).length }])),
   smallest: Math.min(...cats.map((c) => c.total)),
+  byType: { text: per((q) => !q.media), image: per((q) => q.media && q.media.type === 'image' && !q.media.emoji), emoji: per((q) => q.media && q.media.emoji), audio: per((q) => q.media && q.media.type === 'audio'), video: per((q) => q.media && q.media.type === 'video') },
 };
 
 if (process.argv.includes('--json')) { console.log(JSON.stringify({ summary, cats, errors, warns })); process.exit(errors.length ? 1 : 0); }
@@ -100,6 +114,7 @@ console.log('Questions: ' + summary.questions + ' (' + summary.unique + ' unique
 console.log('By points: 200 → ' + byTier[0] + ' · 400 → ' + byTier[1] + ' · 600 → ' + byTier[2]);
 console.log('Extra-niche: ' + summary.niche + ' · checked online: ' + summary.webChecked + ' · time-sensitive: ' + summary.timeSensitive + ' · with a source reference: ' + summary.withRef);
 console.log('Smallest category: ' + summary.smallest + ' questions');
+console.log('By type: text ' + summary.byType.text + ' · pictures ' + summary.byType.image + ' · emoji puzzles ' + summary.byType.emoji + ' · sounds ' + summary.byType.audio + ' · clips ' + summary.byType.video);
 console.log('Arab / Middle East / Islam related: ' + arabAll + ' (' + summary.arabShare.pctAll + '% of all) · at 600: ' + arab600 + ' (' + summary.arabShare.pct600 + '% of 600s)');
 console.log('By topic group: ' + B.groups.map((g) => g.id + ' ' + summary.byGroup[g.id].questions + ' (' + summary.byGroup[g.id].categories + ' cats)').join(' · '));
 console.log('');
