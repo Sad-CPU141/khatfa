@@ -188,7 +188,8 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     await setVal(search, 'tennis');
     await click(w, btn(d, 'Shown off'));
     await setVal(search, '');
-    ok([...d.querySelectorAll('.cgroup')].length > 5 && /9\/11/.test(text(d)), 'with a search typed, “Shown off” only switches off the categories shown (F1 and tennis off, 9 of 11 sports on)');
+    const nSports = KH.BANK.cats.filter((c) => c.group === 'sports').length;
+    ok([...d.querySelectorAll('.cgroup')].length > 5 && new RegExp((nSports - 2) + '/' + nSports).test(text(d)), 'with a search typed, “Shown off” only switches off the categories shown (F1 and tennis off, ' + (nSports - 2) + ' of ' + nSports + ' sports on)');
     await setVal(search, 'tennis');
     await click(w, btn(d, 'Shown on'));
     await setVal(search, '');
