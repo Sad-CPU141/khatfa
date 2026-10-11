@@ -67,7 +67,7 @@ function App() {
       if (g && g.current && (!prev || !prev.current || prev.current.cell !== g.current.cell)) {
         const c = cellById(g, g.current.cell); if (c && c.q) setQhist(trimHistory(markSeen(histRef.current, c.q.id, g.gameNo)));
       }
-      if (g && g.phase === 'done' && (!prev || prev.phase !== 'done' || prev.id !== g.id)) {
+      if (g && g.phase === 'done' && (!prev || prev !== g)) {
         setPast((p) => { const list = [pastEntry(g), ...p.filter((x) => x.id !== g.id)].slice(0, 30); store.set(K.past, list); return list; });
       }
       return g;
@@ -120,14 +120,14 @@ function App() {
   else if (screen === 'settings') view = <SettingsScreen settings={settings} setSettings={setSettings} state={{ settings, game, past, packs, history: qhist, issues }} issues={issues} onClearIssues={() => setIssues([])} onRestore={restore} onClearAll={clearAll} bank={BANK} qhist={qhist} onResetHistory={() => setQhist({ n: histRef.current.n, seen: {} })} onBack={() => setScreen('home')} />;
   else if (screen === 'setup') view = <Setup bank={BANK} initial={{ teams: settings.lastTeams, rules: settings.rules }} onBack={() => setScreen('home')} onStart={startNew} />;
   else if (screen === 'game' && game) {
-    const common = { g: game, act, ctx, bank: BANK, onMenu: () => setSheet('menu'), onTv: () => setSheet('tv'), onWrong: (id) => setWrongCell(id) };
+    const common = { g: game, act, ctx, bank: BANK, onMenu: () => setSheet('menu'), onTv: () => setSheet('tv'), onWrong: (id) => setWrongCell(id), onFix: () => setSheet('fix') };
     if (tvHere) view = <><TvView g={game} flash={flash} onFlashDone={() => setFlash(null)} onStatus={setLocalStatus} status={localStatus} /><TvExit onExit={() => setTvHere(false)} /></>;
     else if (game.phase === 'pick') view = <CategoryPick {...common} />;
     else if (game.phase === 'board') view = <Board {...common} />;
     else if (game.phase === 'question') view = <QuestionScreen {...common} flash={doFlash} media={{ output: outputHere, onStatus: setLocalStatus, status: outputHere ? localStatus : tvLink.status,
       where: outputHere ? t('playsHere') : t('playsOnTv'),
       swap: tvLink.tv.open ? { label: playHere ? t('playOnTvInstead') : t('playHereInstead'), fn: () => { setPlayHere(!playHere); act((x) => mediaCmd(x, 'pause')); } } : null }} />;
-    else view = <Results g={game} act={act} onHome={goHome} onAgain={playAgain} onFlagPlayed={() => setPlayedList(true)} />;
+    else view = <Results g={game} act={act} onHome={goHome} onAgain={playAgain} onFlagPlayed={() => setPlayedList(true)} onFix={() => setSheet('fix')} />;
   } else view = <Home game={game} past={past} settings={settings} setSettings={setSettings} onNew={() => setScreen('setup')} onContinue={() => setScreen('game')} onHow={() => setSheet('how')} onSettings={() => setScreen('settings')} onQuestions={() => setScreen('questions')} bank={BANK} />;
 
   return (
@@ -136,6 +136,7 @@ function App() {
         {view}
         {flash && !tvHere && screen === 'game' && <Flash f={flash} g={game} onDone={() => setFlash(null)} />}
         {sheet === 'menu' && game && <GameMenu g={game} act={act} onClose={() => setSheet(null)} onHome={goHome} onFlagPlayed={() => setPlayedList(true)} />}
+        {sheet === 'fix' && game && <FixScores g={game} act={act} onClose={() => setSheet(null)} />}
         {playedList && game && <PlayedList g={game} onClose={() => setPlayedList(false)} onPick={(id) => { setPlayedList(false); setWrongCell(id); }} />}
         {wrongCell && game && <WrongSheet g={game} cellId={wrongCell} ctx={ctx} act={act} onClose={() => setWrongCell(null)} onDone={onWrongDone} />}
         {sheet === 'tv' && <TvSheet onClose={() => setSheet(null)} onHere={() => setTvHere(true)} />}

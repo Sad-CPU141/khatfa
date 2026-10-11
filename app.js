@@ -1,7 +1,7 @@
-/* Khatfa b073f1541a — built from src/ by build.js. Edit src/, not this file. */
+/* Khatfa 20d3ea0175 — built from src/ by build.js. Edit src/, not this file. */
 "use strict";
 (function(){
-const APP_VERSION = "b073f1541a";
+const APP_VERSION = "20d3ea0175";
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const shuffle = arr => {
@@ -475,7 +475,14 @@ const S = {
   undoWhat: ['Undo: {what}', 'تراجع: {what}'],
   nothingToUndo: ['Nothing to undo', 'ما فيه شي للتراجع'],
   fixScores: ['Fix scores', 'تعديل النقاط'],
-  fixScoresSub: ['For mistakes only. Changes are listed in the game log.', 'للأخطاء فقط. التعديل يظهر في سجل اللعبة.'],
+  fixScoresSub: ['Gave the wrong team points? Fix it here: add or take away, or type the right score. Every change is listed in the game log and can be undone.', 'عطيت النقاط للفريق الغلط؟ صلّحها هنا: زيد أو نقّص، أو اكتب النتيجة الصحيحة. كل تعديل يظهر في سجل اللعبة وتقدر تتراجع عنه.'],
+  fixStep: ['Add / take away', 'زيادة / نقص'],
+  setScoreTo: ['Exact score…', 'النتيجة بالضبط…'],
+  setScoreFor: ['Set the score for {team}', 'عدّل نتيجة {team}'],
+  setScore: ['Set', 'اعتمد'],
+  undoLastFix: ['Undo the last fix', 'تراجع عن آخر تعديل'],
+  fixWrongTip: ['Tip: tap any team’s score during the game to open this. If a question itself was wrong, use “This is wrong” on it instead: it reverses exactly that question’s points.', 'تلميح: اضغط على نقاط أي فريق أثناء اللعب عشان يفتح هذا. وإذا السؤال نفسه غلط، استخدم «السؤال غلط» عليه: يرجّع نقاط هالسؤال بالضبط.'],
+  editScoreOf: ['Fix {team}’s score', 'عدّل نقاط {team}'],
   endGame: ['End game now', 'إنهاء اللعبة الآن'],
   endGameQ: ['End the game now?', 'تنهي اللعبة الآن؟'],
   endGameBody: ['Scores so far decide the winner. Unplayed questions are skipped.', 'النقاط الحالية تحدد الفائز. الأسئلة الباقية تنلغي.'],
@@ -2114,13 +2121,23 @@ function ScoreCard({
   team,
   active,
   label,
-  big
+  big,
+  onEdit
 }) {
   const d = useDelta(team.score);
-  return React.createElement("div", {
-    className: 'scard' + (active ? ' active' : '') + (big ? ' big' : ''),
-    style: tStyle(team)
-  }, React.createElement("span", {
+  const El = onEdit ? 'button' : 'div';
+  return React.createElement(El, {
+    className: 'scard' + (active ? ' active' : '') + (big ? ' big' : '') + (onEdit ? ' editable' : ''),
+    style: tStyle(team),
+    onClick: onEdit || undefined,
+    "aria-label": onEdit ? t('editScoreOf', {
+      team: teamName(team)
+    }) : undefined,
+    type: onEdit ? 'button' : undefined
+  }, onEdit && React.createElement("span", {
+    className: "s-edit",
+    "aria-hidden": "true"
+  }, "\u270E"), React.createElement("span", {
     className: "s-em",
     "aria-hidden": "true"
   }, team.emoji), React.createElement("span", {
@@ -2143,7 +2160,8 @@ function ScoreBar({
   g,
   activeId,
   label,
-  big
+  big,
+  onEdit
 }) {
   return React.createElement("div", {
     className: 'scorebar n' + g.teams.length + (big ? ' big' : '')
@@ -2152,7 +2170,8 @@ function ScoreBar({
     team: tm,
     active: tm.id === activeId,
     label: label,
-    big: big
+    big: big,
+    onEdit: onEdit
   })));
 }
 function Flash({
@@ -2906,7 +2925,8 @@ function Board({
   g,
   act,
   onMenu,
-  onTv
+  onTv,
+  onFix
 }) {
   const team = turnTeam(g);
   return React.createElement("div", {
@@ -2925,7 +2945,8 @@ function Board({
   }), React.createElement(ScoreBar, {
     g: g,
     activeId: team.id,
-    label: t('turnShort')
+    label: t('turnShort'),
+    onEdit: onFix
   }), React.createElement("p", {
     className: "turnline",
     style: tStyle(team)
@@ -3113,7 +3134,8 @@ function QuestionScreen({
   onMenu,
   onTv,
   onWrong,
-  media
+  media,
+  onFix
 }) {
   const cur = g.current;
   const cell = curCell(g);
@@ -3166,7 +3188,8 @@ function QuestionScreen({
     dense: true
   }), React.createElement(ScoreBar, {
     g: g,
-    activeId: reveal ? null : cur.team
+    activeId: reveal ? null : cur.team,
+    onEdit: onFix
   }), React.createElement(QHead, {
     g: g,
     cell: cell
@@ -3369,7 +3392,8 @@ function Results({
   act,
   onHome,
   onAgain,
-  onFlagPlayed
+  onFlagPlayed,
+  onFix
 }) {
   const sorted = [...g.teams].sort((a, b) => b.score - a.score);
   const s = gameStats(g);
@@ -3405,7 +3429,10 @@ function Results({
     g: g
   }), React.createElement(GameLog, {
     g: g
-  }), onFlagPlayed && React.createElement("button", {
+  }), onFix && React.createElement("button", {
+    className: "btn btn-sm",
+    onClick: onFix
+  }, "\xB1 ", t('fixScores')), onFlagPlayed && React.createElement("button", {
     className: "btn btn-sm btn-flag",
     onClick: onFlagPlayed
   }, "\u26A0 ", t('flagPlayed')), React.createElement("button", {
@@ -3431,7 +3458,18 @@ function FixScores({
   act,
   onClose
 }) {
-  const step = g.rules.values[0];
+  const [step, setStep] = useState(200);
+  const [exact, setExact] = useState({});
+  const lastIsFix = undoLabel(g) === 'adjust';
+  const setTo = tm => {
+    const v = parseInt(String(exact[tm.id] || '').replace(/[^\d-]/g, ''), 10);
+    if (isNaN(v)) return;
+    act(x => adjustScore(x, tm.id, v - teamById(x, tm.id).score));
+    setExact({
+      ...exact,
+      [tm.id]: ''
+    });
+  };
   return React.createElement(Sheet, {
     onClose: onClose
   }, React.createElement("div", {
@@ -3439,11 +3477,25 @@ function FixScores({
   }, React.createElement("h2", {
     className: "display"
   }, t('fixScores')), React.createElement("p", {
-    className: "hint"
-  }, t('fixScoresSub')), g.teams.map(tm => React.createElement("div", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('fixScoresSub')), React.createElement("div", {
+    className: "field"
+  }, React.createElement("span", {
+    className: "label"
+  }, t('fixStep')), React.createElement(Seg, {
+    value: step,
+    options: [[100, '100'], [200, '200'], [400, '400'], [600, '600']],
+    onChange: setStep,
+    label: t('fixStep')
+  })), g.teams.map(tm => React.createElement("div", {
     key: tm.id,
-    className: "fixrow",
+    className: "fixteam stack-sm",
     style: tStyle(tm)
+  }, React.createElement("div", {
+    className: "fixrow"
   }, React.createElement("span", {
     className: "grow"
   }, tm.emoji, " ", React.createElement(Name, {
@@ -3458,7 +3510,39 @@ function FixScores({
     className: "mini",
     "aria-label": '+' + step + ' ' + teamName(tm),
     onClick: () => act(x => adjustScore(x, tm.id, step))
-  }, "+"))), React.createElement("button", {
+  }, "+")), React.createElement("div", {
+    className: "row fixexact"
+  }, React.createElement("input", {
+    className: "input",
+    type: "number",
+    inputMode: "numeric",
+    step: "100",
+    dir: "ltr",
+    placeholder: t('setScoreTo'),
+    "aria-label": t('setScoreFor', {
+      team: teamName(tm)
+    }),
+    value: exact[tm.id] || '',
+    onChange: e => setExact({
+      ...exact,
+      [tm.id]: e.target.value
+    }),
+    onKeyDown: e => {
+      if (e.key === 'Enter') setTo(tm);
+    }
+  }), React.createElement("button", {
+    className: "btn btn-sm",
+    disabled: exact[tm.id] === undefined || exact[tm.id] === '',
+    onClick: () => setTo(tm)
+  }, t('setScore'))))), lastIsFix && React.createElement("button", {
+    className: "btn btn-ghost",
+    onClick: () => act(undo)
+  }, "\u21B6 ", t('undoLastFix')), React.createElement("p", {
+    className: "hint",
+    style: {
+      margin: 0
+    }
+  }, t('fixWrongTip')), React.createElement("button", {
     className: "btn btn-gold",
     onClick: onClose
   }, t('close'))));
@@ -6874,7 +6958,7 @@ function App() {
         const c = cellById(g, g.current.cell);
         if (c && c.q) setQhist(trimHistory(markSeen(histRef.current, c.q.id, g.gameNo)));
       }
-      if (g && g.phase === 'done' && (!prev || prev.phase !== 'done' || prev.id !== g.id)) {
+      if (g && g.phase === 'done' && (!prev || prev !== g)) {
         setPast(p => {
           const list = [pastEntry(g), ...p.filter(x => x.id !== g.id)].slice(0, 30);
           store.set(K.past, list);
@@ -7029,7 +7113,8 @@ function App() {
       bank: BANK,
       onMenu: () => setSheet('menu'),
       onTv: () => setSheet('tv'),
-      onWrong: id => setWrongCell(id)
+      onWrong: id => setWrongCell(id),
+      onFix: () => setSheet('fix')
     };
     if (tvHere) view = React.createElement(React.Fragment, null, React.createElement(TvView, {
       g: game,
@@ -7059,7 +7144,8 @@ function App() {
       act: act,
       onHome: goHome,
       onAgain: playAgain,
-      onFlagPlayed: () => setPlayedList(true)
+      onFlagPlayed: () => setPlayedList(true),
+      onFix: () => setSheet('fix')
     });
   } else view = React.createElement(Home, {
     game: game,
@@ -7088,6 +7174,10 @@ function App() {
     onClose: () => setSheet(null),
     onHome: goHome,
     onFlagPlayed: () => setPlayedList(true)
+  }), sheet === 'fix' && game && React.createElement(FixScores, {
+    g: game,
+    act: act,
+    onClose: () => setSheet(null)
   }), playedList && game && React.createElement(PlayedList, {
     g: game,
     onClose: () => setPlayedList(false),

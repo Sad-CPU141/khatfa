@@ -91,12 +91,12 @@ function BoardGrid({ g, onOpen, big }) {
     </div>
   );
 }
-function Board({ g, act, onMenu, onTv }) {
+function Board({ g, act, onMenu, onTv, onFix }) {
   const team = turnTeam(g);
   return (
     <div className="app wide">
       <TopBar left={<MenuBtn onClick={onMenu} />} title={t('leftN', { n: openCells(g).length })} right={<TvButton onTv={onTv} />} dense />
-      <ScoreBar g={g} activeId={team.id} label={t('turnShort')} />
+      <ScoreBar g={g} activeId={team.id} label={t('turnShort')} onEdit={onFix} />
       <p className="turnline" style={tStyle(team)}><span>{team.emoji}</span> {t('turnOf', { team: teamName(team) })}</p>
       <BoardReport g={g} />
       <BoardGrid g={g} onOpen={(id) => act((x) => openCell(x, id, Date.now()))} />
@@ -189,7 +189,7 @@ function ResultBanner({ g }) {
     </div>
   );
 }
-function QuestionScreen({ g, act, flash, onMenu, onTv, onWrong, media }) {
+function QuestionScreen({ g, act, flash, onMenu, onTv, onWrong, media, onFix }) {
   const cur = g.current; const cell = curCell(g);
   const [peek, setPeek] = useState(false);
   useEffect(() => { setPeek(false); }, [cell && cell.id]);
@@ -207,7 +207,7 @@ function QuestionScreen({ g, act, flash, onMenu, onTv, onWrong, media }) {
   return (
     <div className="app qscreen">
       <TopBar left={<MenuBtn onClick={onMenu} />} title={t('leftN', { n: openCells(g).length })} right={<TvButton onTv={onTv} />} dense />
-      <ScoreBar g={g} activeId={reveal ? null : cur.team} />
+      <ScoreBar g={g} activeId={reveal ? null : cur.team} onEdit={onFix} />
       <QHead g={g} cell={cell} />
       <StageBanner g={g} />
       <Clock g={g} />
@@ -280,7 +280,7 @@ function GameLog({ g }) {
     </details>
   );
 }
-function Results({ g, act, onHome, onAgain, onFlagPlayed }) {
+function Results({ g, act, onHome, onAgain, onFlagPlayed, onFix }) {
   const sorted = [...g.teams].sort((a, b) => b.score - a.score);
   const s = gameStats(g);
   return (
@@ -302,6 +302,7 @@ function Results({ g, act, onHome, onAgain, onFlagPlayed }) {
       </section>
       <Moments g={g} />
       <GameLog g={g} />
+      {onFix && <button className="btn btn-sm" onClick={onFix}>± {t('fixScores')}</button>}
       {onFlagPlayed && <button className="btn btn-sm btn-flag" onClick={onFlagPlayed}>⚠ {t('flagPlayed')}</button>}
       <button className="btn btn-gold" onClick={onAgain}>{t('playAgain')}</button>
       <p className="hint center" style={{ marginTop: -8 }}>{t('playAgainSub')}</p>
@@ -315,20 +316,38 @@ function Results({ g, act, onHome, onAgain, onFlagPlayed }) {
 
 /* ---------- menu + fix scores ---------- */
 function FixScores({ g, act, onClose }) {
-  const step = g.rules.values[0];
+  const [step, setStep] = useState(200);
+  const [exact, setExact] = useState({});
+  const lastIsFix = undoLabel(g) === 'adjust';
+  const setTo = (tm) => {
+    const v = parseInt(String(exact[tm.id] || '').replace(/[^\d-]/g, ''), 10);
+    if (isNaN(v)) return;
+    act((x) => adjustScore(x, tm.id, v - teamById(x, tm.id).score));
+    setExact({ ...exact, [tm.id]: '' });
+  };
   return (
     <Sheet onClose={onClose}>
       <div className="stack">
         <h2 className="display">{t('fixScores')}</h2>
-        <p className="hint">{t('fixScoresSub')}</p>
+        <p className="hint" style={{ margin: 0 }}>{t('fixScoresSub')}</p>
+        <div className="field"><span className="label">{t('fixStep')}</span><Seg value={step} options={[[100, '100'], [200, '200'], [400, '400'], [600, '600']]} onChange={setStep} label={t('fixStep')} /></div>
         {g.teams.map((tm) => (
-          <div key={tm.id} className="fixrow" style={tStyle(tm)}>
-            <span className="grow">{tm.emoji} <Name team={tm} /></span>
-            <button className="mini" aria-label={'−' + step + ' ' + teamName(tm)} onClick={() => act((x) => adjustScore(x, tm.id, -step))}>−</button>
-            <b className="num fx-s">{tm.score}</b>
-            <button className="mini" aria-label={'+' + step + ' ' + teamName(tm)} onClick={() => act((x) => adjustScore(x, tm.id, step))}>+</button>
+          <div key={tm.id} className="fixteam stack-sm" style={tStyle(tm)}>
+            <div className="fixrow">
+              <span className="grow">{tm.emoji} <Name team={tm} /></span>
+              <button className="mini" aria-label={'−' + step + ' ' + teamName(tm)} onClick={() => act((x) => adjustScore(x, tm.id, -step))}>−</button>
+              <b className="num fx-s">{tm.score}</b>
+              <button className="mini" aria-label={'+' + step + ' ' + teamName(tm)} onClick={() => act((x) => adjustScore(x, tm.id, step))}>+</button>
+            </div>
+            <div className="row fixexact">
+              <input className="input" type="number" inputMode="numeric" step="100" dir="ltr" placeholder={t('setScoreTo')} aria-label={t('setScoreFor', { team: teamName(tm) })} value={exact[tm.id] || ''}
+                onChange={(e) => setExact({ ...exact, [tm.id]: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') setTo(tm); }} />
+              <button className="btn btn-sm" disabled={exact[tm.id] === undefined || exact[tm.id] === ''} onClick={() => setTo(tm)}>{t('setScore')}</button>
+            </div>
           </div>
         ))}
+        {lastIsFix && <button className="btn btn-ghost" onClick={() => act(undo)}>↶ {t('undoLastFix')}</button>}
+        <p className="hint" style={{ margin: 0 }}>{t('fixWrongTip')}</p>
         <button className="btn btn-gold" onClick={onClose}>{t('close')}</button>
       </div>
     </Sheet>

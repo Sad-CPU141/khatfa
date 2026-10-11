@@ -257,6 +257,19 @@ const closeFlash = async (w, d) => { const f = d.querySelector('.flash'); if (f)
     ok(/Undo: the score fix/.test(text(d)), 'the menu says exactly what undo will undo');
     await click(w, btn(d, 'Undo: the score fix'));
     ok(KH.store.get('kh_current_v1').teams[1].score === before, 'undo reverts it');
+    // tap a score to fix it, including typing an exact score
+    await click(w, d.querySelectorAll('.scard.editable')[0]);
+    ok(!!d.querySelector('.fixteam') && /Gave the wrong team points/.test(text(d)), 'tapping a team’s score opens “Fix scores”');
+    const ex = d.querySelectorAll('.fixexact input')[0];
+    const setter = Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype, 'value').set;
+    setter.call(ex, '1300'); ex.dispatchEvent(new w.Event('input', { bubbles: true }));
+    await sleep(20);
+    await click(w, d.querySelectorAll('.fixexact .btn')[0]);
+    const fixed = KH.store.get('kh_current_v1');
+    ok(fixed.teams[0].score === 1300 && fixed.log[fixed.log.length - 1].kind === 'adjust', 'typing an exact score sets it (and it’s logged)');
+    await click(w, btn(d, 'Undo the last fix'));
+    ok(KH.store.get('kh_current_v1').teams[0].score !== 1300, '“Undo the last fix” puts it back');
+    await click(w, btn(d, 'Close'));
 
     // TV view on this screen
     await click(w, d.querySelector('.tvbtn'));

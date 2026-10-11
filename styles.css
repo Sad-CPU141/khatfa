@@ -1,4 +1,4 @@
-/* Khatfa b073f1541a — built from src/styles.css */
+/* Khatfa 20d3ea0175 — built from src/styles.css */
 /* Khatfa — same "game night" family as Draft Night: ink/purple stage, gold accents, condensed headings.
    Khatfa's own accent is electric teal (the "snatch" colour). Written with logical properties so
    Arabic (RTL) and English (LTR) both lay out correctly. Fonts are self-hosted (SIL OFL). */
@@ -506,3 +506,9 @@ select.input{appearance:auto}
   .board{grid-auto-rows:auto}
   .board .bcat{display:grid;grid-row:span 2;grid-template-rows:subgrid;align-content:start}
 }
+.scard.editable{cursor:pointer;font:inherit;color:inherit;text-align:start;width:100%}
+.scard .s-edit{position:absolute;inset-block-start:6px;inset-inline-end:8px;font-size:13px;opacity:.55}
+.scard.editable:hover .s-edit,.scard.editable:focus-visible .s-edit{opacity:1}
+.fixteam{padding:10px;border-radius:14px;background:var(--panel);border-inline-start:6px solid var(--c)}
+.fixteam .fixrow{padding:0;background:none;border:0}
+.fixexact .input{min-height:42px;font-size:16px}

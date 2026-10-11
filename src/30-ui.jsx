@@ -123,22 +123,24 @@ function useDelta(value) {
   useEffect(() => { if (!d) return undefined; const id = setTimeout(() => setD(null), 1600); return () => clearTimeout(id); }, [d]);
   return d;
 }
-function ScoreCard({ team, active, label, big }) {
+function ScoreCard({ team, active, label, big, onEdit }) {
   const d = useDelta(team.score);
+  const El = onEdit ? 'button' : 'div';
   return (
-    <div className={'scard' + (active ? ' active' : '') + (big ? ' big' : '')} style={tStyle(team)}>
+    <El className={'scard' + (active ? ' active' : '') + (big ? ' big' : '') + (onEdit ? ' editable' : '')} style={tStyle(team)} onClick={onEdit || undefined} aria-label={onEdit ? t('editScoreOf', { team: teamName(team) }) : undefined} type={onEdit ? 'button' : undefined}>
+      {onEdit && <span className="s-edit" aria-hidden="true">✎</span>}
       <span className="s-em" aria-hidden="true">{team.emoji}</span>
       <span className="s-name"><Name team={team} /></span>
       <span className="s-score"><AnimatedNumber value={team.score} /></span>
       {active && label && <span className="s-turn">{label}</span>}
       {d && <span key={d.k} dir="ltr" className={'s-delta' + (d.n < 0 ? ' neg' : '')}>{d.n > 0 ? '+' : '−'}{Math.abs(d.n)}</span>}
-    </div>
+    </El>
   );
 }
-function ScoreBar({ g, activeId, label, big }) {
+function ScoreBar({ g, activeId, label, big, onEdit }) {
   return (
     <div className={'scorebar n' + g.teams.length + (big ? ' big' : '')}>
-      {g.teams.map((tm) => <ScoreCard key={tm.id} team={tm} active={tm.id === activeId} label={label} big={big} />)}
+      {g.teams.map((tm) => <ScoreCard key={tm.id} team={tm} active={tm.id === activeId} label={label} big={big} onEdit={onEdit} />)}
     </div>
   );
 }
